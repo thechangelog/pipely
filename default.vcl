@@ -4,16 +4,17 @@ vcl 4.1;
 # Import std for duration comparisons & access to env vars
 import std;
 
-# Import vmod_dynamic to resolve backend hosts via DNS
+# Import var so that we can get & set variables
+import var;
+
+# Import vmod_dynamic so that we can resolve backend hosts via DNS
 import dynamic;
 
-# Disable default backend, we are using dynamic backends **only**
+# Disable default backend, we are using dynamic backends **only** so that we
+# can handle new origin instances appearing (e.g. app deploys)
 backend default none;
 
-# Force IPv6 backends **only**
-acl ipv6_only { "::0"/0; }
-
-probe changelog_health {
+probe backend_healthz {
   .url = "/health";
   .interval = 5s;
   .timeout = 2s;
@@ -24,17 +25,15 @@ probe changelog_health {
 # Setup a dynamic director
 sub vcl_init {
   # https://github.com/nigoroll/libvmod-dynamic/blob/3697d6f195fe077fe213918b7b67f5da4efdede2/src/tbl/list_prop.h
-  new changelog = dynamic.director(
+  new origin = dynamic.director(
     ttl = 10s,
-    probe = changelog_health,
-    host_header = "changelog-2024-01-12.fly.dev",
+    probe = backend_healthz,
+    host_header = std.getenv("BACKEND_FQDN"),
     first_byte_timeout = 5s,
     connect_timeout = 5s,
-    between_bytes_timeout = 30s,
-    whitelist = ipv6_only
+    between_bytes_timeout = 30s
   );
 }
-
 
 # NOTE: vcl_recv is called at the beginning of a request, after the complete
 # request has been received and parsed. Its purpose is to decide whether or not
@@ -55,7 +54,7 @@ sub vcl_recv {
     set req.url = "/health";
   }
 
-  set req.backend_hint = changelog.backend("localhost", "5000");
+  set req.backend_hint = origin.backend(std.getenv("BACKEND_HOST"), std.getenv("BACKEND_PORT"));
 }
 
 # https://varnish-cache.org/docs/7.4/users-guide/vcl-grace.html
@@ -114,8 +113,13 @@ sub vcl_deliver {
   # How many times has this response been served from Varnish?
   set resp.http.cache-status = resp.http.cache-status + "; hits=" + obj.hits;
 
+  var.set("region", std.getenv("FLY_REGION"));
+  if (var.get("region") == "") {
+     var.set("region", "LOCAL");
+  }
+
   # Which region is serving this request?
-  set resp.http.cache-status = resp.http.cache-status + "; region=" + std.getenv("FLY_REGION");
+  set resp.http.cache-status = resp.http.cache-status + "; region=" + var.get("region");
 }
 
 # TODOS:

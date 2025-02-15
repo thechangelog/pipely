@@ -26,8 +26,8 @@ You are welcome to fork it and make it your own. OSS FTW 💚
 - [x] Dynamic backend, cache-status header - [PR #1](https://github.com/thechangelog/pipely/pull/1)
 - [x] Add tests - [PR #3](https://github.com/thechangelog/pipely/pull/3)
 - [x] Make it easy to develop locally - [PR #7](https://github.com/thechangelog/pipely/pull/7)
-- [ ] Support TLS origins
-- [ ] Add feeds backend: /feed -> http://feeds.changelog.place/feed.xml
+- [x] Add support for TLS backends, publish & deploy to production - [PR #8](https://github.com/thechangelog/pipely/pull/8)
+- [ ] Add feeds backend: /feed -> https://feeds.changelog.place/feed.xml
 - [ ] Send logs to Honeycomb.io (same structure as Fastly logs)
 - [ ] Send logs to S3 (for stats)
 - [ ] Implement purge across all app instances (Fly.io machines)
@@ -48,8 +48,16 @@ A few other commands that you may be interested in:
 # Requires https://github.com/casey/just
 just
 Available recipes:
-    report     # Open the test report
-    test *ARGS # Run the tests
+    debug                   # Debug container image interactively
+    report                  # Open the test report
+    test *ARGS              # Run the tests
+
+    [team]
+    cert fqdn               # Add cert $fqdn
+    deploy tag="dev-$USER"  # Deploy container image
+    envrc-secrets           # Create .envrc.secrets with credentials from 1Password
+    publish tag="dev-$USER" # Publish container image
+    scale                   # Scale production app
 
 # Run the tests
 just test
@@ -87,5 +95,6 @@ See you in our [Zulip Chat](https://changelog.zulipchat.com/) 👋
 
 ## Contributors
 
-- [James A Rosen](https://www.jamesarosen.com/now), Staff Engineer
+- [James A Rosen](https://www.jamesarosen.com/now), Staff Software Engineer
 - [Matt Johnson](https://github.com/mttjohnson), Senior Site Reliability Engineer
+- [Nabeel Sulieman](https://github.com/nabsul), Staff Software Engineer

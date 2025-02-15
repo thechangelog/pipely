@@ -1,5 +1,5 @@
 # Full app config reference: https://fly.io/docs/reference/configuration/
-app = "cdn-2024-08-02"
+app = "cdn-2025-02-25"
 # Closest to the origin
 primary_region = "iad"
 
