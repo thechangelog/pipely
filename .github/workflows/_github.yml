@@ -12,10 +12,25 @@ jobs:
 
       - uses: extractions/setup-just@v2
         with:
-          just-version: "1.37.0"
+          just-version: "1.39.0"
 
       - name: "Test..."
         run: |
           just test --verbose
         env:
           TERM: xterm
+
+      - name: "Publish..."
+        if: ${{ github.ref_name == 'main' }}
+        run: |
+          just publish ${{ github.ref_name }}
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+      - name: "Publish & deploy tag..."
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          just publish ${{ github.ref_name }}
+          just deploy ${{ github.ref_name }}
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
