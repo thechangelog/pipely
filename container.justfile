@@ -47,5 +47,11 @@ bench-origin: (bench "https://changelog-2024-01-12.fly.dev/")
 # Benchmark tls-exterminator
 bench-tls-exterminator: (bench "http://localhost:5000/")
 
-# Benchmark varnish
+# Benchmark cdn
+bench-cdn: (bench "https://changelog.com/" "2" "100000")
+
+# Benchmark local varnish
 bench-varnish: (bench "http://localhost:9000/")
+
+# Benchmark cdn2
+bench-cdn2: (bench "https://cdn2.changelog.com/" "2" "100000")

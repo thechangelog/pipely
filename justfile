@@ -45,8 +45,8 @@ report:
     open tmp/index.html
 
 # Debug container image interactively
-debug: dagger
-    dagger call debug terminal --cmd=bash
+debug:
+    @just dagger call debug terminal --cmd=bash
 
 # https://github.com/dagger/dagger/releases
 
