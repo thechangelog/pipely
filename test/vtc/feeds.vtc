@@ -1,0 +1,361 @@
+varnishtest "Test Feed redirects"
+
+# App mock server
+server s1 {
+    rxreq
+    txresp -status 200 -body "App backend"
+} -start
+
+# Feeds mock server with responses for all feed requests
+server s2 {
+    # Test for /podcast/feed
+    rxreq
+    expect req.url == "/podcast.xml"
+    txresp -status 200 -body "podcast.xml"
+
+    # Test for /gotime/feed
+    rxreq
+    expect req.url == "/gotime.xml"
+    txresp -status 200 -body "gotime.xml"
+
+    # Test for /master/feed
+    rxreq
+    expect req.url == "/master.xml"
+    txresp -status 200 -body "master.xml"
+
+    # Test for /feed
+    rxreq
+    expect req.url == "/feed.xml"
+    txresp -status 200 -body "feed.xml"
+
+    # Test for /jsparty/feed
+    rxreq
+    expect req.url == "/jsparty.xml"
+    txresp -status 200 -body "jsparty.xml"
+
+    # Test for /shipit/feed
+    rxreq
+    expect req.url == "/shipit.xml"
+    txresp -status 200 -body "shipit.xml"
+
+    # Test for /news/feed
+    rxreq
+    expect req.url == "/news.xml"
+    txresp -status 200 -body "news.xml"
+
+    # Test for /brainscience/feed
+    rxreq
+    expect req.url == "/brainscience.xml"
+    txresp -status 200 -body "brainscience.xml"
+
+    # Test for /founderstalk/feed
+    rxreq
+    expect req.url == "/founderstalk.xml"
+    txresp -status 200 -body "founderstalk.xml"
+
+    # Test for /interviews/feed
+    rxreq
+    expect req.url == "/interviews.xml"
+    txresp -status 200 -body "interviews.xml"
+
+    # Test for /friends/feed
+    rxreq
+    expect req.url == "/friends.xml"
+    txresp -status 200 -body "friends.xml"
+
+    # Test for /feed/
+    rxreq
+    expect req.url == "/feed.xml"
+    txresp -status 200 -body "feed.xml"
+
+    # Test for /rfc/feed
+    rxreq
+    expect req.url == "/rfc.xml"
+    txresp -status 200 -body "rfc.xml"
+
+    # Test for /spotlight/feed
+    rxreq
+    expect req.url == "/spotlight.xml"
+    txresp -status 200 -body "spotlight.xml"
+
+    # Test for /afk/feed
+    rxreq
+    expect req.url == "/afk.xml"
+    txresp -status 200 -body "afk.xml"
+
+    # Test for /posts/feed
+    rxreq
+    expect req.url == "/posts.xml"
+    txresp -status 200 -body "posts.xml"
+
+    # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed
+    rxreq
+    expect req.url == "/plusplus.xml"
+    txresp -status 200 -body "plusplus.xml"
+
+    # Test for /rss
+    rxreq
+    expect req.url == "/feed.xml"
+    txresp -status 200 -body "feed.xml"
+
+    # Test for /feeds/* path
+    rxreq
+    expect req.url == "/feeds/0284CC5C777C51D158BBECCBBB56422A.xml"
+    txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
+} -start
+
+# Start varnish with our VCL
+varnish v1 -vcl {
+    vcl 4.1;
+
+    import std;
+
+    backend app {
+        .host = "${s1_addr}";
+        .port = "${s1_port}";
+        .host_header = "app.pipely.tech";
+    }
+
+    backend feeds {
+        .host = "${s2_addr}";
+        .port = "${s2_port}";
+        .host_header = "feeds.pipely.tech";
+    }
+
+    sub vcl_recv {
+        set req.http.x-backend = "";
+
+        if (req.url == "/podcast/feed") {
+            set req.url = "/podcast.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/gotime/feed") {
+            set req.url = "/gotime.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/master/feed") {
+            set req.url = "/master.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/feed") {
+            set req.url = "/feed.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/jsparty/feed") {
+            set req.url = "/jsparty.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/shipit/feed") {
+            set req.url = "/shipit.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/news/feed") {
+            set req.url = "/news.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/brainscience/feed") {
+            set req.url = "/brainscience.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/founderstalk/feed") {
+            set req.url = "/founderstalk.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/interviews/feed") {
+            set req.url = "/interviews.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/friends/feed") {
+            set req.url = "/friends.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/feed/") {
+            set req.url = "/feed.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/rfc/feed") {
+            set req.url = "/rfc.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/spotlight/feed") {
+            set req.url = "/spotlight.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/afk/feed") {
+            set req.url = "/afk.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/posts/feed") {
+            set req.url = "/posts.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed") {
+            set req.url = "/plusplus.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url == "/rss") {
+            set req.url = "/feed.xml";
+            set req.http.x-backend = "feeds";
+        } else if (req.url ~ "^/feeds/") {
+            set req.url = req.url + ".xml";
+            set req.http.x-backend = "feeds";
+        }
+
+        if (req.http.x-backend == "feeds") {
+            set req.backend_hint = feeds;
+        } else {
+            set req.backend_hint = app;
+        }
+
+        unset req.http.x-backend;
+    }
+
+    # Disable caching for testing
+    sub vcl_backend_response {
+        set beresp.uncacheable = true;
+        return(deliver);
+    }
+} -start
+
+# / should go to app backend
+client c1 {
+    txreq -url "/"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "App backend"
+} -run
+
+# /podcast/feed should go to feeds backend
+client c2 {
+    txreq -url "/podcast/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "podcast.xml"
+} -run
+
+# /gotime/feed should go to feeds backend
+client c3 {
+    txreq -url "/gotime/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "gotime.xml"
+} -run
+
+# /master/feed should go to feeds backend
+client c4 {
+    txreq -url "/master/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "master.xml"
+} -run
+
+# /feed should go to feeds backend
+client c5 {
+    txreq -url "/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "feed.xml"
+} -run
+
+# /jsparty/feed should go to feeds backend
+client c6 {
+    txreq -url "/jsparty/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "jsparty.xml"
+} -run
+
+# /shipit/feed should go to feeds backend
+client c7 {
+    txreq -url "/shipit/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "shipit.xml"
+} -run
+
+# /news/feed should go to feeds backend
+client c8 {
+    txreq -url "/news/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "news.xml"
+} -run
+
+# /brainscience/feed should go to feeds backend
+client c9 {
+    txreq -url "/brainscience/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "brainscience.xml"
+} -run
+
+# /founderstalk/feed should go to feeds backend
+client c10 {
+    txreq -url "/founderstalk/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "founderstalk.xml"
+} -run
+
+# /interviews/feed should go to feeds backend
+client c11 {
+    txreq -url "/interviews/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "interviews.xml"
+} -run
+
+# /friends/feed should go to feeds backend
+client c12 {
+    txreq -url "/friends/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "friends.xml"
+} -run
+
+# /feed/ should go to feeds backend
+client c13 {
+    txreq -url "/feed/"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "feed.xml"
+} -run
+
+# /rfc/feed should go to feeds backend
+client c14 {
+    txreq -url "/rfc/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "rfc.xml"
+} -run
+
+# /spotlight/feed should go to feeds backend
+client c15 {
+    txreq -url "/spotlight/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "spotlight.xml"
+} -run
+
+# /afk/feed should go to feeds backend
+client c16 {
+    txreq -url "/afk/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "afk.xml"
+} -run
+
+# /posts/feed should go to feeds backend
+client c17 {
+    txreq -url "/posts/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "posts.xml"
+} -run
+
+# /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed should go to feeds backend
+client c18 {
+    txreq -url "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "plusplus.xml"
+} -run
+
+# /rss should go to feeds backend
+client c18 {
+    txreq -url "/rss"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "feed.xml"
+} -run
+
+# /feeds/* should go to feeds backend
+client c19 {
+    txreq -url "/feeds/0284CC5C777C51D158BBECCBBB56422A"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "0284CC5C777C51D158BBECCBBB56422A.xml"
+} -run

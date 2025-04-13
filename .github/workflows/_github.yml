@@ -12,23 +12,44 @@ jobs:
 
       - uses: extractions/setup-just@v2
         with:
-          just-version: "1.39.0"
+          just-version: "1.40.0"
 
       - name: "Test..."
         run: |
-          just test --verbose
+          just test
         env:
           TERM: xterm
 
+      - name: "Test acceptance of current CDN deployment..."
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        run: |
+          just test-acceptance-cdn
+        env:
+          TERM: xterm
+
+      - name: "Test acceptance of NEW CDN deployment..."
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        run: |
+          just test-acceptance-cdn2
+        env:
+          TERM: xterm
+
+      - name: "Archive test acceptance reports..."
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-acceptance
+          path: |
+            tmp/test-acceptance-*
+
       - name: "Publish..."
-        if: ${{ github.ref_name == 'main' }}
+        if: ${{ github.ref_name == 'main' && github.event_name == 'push' }}
         run: |
           just publish ${{ github.ref_name }}
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - name: "Publish & deploy tag..."
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' }}
         run: |
           just publish ${{ github.ref_name }}
           just deploy ${{ github.ref_name }}
