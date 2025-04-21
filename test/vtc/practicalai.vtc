@@ -1,0 +1,46 @@
+varnishtest "Test practical.ai redirects"
+
+varnish v1 -vcl {
+    vcl 4.1;
+
+    import std;
+
+    backend default none;
+
+    sub vcl_recv {
+        if (req.url == "/practicalai/feed"
+            || req.url == "/practicalai") {
+            return (synth(301, "Moved Permanently"));
+        }
+    }
+
+    sub vcl_synth {
+        if (req.url == "/practicalai/feed"
+            && resp.status == 301) {
+            set resp.http.location = "https://feeds.transistor.fm/practical-ai-machine-learning-data-science-llm";
+            return (deliver);
+        }
+
+        if (req.url == "/practicalai"
+            && resp.status == 301) {
+            set resp.http.location = "https://practicalai.fm";
+            return (deliver);
+        }
+    }
+} -start
+
+# /practicalai/feed redirect
+client c1 {
+    txreq -url "/practicalai/feed"
+    rxresp
+    expect resp.status == 301
+    expect resp.http.location == "https://feeds.transistor.fm/practical-ai-machine-learning-data-science-llm"
+} -run
+
+# /practicalai redirect
+client c2 {
+    txreq -url "/practicalai"
+    rxresp
+    expect resp.status == 301
+    expect resp.http.location == "https://practicalai.fm"
+} -run

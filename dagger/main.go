@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"dagger/pipely/internal/dagger"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/containerd/platforms"
 )
@@ -30,35 +32,36 @@ func New(
 	// +default="dev"
 	tag string,
 
-	// +default="7.4.3@sha256:c36e73e14650a021b0b8a8c748cac07a7d7b65052dc6395d193faed169c5b294"
+	// https://hub.docker.com/_/varnish/tags
+	// +default="7.7.0@sha256:d632bc833d17a9555126205315ea4de9c634d0b05d96757b9dbab30c8430e312"
 	varnishVersion string,
 
 	// +default=9000
 	varnishPort int,
 
-	// +default="1.23.6@sha256:77a21b3e354c03e9f66b13bc39f4f0db8085c70f8414406af66b29c6d6c4dd85"
+	// +default="60s"
+	berespTtl string,
+
+	// +default="24h"
+	berespGrace string,
+
+	// https://hub.docker.com/_/golang/tags?name=1.23
+	// +default="1.23.8@sha256:87bb94031b23532885cbda15e9a365a5805059648a87ed1b67a1352dd7360fe4"
 	golangVersion string,
 
+	// https://github.com/mattn/goreman
+	// +default="v0.3.16"
+	goremanVersion string,
+
+	// https://github.com/nabsul/tls-exterminator
 	// +default="4226223f2380319e73300bc7d14fd652c56c6b4e"
 	tlsExterminatorVersion string,
 
 	// +default="5000:changelog-2024-01-12.fly.dev"
-	changelogProxy string,
+	appProxy string,
 
 	// +default="5010:feeds.changelog.place"
 	feedsProxy string,
-
-	// +default="v0.3.16"
-	goremanVersion string,
-
-	// +default="localhost"
-	backendFqdn string,
-
-	// +default="localhost"
-	backendHost string,
-
-	// +default="5000"
-	backendPort string,
 ) (*Pipely, error) {
 	pipely := &Pipely{
 		Golang:  dag.Container().From("golang:" + golangVersion),
@@ -76,33 +79,115 @@ func New(
 		File("/go/bin/goreman")
 
 	procfile := fmt.Sprintf(`pipely: docker-varnish-entrypoint
-changelog: tls-exterminator %s
+app: tls-exterminator %s
 feeds: tls-exterminator %s
-`, changelogProxy, feedsProxy)
+`, appProxy, feedsProxy)
+
+	appPortAndFqdn := strings.Split(appProxy, ":")
+	if len(appPortAndFqdn) != 2 {
+		return nil, errors.New("--app-proxy must be of format 'PORT:FQDN'")
+	}
+	appPort := appPortAndFqdn[0]
+	appFqdn := appPortAndFqdn[1]
+
+	feedsPortAndFqdn := strings.Split(feedsProxy, ":")
+	if len(feedsPortAndFqdn) != 2 {
+		return nil, errors.New("--feeds-proxy must be of format 'PORT:FQDN'")
+	}
+	feedsPort := feedsPortAndFqdn[0]
+	feedsFqdn := feedsPortAndFqdn[1]
 
 	pipely.App = dag.Container().
 		From("varnish:"+varnishVersion).
 		WithEnvVariable("VARNISH_HTTP_PORT", "9000").
-		WithEnvVariable("BACKEND_FQDN", backendFqdn).
-		WithEnvVariable("BACKEND_HOST", backendHost).
-		WithEnvVariable("BACKEND_PORT", backendPort).
+		WithEnvVariable("BACKEND_APP_FQDN", appFqdn).
+		WithEnvVariable("BACKEND_APP_HOST", "localhost").
+		WithEnvVariable("BACKEND_APP_PORT", appPort).
+		WithEnvVariable("BACKEND_FEEDS_FQDN", feedsFqdn).
+		WithEnvVariable("BACKEND_FEEDS_HOST", "localhost").
+		WithEnvVariable("BACKEND_FEEDS_PORT", feedsPort).
+		WithEnvVariable("BERESP_TTL", berespTtl).
+		WithEnvVariable("BERESP_GRACE", berespGrace).
 		WithExposedPort(varnishPort).
 		WithFile("/etc/varnish/default.vcl", source.File("default.vcl")).
 		WithFile("/usr/local/bin/tls-exterminator", tlsExterminator).
 		WithFile("/usr/local/bin/goreman", goreman).
 		WithNewFile("/Procfile", procfile).
 		WithWorkdir("/").
-		WithEntrypoint([]string{"goreman", "start"})
+		WithEntrypoint([]string{"goreman", "--set-ports=false", "start"})
 
 	return pipely, nil
 }
 
-// Debug container with various useful tools - use just as the starting point
+// Test container with various useful tools - use `just` as the starting point
+func (m *Pipely) Test(ctx context.Context) *dagger.Container {
+	p, _ := dag.DefaultPlatform(ctx)
+	platform := platforms.MustParse(string(p))
+
+	var altArchitecture string
+	switch platform.Architecture {
+	case "amd64":
+		altArchitecture = "x86_64"
+	case "arm64":
+		altArchitecture = "aarch64"
+	default:
+		altArchitecture = platform.Architecture
+	}
+
+	// https://github.com/Orange-OpenSource/hurl/releases
+	hurlArchive := dag.HTTP("https://github.com/Orange-OpenSource/hurl/releases/download/6.1.1/hurl-6.1.1-" + altArchitecture + "-unknown-linux-gnu.tar.gz")
+
+	return m.App.
+		WithUser("root").
+		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
+		WithEnvVariable("TERM", "xterm-256color").
+		WithExec([]string{"apt-get", "update"}).
+		WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
+		WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
+		WithExec([]string{"tar", "-zxvf", "/opt/hurl.tar.gz", "-C", "/opt/hurl", "--strip-components=1"}).
+		WithExec([]string{"ln", "-sf", "/opt/hurl/bin/hurl", "/usr/local/bin/hurl"}).
+		WithExec([]string{"apt-get", "install", "--yes", "curl"}).
+		WithExec([]string{"curl", "--version"}).
+		WithExec([]string{"apt-get", "install", "--yes", "libxml2"}).
+		WithExec([]string{"hurl", "--version"}).
+		WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
+		WithFile("/justfile", m.Source.File("container.justfile")).
+		WithExec([]string{"just"}).
+		WithDirectory("/test", m.Source.Directory("test"))
+}
+
+// Test VCL via VTC
+func (m *Pipely) TestVarnish(ctx context.Context) *dagger.Container {
+	return m.Test(ctx).WithExec([]string{"just", "test-vtc"})
+}
+
+// Test acceptance
+func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
+	pipely, err := m.Test(ctx).
+		AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true}).
+		Start(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return m.Test(ctx).
+		WithServiceBinding("pipely", pipely).
+		WithExec([]string{"just", "test-acceptance-local", "--variable", "host=http://pipely:9000", "--verbose"})
+}
+
+// Test acceptance report
+func (m *Pipely) TestAcceptanceReport(ctx context.Context) *dagger.Directory {
+	return m.TestAcceptance(ctx).Directory("/var/opt/hurl/test-acceptance-local")
+}
+
+// Debug container with various useful tools - use `just` as the starting point
 func (m *Pipely) Debug(ctx context.Context) *dagger.Container {
+	// https://github.com/davecheney/httpstat
 	httpstat := m.Golang.
 		WithExec([]string{"go", "install", "github.com/davecheney/httpstat@v1.2.1"}).
 		File("/go/bin/httpstat")
 
+	// https://github.com/fabio42/sasqwatch
 	sasqwatch := m.Golang.
 		WithExec([]string{"go", "install", "github.com/fabio42/sasqwatch@8564c29ceaa03d5211b8b6d7a3012f9acf691fd1"}).
 		File("/go/bin/sasqwatch")
@@ -113,29 +198,28 @@ func (m *Pipely) Debug(ctx context.Context) *dagger.Container {
 
 	p, _ := dag.DefaultPlatform(ctx)
 	platform := platforms.MustParse(string(p))
-	oha := dag.HTTP("https://github.com/hatoo/oha/releases/download/v1.8.0/oha-" + platform.OS + "-" + platform.Architecture)
+	// https://github.com/hatoo/oha/releases
+	oha := dag.HTTP("https://github.com/hatoo/oha/releases/download/v1.8.0/oha-linux-" + platform.Architecture)
 
-	return m.App.
-		WithUser("root").
-		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
-		WithEnvVariable("TERM", "xterm-256color").
-		WithExec([]string{"apt-get", "update"}).
-		WithExec([]string{"apt-get", "install", "--yes", "curl"}).
-		WithExec([]string{"curl", "--version"}).
+	return m.Test(ctx).
 		WithExec([]string{"apt-get", "install", "--yes", "tmux"}).
 		WithExec([]string{"tmux", "-V"}).
 		WithExec([]string{"apt-get", "install", "--yes", "htop"}).
 		WithExec([]string{"htop", "-V"}).
+		WithExec([]string{"apt-get", "install", "--yes", "procps"}).
+		WithExec([]string{"ps", "-V"}).
 		WithExec([]string{"apt-get", "install", "--yes", "neovim"}).
 		WithExec([]string{"nvim", "--version"}).
 		WithFile("/usr/local/bin/httpstat", httpstat).
+		WithExec([]string{"httpstat", "-v"}).
 		WithFile("/usr/local/bin/sasqwatch", sasqwatch).
+		WithExec([]string{"sasqwatch", "-v"}).
 		WithFile("/usr/local/bin/gotop", gotop).
+		WithExec([]string{"gotop", "-v"}).
 		WithFile("/usr/local/bin/oha", oha, dagger.ContainerWithFileOpts{
 			Permissions: 755,
 		}).
-		WithFile("/justfile", m.Source.File("container.justfile")).
-		WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"})
+		WithExec([]string{"oha", "--version"})
 }
 
 // Publish app container

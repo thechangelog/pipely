@@ -1,4 +1,4 @@
-name: Test
+name: "Ship It!"
 
 on:
   push:
@@ -12,11 +12,13 @@ on:
       - synchronize
       - reopened
       - ready_for_review
+  schedule:
+    - cron: "6 9 * * *"
   workflow_dispatch:
 
 # All jobs have the same outcome. We define multiple for resiliency reasons.
 jobs:
-  # In thechangelog/pipedream repository (a.k.a. upstream),
+  # In thechangelog/pipely repository (a.k.a. upstream),
   # this is the preferred default (i.e. custom runners, faster than GitHub):
   on-namespace:
     if: ${{ contains(vars.RUNS_ON, 'namespace') }}

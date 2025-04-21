@@ -19,12 +19,12 @@ You are welcome to fork and build this your own. OSS FTW 💚
 - ✅ Add tests - [PR #3](https://github.com/thechangelog/pipely/pull/3)
 - ✅ Make it easy to develop locally - [PR #7](https://github.com/thechangelog/pipely/pull/7)
 - ✅ Add support for TLS backends, publish & deploy to production - [PR #8](https://github.com/thechangelog/pipely/pull/8)
-- ☑️ Add feeds backend: `/feed` -> https://feeds.changelog.place/feed.xml
-- ☑️ Send logs to Honeycomb.io (same structure as Fastly logs)
+- ✅ Add Feeds backend - [PR #10](https://github.com/thechangelog/pipely/pull/10)
+- ☑️ Add Assets backend - [requires disk cache](https://varnish-cache.org/docs/trunk/users-guide/storage-backends.html#file)
+- ☑️ Send logs to Honeycomb.io (same structure as Fastly logs) - [JSON logging](https://info.varnish-software.com/blog/varnish-and-json-logging)
 - ☑️ Send logs to S3 (for stats)
-- ☑️ Add assets backend: `cdn2.changelog.com` -> https://changelog.place/* (requires disk cache)
-- ☑️ Implement purge across all app instances (Fly.io machines)
 - ☑️ Add edge redirects from [Fastly service](https://manage.fastly.com/configure/services/7gKbcKSKGDyqU7IuDr43eG)
+- ☑️ Implement purge across all app instances (Fly.io machines)
 
 ## Local development and testing
 
@@ -41,16 +41,26 @@ A few other commands that you may be interested in:
 # Requires https://github.com/casey/just
 just
 Available recipes:
-    debug                   # Debug container image interactively
-    report                  # Open the test report
-    test *ARGS              # Run the tests
+    debug                      # Debug container image interactively
+    test                       # Test everything
+    test-acceptance-cdn *ARGS  # Test remote CDN
+    test-acceptance-cdn2 *ARGS # Test remote CDN2 (a.k.a. Pipely, a.k.a. Pipedream)
+    test-acceptance-local      # Test local CDN
+    test-reports               # Open test reports
+    test-reports-rm            # Clear test reports
+    test-vtc                   # Test VCL config
 
     [team]
-    cert fqdn               # Add cert $fqdn
-    deploy tag="dev-$USER"  # Deploy container image
-    envrc-secrets           # Create .envrc.secrets with credentials from 1Password
-    publish tag="dev-$USER" # Publish container image
-    scale                   # Scale production app
+    cert fqdn                  # Add cert $fqdn to app
+    certs                      # Show app certs
+    deploy tag="dev-$USER"     # Deploy container image
+    envrc-secrets              # Create .envrc.secrets with credentials from 1Password
+    ips                        # Show app IPs
+    machines                   # Show app machines
+    publish tag="dev-$USER"    # Publish container image
+    restart                    # Restart ALL app machines, one-by-one
+    scale                      # Scale production app
+    status                     # Show app status
 
 # Run the tests
 just test

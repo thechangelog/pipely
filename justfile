@@ -1,5 +1,7 @@
 # vim: set tabstop=4 shiftwidth=4 expandtab:
 
+set shell := ["bash", "-uc"]
+
 [private]
 default:
     @just --list
@@ -21,7 +23,7 @@ BIN_PATH := LOCAL_PATH / "bin"
 # https://github.com/Orange-OpenSource/hurl/releases
 
 [private]
-HURL_VERSION := "6.0.0"
+HURL_VERSION := "6.1.1"
 [private]
 HURL_NAME := "hurl-" + HURL_VERSION + "-" + arch() + "-" + OS + "-" + OS_ALT
 [private]
@@ -37,21 +39,36 @@ hurl *ARGS:
         && ln -sf {{ HURL }} {{ BIN_PATH }}/hurl && echo {{ _MAGENTA }}hurl{{ _RESET }} && hurl --version)
     {{ if ARGS != "" { HURL + " " + ARGS } else { HURL + " --help" } }}
 
-# Run the tests
-test *ARGS: (hurl "--test --color --report-html tmp --variable host=https://pipedream.changelog.com " + ARGS + " test/*.hurl")
+# Test everything
+test: test-vtc test-acceptance-local
 
-# Open the test report
-report:
-    open tmp/index.html
+# Test VCL config
+test-vtc: (dagger 'call test-varnish stdout')
+
+# Test local CDN
+test-acceptance-local: (dagger 'call --beresp-ttl=5s test-acceptance-report export --path=./tmp/test-acceptance-local')
+
+# Test remote CDN2 (a.k.a. Pipely, a.k.a. Pipedream)
+test-acceptance-cdn2 *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn2 --variable host=https://cdn2.changelog.com --variable delay_ms=65000 --variable delay_s=60 " + ARGS + " test/acceptance/*.hurl test/acceptance/cdn2/*.hurl")
+
+# Test remote CDN
+test-acceptance-cdn *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn --variable host=https://changelog.com " + ARGS + " test/acceptance/*.hurl test/acceptance/cdn/*.hurl")
+
+# Open test reports
+test-reports:
+    open tmp/*/index.html
+
+# Clear test reports
+test-reports-rm:
+    rm -fr tmp/*
 
 # Debug container image interactively
-debug:
-    @just dagger call debug terminal --cmd=bash
+debug: (dagger 'call --beresp-ttl=5s debug terminal --cmd=bash')
 
 # https://github.com/dagger/dagger/releases
 
 [private]
-DAGGER_VERSION := "0.16.1"
+DAGGER_VERSION := "0.18.3"
 [private]
 DAGGER_DIR := BIN_PATH / "dagger-" + DAGGER_VERSION
 [private]
@@ -62,6 +79,10 @@ dagger *ARGS:
     @[ -x {{ DAGGER }} ] \
     || (curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR={{ DAGGER_DIR }} DAGGER_VERSION={{ DAGGER_VERSION }} sh)
     {{ if ARGS != "" { DAGGER + " " + ARGS } else { DAGGER + " --help" } }}
+
+[private]
+shell:
+    @just dagger shell
 
 # Publish container image
 [group('team')]
@@ -85,10 +106,45 @@ deploy tag="dev-$USER":
 scale:
     flyctl scale count $(echo {{ FLY_APP_REGIONS }}, | grep -o ',' | wc -l) --max-per-region 1 --region {{ FLY_APP_REGIONS }} --app {{ FLY_APP }}
 
-# Add cert $fqdn
+# Add cert $fqdn to app
 [group('team')]
 cert fqdn:
     flyctl certs add {{ fqdn }} --app {{ FLY_APP }}
+
+# Show app certs
+[group('team')]
+certs:
+    flyctl certs list --app {{ FLY_APP }}
+
+# Show app IPs
+[group('team')]
+ips:
+    flyctl ips list --app {{ FLY_APP }}
+
+# Show app machines
+[group('team')]
+machines:
+    flyctl machines list --app {{ FLY_APP }}
+
+# Restart ALL app machines, one-by-one
+[group('team')]
+restart:
+    @just machines \
+    | awk '/pipely/ { print $1 }' \
+    | while read machine; do \
+        echo -en "\n♻️ "; \
+        flyctl machine stop $machine; \
+        sleep 3; \
+        flyctl machine start $machine \
+        || (sleep 5; flyctl machine start $machine); \
+    done
+    @echo {{ _MAGENTA }}🧐 Any stopped machines?{{ _RESET }}
+    @just machines | grep stop || echo ✨
+
+# Show app status
+[group('team')]
+status:
+    flyctl status --app {{ FLY_APP }}
 
 # Create .envrc.secrets with credentials from 1Password
 [group('team')]
@@ -108,6 +164,19 @@ FLY_APP_REGIONS := env("FLY_APP_REGIONS", "sjc,dfw,ord,iad,scl,lhr,fra,jnb,sin,s
 create:
     (flyctl apps list --org {{ FLY_ORG }} | grep {{ FLY_APP }}) \
     || flyctl apps create {{ FLY_APP }} --org {{ FLY_ORG }}
+
+[private]
+actions-runner:
+    docker run --interactive --tty \
+        --volume=pipely-linuxbrew:/home/linuxbrew/.linuxbrew \
+        --volume=pipely-asdf:/home/runner/.asdf \
+        --volume=.:/home/runner/work --workdir=/home/runner/work \
+        --env=HOST=$(hostname) --publish=9090:9000 \
+        --pull=always ghcr.io/actions/actions-runner
+
+[private]
+just0:
+    curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sudo bash -s -- --to /usr/local/bin
 
 # https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/
 

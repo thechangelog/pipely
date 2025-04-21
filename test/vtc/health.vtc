@@ -1,0 +1,95 @@
+varnishtest "Test health checks for different backends"
+
+# App mock server
+server s1 {
+    rxreq
+    expect req.url == "/health" 
+    txresp -status 200 -body "App backend is healthy"
+} -start
+
+# Feeds mock server
+server s2 {
+    rxreq
+    expect req.url == "/health"
+    txresp -status 200 -body "Feeds backend is healthy"
+} -start
+
+# Start Varnish with a VCL close to our final one
+# FWIW, we don't use dynamic directors so that we don't need to handle variable timing & delay
+varnish v1 -vcl {
+    vcl 4.1;
+
+    import std;
+
+    backend app {
+        .host = "${s1_addr}";
+        .port = "${s1_port}";
+        .host_header = "app.pipely.tech";
+    }
+    
+    backend feeds {
+        .host = "${s2_addr}";
+        .port = "${s2_port}";
+        .host_header = "feeds.pipely.tech";
+    }
+
+    sub vcl_recv {
+        if (req.url == "/varnish_health") {
+            return(synth(204));
+        }
+
+        set req.http.x-backend = "";
+
+        if (req.url == "/app_health") {
+            set req.url = "/health";
+        }
+
+        if (req.url == "/feeds_health") {
+            set req.http.x-backend = "feeds";
+            set req.url = "/health";
+        }
+
+        if (req.http.x-backend == "feeds") {
+            set req.backend_hint = feeds;
+        } else {
+            set req.backend_hint = app;
+        }
+
+        unset req.http.x-backend;
+    }
+
+    sub vcl_backend_response {
+        if (bereq.url == "/health") {
+            # Disable caching for health check requests
+            set beresp.uncacheable = true;
+            set beresp.ttl = 0s;
+            return(deliver);
+        }
+        
+        # Normal caching for other requests
+        return(deliver);
+    }
+} -start
+
+# Check Varnish health endpoint
+client c1 {
+    txreq -url "/varnish_health"
+    rxresp
+    expect resp.status == 204
+} -run
+
+# Check App health endpoint
+client c2 {
+    txreq -url "/app_health"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "App backend is healthy"
+} -run
+
+# Check Feeds health endpoint
+client c3 {
+    txreq -url "/feeds_health"
+    rxresp
+    expect resp.status == 200
+    expect resp.body == "Feeds backend is healthy"
+} -run
