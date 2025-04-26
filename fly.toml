@@ -7,14 +7,12 @@ kill_signal = "SIGTERM"
 kill_timeout = 30
 
 [env]
-# We want a low value so that:
-# - we leave room for "sidecar" processes (log drains, purge worker, etc.)
-# - easier to test what happens when the memory fills up
-VARNISH_SIZE="100M"
+# We are leaving some room for "sidecar" processes (log drains, purge worker, etc.)
+VARNISH_SIZE = "800M"
 
 [[vm]]
 size = "shared-cpu-1x"
-memory = "256MB"
+memory = "1GB"
 
 [deploy]
 strategy = "bluegreen"
@@ -27,7 +25,7 @@ protocol = "tcp"
 grace_period = "5s"
 interval = "5s"
 method = "get"
-path = "/varnish_health"
+path = "/health"
 protocol = "http"
 timeout = "3s"
 

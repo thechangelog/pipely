@@ -1,22 +1,22 @@
 varnishtest "Test PURGE method handling"
 
 server s1 {
-    rxreq
-    txresp
+  rxreq
+  txresp
 } -start
 
 varnish v1 -vcl+backend {
-    sub vcl_recv {
-        # https://varnish-cache.org/docs/7.7/users-guide/purging.html
-        if (req.method == "PURGE") {
-            return (purge);
-        }
-    }
+  sub vcl_recv {
+      # https://varnish-cache.org/docs/7.7/users-guide/purging.html
+      if (req.method == "PURGE") {
+        return (purge);
+      }
+  }
 } -start
 
 # Test 1: Test PURGE method
 client c1 {
-    txreq -method PURGE -url "/"
-    rxresp
-    expect resp.status == 200
+  txreq -method PURGE -url "/"
+  rxresp
+  expect resp.status == 200
 } -run

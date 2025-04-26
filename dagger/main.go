@@ -3,16 +3,23 @@ package main
 import (
 	"context"
 	"dagger/pipely/internal/dagger"
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/containerd/platforms"
 )
 
+const (
+	// https://hub.docker.com/_/golang/tags?name=1.24
+	golangVersion = "1.24.2@sha256:30baaea08c5d1e858329c50f29fe381e9b7d7bced11a0f5f1f69a1504cdfbf5e"
+
+	// https://github.com/mattn/goreman/releases
+	goremanVersion = "v0.3.16"
+
+	// https://github.com/nabsul/tls-exterminator
+	tlsExterminatorVersion = "4226223f2380319e73300bc7d14fd652c56c6b4e"
+)
+
 type Pipely struct {
-	// Container with all dependencies wired up correctly & ready for production
-	App *dagger.Container
 	// Golang container
 	Golang *dagger.Container
 	// Varnish container
@@ -21,6 +28,12 @@ type Pipely struct {
 	Source *dagger.Directory
 	// Container image tag
 	Tag string
+	// App proxy
+	AppProxy *Proxy
+	// Feeds proxy
+	FeedsProxy *Proxy
+	// Assets proxy
+	AssetsProxy *Proxy
 }
 
 func New(
@@ -33,7 +46,7 @@ func New(
 	tag string,
 
 	// https://hub.docker.com/_/varnish/tags
-	// +default="7.7.0@sha256:d632bc833d17a9555126205315ea4de9c634d0b05d96757b9dbab30c8430e312"
+	// +default="7.7.0@sha256:3677549b54558d31781d7bc5cf7eedb7dc529c8c2bdd658b5051bee38bddf716"
 	varnishVersion string,
 
 	// +default=9000
@@ -45,78 +58,84 @@ func New(
 	// +default="24h"
 	berespGrace string,
 
-	// https://hub.docker.com/_/golang/tags?name=1.23
-	// +default="1.23.8@sha256:87bb94031b23532885cbda15e9a365a5805059648a87ed1b67a1352dd7360fe4"
-	golangVersion string,
-
-	// https://github.com/mattn/goreman
-	// +default="v0.3.16"
-	goremanVersion string,
-
-	// https://github.com/nabsul/tls-exterminator
-	// +default="4226223f2380319e73300bc7d14fd652c56c6b4e"
-	tlsExterminatorVersion string,
-
-	// +default="5000:changelog-2024-01-12.fly.dev"
+	// +default="5000:changelog-2024-01-12.fly.dev:"
 	appProxy string,
 
-	// +default="5010:feeds.changelog.place"
+	// +default="5010:feeds.changelog.place:"
 	feedsProxy string,
+
+	// +default="5020:changelog.place:cdn2.changelog.com"
+	assetsProxy string,
 ) (*Pipely, error) {
 	pipely := &Pipely{
-		Golang:  dag.Container().From("golang:" + golangVersion),
-		Varnish: dag.Container().From("varnish:" + varnishVersion),
-		Tag:     tag,
-		Source:  source,
+		Golang: dag.Container().From("golang:" + golangVersion),
+		Tag:    tag,
+		Source: source,
 	}
 
-	tlsExterminator := pipely.Golang.
+	pipely.Varnish = dag.Container().From("varnish:"+varnishVersion).
+		WithEnvVariable("VARNISH_HTTP_PORT", fmt.Sprintf("%d", varnishPort)).
+		WithExposedPort(varnishPort).
+		WithEnvVariable("BERESP_TTL", berespTtl).
+		WithEnvVariable("BERESP_GRACE", berespGrace)
+
+	app, err := NewProxy(appProxy)
+	if err != nil {
+		return nil, err
+	}
+	pipely.AppProxy = app
+
+	feeds, err := NewProxy(feedsProxy)
+	if err != nil {
+		return nil, err
+	}
+	pipely.FeedsProxy = feeds
+
+	assets, err := NewProxy(assetsProxy)
+	if err != nil {
+		return nil, err
+	}
+	pipely.AssetsProxy = assets
+
+	return pipely, nil
+}
+
+func (m *Pipely) app() *dagger.Container {
+	tlsExterminator := m.Golang.
 		WithExec([]string{"go", "install", "github.com/nabsul/tls-exterminator@" + tlsExterminatorVersion}).
 		File("/go/bin/tls-exterminator")
 
-	goreman := pipely.Golang.
+	goreman := m.Golang.
 		WithExec([]string{"go", "install", "github.com/mattn/goreman@" + goremanVersion}).
 		File("/go/bin/goreman")
 
 	procfile := fmt.Sprintf(`pipely: docker-varnish-entrypoint
 app: tls-exterminator %s
 feeds: tls-exterminator %s
-`, appProxy, feedsProxy)
+assets: tls-exterminator %s
+`, m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
 
-	appPortAndFqdn := strings.Split(appProxy, ":")
-	if len(appPortAndFqdn) != 2 {
-		return nil, errors.New("--app-proxy must be of format 'PORT:FQDN'")
-	}
-	appPort := appPortAndFqdn[0]
-	appFqdn := appPortAndFqdn[1]
-
-	feedsPortAndFqdn := strings.Split(feedsProxy, ":")
-	if len(feedsPortAndFqdn) != 2 {
-		return nil, errors.New("--feeds-proxy must be of format 'PORT:FQDN'")
-	}
-	feedsPort := feedsPortAndFqdn[0]
-	feedsFqdn := feedsPortAndFqdn[1]
-
-	pipely.App = dag.Container().
-		From("varnish:"+varnishVersion).
-		WithEnvVariable("VARNISH_HTTP_PORT", "9000").
-		WithEnvVariable("BACKEND_APP_FQDN", appFqdn).
+	return m.Varnish.
+		WithEnvVariable("BACKEND_APP_FQDN", m.AppProxy.Fqdn).
 		WithEnvVariable("BACKEND_APP_HOST", "localhost").
-		WithEnvVariable("BACKEND_APP_PORT", appPort).
-		WithEnvVariable("BACKEND_FEEDS_FQDN", feedsFqdn).
+		WithEnvVariable("BACKEND_APP_PORT", m.AppProxy.Port).
+		WithEnvVariable("BACKEND_FEEDS_FQDN", m.FeedsProxy.Fqdn).
 		WithEnvVariable("BACKEND_FEEDS_HOST", "localhost").
-		WithEnvVariable("BACKEND_FEEDS_PORT", feedsPort).
-		WithEnvVariable("BERESP_TTL", berespTtl).
-		WithEnvVariable("BERESP_GRACE", berespGrace).
-		WithExposedPort(varnishPort).
-		WithFile("/etc/varnish/default.vcl", source.File("default.vcl")).
+		WithEnvVariable("BACKEND_FEEDS_PORT", m.FeedsProxy.Port).
+		WithEnvVariable("BACKEND_ASSETS_FQDN", m.AssetsProxy.Fqdn).
+		WithEnvVariable("BACKEND_ASSETS_HOST", "localhost").
+		WithEnvVariable("BACKEND_ASSETS_PORT", m.AssetsProxy.Port).
+		WithEnvVariable("ASSETS_HOST", m.AssetsProxy.Host).
 		WithFile("/usr/local/bin/tls-exterminator", tlsExterminator).
 		WithFile("/usr/local/bin/goreman", goreman).
 		WithNewFile("/Procfile", procfile).
 		WithWorkdir("/").
 		WithEntrypoint([]string{"goreman", "--set-ports=false", "start"})
+}
 
-	return pipely, nil
+func (m *Pipely) withVarnishConfig(c *dagger.Container) *dagger.Container {
+	return c.
+		WithFile("/etc/varnish/default.vcl", m.Source.File("vcl/pipedream.changelog.com.vcl"))
 }
 
 // Test container with various useful tools - use `just` as the starting point
@@ -137,23 +156,25 @@ func (m *Pipely) Test(ctx context.Context) *dagger.Container {
 	// https://github.com/Orange-OpenSource/hurl/releases
 	hurlArchive := dag.HTTP("https://github.com/Orange-OpenSource/hurl/releases/download/6.1.1/hurl-6.1.1-" + altArchitecture + "-unknown-linux-gnu.tar.gz")
 
-	return m.App.
-		WithUser("root").
-		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
-		WithEnvVariable("TERM", "xterm-256color").
-		WithExec([]string{"apt-get", "update"}).
-		WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
-		WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
-		WithExec([]string{"tar", "-zxvf", "/opt/hurl.tar.gz", "-C", "/opt/hurl", "--strip-components=1"}).
-		WithExec([]string{"ln", "-sf", "/opt/hurl/bin/hurl", "/usr/local/bin/hurl"}).
-		WithExec([]string{"apt-get", "install", "--yes", "curl"}).
-		WithExec([]string{"curl", "--version"}).
-		WithExec([]string{"apt-get", "install", "--yes", "libxml2"}).
-		WithExec([]string{"hurl", "--version"}).
-		WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
-		WithFile("/justfile", m.Source.File("container.justfile")).
-		WithExec([]string{"just"}).
-		WithDirectory("/test", m.Source.Directory("test"))
+	return m.withVarnishConfig(
+		m.app().
+			WithUser("root").
+			WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
+			WithEnvVariable("TERM", "xterm-256color").
+			WithExec([]string{"apt-get", "update"}).
+			WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
+			WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
+			WithExec([]string{"tar", "-zxvf", "/opt/hurl.tar.gz", "-C", "/opt/hurl", "--strip-components=1"}).
+			WithExec([]string{"ln", "-sf", "/opt/hurl/bin/hurl", "/usr/local/bin/hurl"}).
+			WithExec([]string{"apt-get", "install", "--yes", "curl"}).
+			WithExec([]string{"curl", "--version"}).
+			WithExec([]string{"apt-get", "install", "--yes", "libxml2"}).
+			WithExec([]string{"hurl", "--version"}).
+			WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
+			WithFile("/justfile", m.Source.File("container.justfile")).
+			WithExec([]string{"just"}).
+			WithDirectory("/test", m.Source.Directory("test")),
+	)
 }
 
 // Test VCL via VTC
@@ -192,6 +213,7 @@ func (m *Pipely) Debug(ctx context.Context) *dagger.Container {
 		WithExec([]string{"go", "install", "github.com/fabio42/sasqwatch@8564c29ceaa03d5211b8b6d7a3012f9acf691fd1"}).
 		File("/go/bin/sasqwatch")
 
+	// github.com/xxxserxxx/gotop
 	gotop := m.Golang.
 		WithExec([]string{"go", "install", "github.com/xxxserxxx/gotop/v4/cmd/gotop@bba42d08624edee8e339ac98c1a9c46810414f78"}).
 		File("/go/bin/gotop")
@@ -236,7 +258,7 @@ func (m *Pipely) Publish(
 
 	registryPassword *dagger.Secret,
 ) (string, error) {
-	return m.App.
+	return m.withVarnishConfig(m.app()).
 		WithLabel("org.opencontainers.image.url", "https://pipely.tech").
 		WithLabel("org.opencontainers.image.description", "A single-purpose, single-tenant CDN running Varnish Cache (open source) on Fly.io").
 		WithLabel("org.opencontainers.image.authors", "@"+registryUsername).
