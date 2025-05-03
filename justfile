@@ -165,6 +165,11 @@ restart:
 status:
   flyctl status --app {{ FLY_APP }}
 
+# Tag a new release
+[group('team')]
+tag tag sha discussion:
+  git tag --force --sign --message="Discussed in <https://github.com/thechangelog/changelog.com/discussions/{{ discussion }}>" {{ tag }} {{ sha }}
+
 # Create .envrc.secrets with credentials from 1Password
 [group('team')]
 envrc-secrets:
