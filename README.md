@@ -20,7 +20,7 @@ You are welcome to fork and build this your own. OSS FTW 💚
 - ✅ Make it easy to develop locally - [PR #7](https://github.com/thechangelog/pipely/pull/7)
 - ✅ Add support for TLS backends, publish & deploy to production - [PR #8](https://github.com/thechangelog/pipely/pull/8)
 - ✅ Add Feeds backend - [PR #10](https://github.com/thechangelog/pipely/pull/10)
-- ☑️ Add Assets backend - [requires disk cache](https://varnish-cache.org/docs/trunk/users-guide/storage-backends.html#file)
+- ✅ Add Assets backend - [PR #11](https://github.com/thechangelog/pipely/pull/11)
 - ☑️ Send logs to Honeycomb.io (same structure as Fastly logs) - [JSON logging](https://info.varnish-software.com/blog/varnish-and-json-logging)
 - ☑️ Send logs to S3 (for stats)
 - ☑️ Add edge redirects from [Fastly service](https://manage.fastly.com/configure/services/7gKbcKSKGDyqU7IuDr43eG)
@@ -42,6 +42,10 @@ A few other commands that you may be interested in:
 just
 Available recipes:
     debug                      # Debug container image interactively
+    how-many-lines             # How many lines of Varnish config?
+    how-many-lines-raw         # How many lines of Varnish config?
+    http-profile url="https://pipedream.changelog.com/" # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
+    shell                      # Open an interactive shell for high-level commands, e.g. `test`, `debug | terminal`, etc.
     test                       # Test everything
     test-acceptance-cdn *ARGS  # Test remote CDN
     test-acceptance-cdn2 *ARGS # Test remote CDN2 (a.k.a. Pipely, a.k.a. Pipedream)
@@ -64,21 +68,6 @@ Available recipes:
 
 # Run the tests
 just test
-
-# There is a script which precedes `just`
-# Yes, we should combine them. Contributions welcome!
-./run
-First argument must be one of the following
-deploy          → deploys to Fly.io
-world-scale     → makes it World Scale™
-small-scale     → makes it Small Scale™
-http-detailed   → shows detailed http response
-http-measure    → measures http response times
-http-profile    → profiles http responses
-demo-2024-01-26 → runs through the first demo
-demo-2024-06-21 → runs through the second demo
-
-💡 All following arguments are passed to the command
 ```
 
 ## How can you help

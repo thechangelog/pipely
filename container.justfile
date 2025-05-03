@@ -41,7 +41,7 @@ test-vtc *ARGS:
 
 # Run acceptance tests
 test-acceptance-local *ARGS:
-    hurl --test --color --report-html /var/opt/hurl/test-acceptance-local --variable host=http://localhost:9000 --variable delay_ms=6000 --variable delay_s=5 {{ ARGS }} test/acceptance/*.hurl test/acceptance/cdn2/*.hurl
+    hurl --test --color --report-html /var/opt/hurl/test-acceptance-local --continue-on-error --variable host=http://localhost:9000 --variable assets_host=cdn2.changelog.com --variable delay_ms=6000 --variable delay_s=5 {{ ARGS }} test/acceptance/*.hurl test/acceptance/cdn2/*.hurl
 
 # Show Varnish cache stats
 cache:
