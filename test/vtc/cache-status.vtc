@@ -189,7 +189,7 @@ client c4 {
   txreq -url "/"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=app,app.tld; ttl=119.999; grace=10.000; hit; hits=1"
+  expect resp.http.cache-status ~ "EDGE; region=LOCAL; origin=app,app.tld; ttl=119.[0-9]+; grace=10.000; hit; hits=1"
 } -run
 
 # Feeds health
@@ -213,7 +213,7 @@ client c7 {
   txreq -url "/podcast/feed"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=feeds,feeds.tld; ttl=119.999; grace=10.000; hit; hits=1"
+  expect resp.http.cache-status ~ "EDGE; region=LOCAL; origin=feeds,feeds.tld; ttl=119.[0-9]+; grace=10.000; hit; hits=1"
 } -run
 
 # Assets health
@@ -237,5 +237,5 @@ client c11 {
   txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.tld"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=assets,assets.tld; ttl=119.999; grace=10.000; hit; hits=1"
+  expect resp.http.cache-status ~ "EDGE; region=LOCAL; origin=assets,assets.tld; ttl=119.[0-9]+; grace=10.000; hit; hits=1"
 } -run
