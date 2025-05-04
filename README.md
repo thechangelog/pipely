@@ -21,8 +21,8 @@ You are welcome to fork and build this your own. OSS FTW 💚
 - ✅ Add support for TLS backends, publish & deploy to production - [PR #8](https://github.com/thechangelog/pipely/pull/8)
 - ✅ Add Feeds backend - [PR #10](https://github.com/thechangelog/pipely/pull/10)
 - ✅ Add Assets backend - [PR #11](https://github.com/thechangelog/pipely/pull/11)
-- ☑️ Send logs to Honeycomb.io (same structure as Fastly logs) - [JSON logging](https://info.varnish-software.com/blog/varnish-and-json-logging)
-- ☑️ Send logs to S3 (for stats)
+- ✅ Send logs to Honeycomb.io - [PR #12](https://github.com/thechangelog/pipely/pull/12)
+- ☑️ Send logs to S3
 - ☑️ Add edge redirects from [Fastly service](https://manage.fastly.com/configure/services/7gKbcKSKGDyqU7IuDr43eG)
 - ☑️ Implement purge across all app instances (Fly.io machines)
 
@@ -87,6 +87,7 @@ See you in our [Zulip Chat](https://changelog.zulipchat.com/) 👋
 
 ## Contributors
 
+- [Gerhard Lazu](https://gerhard.io)
 - [James A Rosen](https://www.jamesarosen.com/now), Staff Software Engineer
 - [Matt Johnson](https://github.com/mttjohnson), Senior Site Reliability Engineer
 - [Nabeel Sulieman](https://github.com/nabsul), Staff Software Engineer
