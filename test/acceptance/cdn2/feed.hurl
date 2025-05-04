@@ -5,9 +5,8 @@ HTTP 200 # expect OK response
 duration < 1000 # ensure that it loads sub 1s when cache is cold...
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
-header "cache-status" contains "EDGE" # served by an edge cache location
-header "cache-status" contains "region=" # region that served this request 
-header "cache-status" contains "origin=" # origin that served this request 
+header "cache-status" contains "region=" # region that served this request
+header "cache-status" contains "origin=" # origin that served this request
 header "cache-status" contains "ttl=" # ttl is set
 header "cache-status" contains "grace=" # grace is set
 

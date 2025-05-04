@@ -81,6 +81,18 @@ sub vcl_init {
 # request has been received and parsed. Its purpose is to decide whether or not
 # to serve the request, how to do it, and, if applicable, which backend to use.
 sub vcl_recv {
+  ### Figure out which is the best public IP to use
+  # Prefer fly-client-ip header
+  if (req.http.fly-client-ip) {
+    std.log("client_ip:" + req.http.fly-client-ip);
+  # If the above is not present, take x-forwarded-for
+  } else if (req.http.x-forwarded-for) {
+    std.log("client_ip:" + regsub(req.http.x-forwarded-for, "^([^,]+).*", "\1"));
+  # If neither are present, use the default
+  } else {
+    std.log("client_ip:" + client.ip);
+  }
+
   ### Varnish health-check
   # This is essential for ensuring that traffic does not get routed to unhealthy Varnish instances
   if (req.url == "/health") {
@@ -252,18 +264,26 @@ sub vcl_synth {
     return(deliver);
 	}
 
-    # practical.ai redirects
-    if (req.url == "/practicalai/feed"
-        && resp.status == 301) {
-      set resp.http.location = "https://feeds.transistor.fm/practical-ai-machine-learning-data-science-llm";
-      return(deliver);
-    }
+  # practical.ai redirects
+  if (req.url == "/practicalai/feed"
+      && resp.status == 301) {
+    set resp.http.location = "https://feeds.transistor.fm/practical-ai-machine-learning-data-science-llm";
+    return(deliver);
+  }
 
-    if (req.url == "/practicalai"
-        && resp.status == 301) {
-      set resp.http.location = "https://practicalai.fm";
-      return(deliver);
-    }
+  if (req.url == "/practicalai"
+      && resp.status == 301) {
+    set resp.http.location = "https://practicalai.fm";
+    return(deliver);
+  }
+
+  # Which region is serving this request?
+  var.set("region", std.getenv("FLY_REGION"));
+  if (var.get("region") == "") {
+    var.set("region", "LOCAL");
+  }
+  set resp.http.cache-status = "region=" + var.get("region") + "; synth";
+  std.log("server_datacenter:" + var.get("region"));
 }
 
 # https://varnish-cache.org/docs/7.7/users-guide/vcl-grace.html
@@ -305,17 +325,17 @@ sub vcl_deliver {
     set resp.http.access-control-allow-origin = "*";
   }
 
-  set resp.http.cache-status = "EDGE";
-
   # Which region is serving this request?
   var.set("region", std.getenv("FLY_REGION"));
   if (var.get("region") == "") {
     var.set("region", "LOCAL");
   }
-  set resp.http.cache-status = resp.http.cache-status + "; region=" + var.get("region");
+  set resp.http.cache-status = "region=" + var.get("region");
+  std.log("server_datacenter:" + var.get("region"));
 
   # Which origin is serving this request?
   set resp.http.cache-status = resp.http.cache-status + "; origin=" + req.backend_hint + "," + req.http.x-backend-fqdn;
+  std.log("backend:" + req.http.x-backend-fqdn);
 
   if (req.http.x-bypass == "true") {
     set resp.http.cache-status = resp.http.cache-status + "; bypass";
@@ -324,8 +344,11 @@ sub vcl_deliver {
 
   # What is the remaining TTL for this object?
   set resp.http.cache-status = resp.http.cache-status + "; ttl=" + obj.ttl;
+  std.log("ttl:" + obj.ttl);
+
   # What is the max object staleness permitted?
   set resp.http.cache-status = resp.http.cache-status + "; grace=" + obj.grace;
+  std.log("grace:" + obj.grace);
 
   # Did the response come from Varnish or from the backend?
   if (obj.hits > 0) {
@@ -341,6 +364,7 @@ sub vcl_deliver {
 
   # How many times has this response been served from Varnish?
   set resp.http.cache-status = resp.http.cache-status + "; hits=" + obj.hits;
+  std.log("hits:" + obj.hits);
 }
 
 # LINKS:

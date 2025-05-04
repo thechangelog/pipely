@@ -1,0 +1,14 @@
+# https://github.com/dagger/dagger/releases
+
+[private]
+DAGGER_VERSION := "0.18.9"
+[private]
+DAGGER_DIR := BIN_PATH / "dagger-" + DAGGER_VERSION
+[private]
+DAGGER := DAGGER_DIR / "dagger"
+
+[private]
+dagger *ARGS:
+  @[ -x {{ DAGGER }} ] \
+  || (curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR={{ DAGGER_DIR }} DAGGER_VERSION={{ DAGGER_VERSION }} sh)
+  {{ if ARGS != "" { DAGGER + " " + ARGS } else { DAGGER + " --help" } }}
