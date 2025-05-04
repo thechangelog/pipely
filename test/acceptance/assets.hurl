@@ -2,6 +2,7 @@ GET {{host}}/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2
 Host: {{assets_host}}
 HTTP 200 # expect OK response
 Content-Type: image/png # expect PNG
+Access-Control-Allow-Origin: * # CORS
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
@@ -11,6 +12,7 @@ HEAD {{host}}/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e
 Host: {{assets_host}}
 HTTP 200 # expect OK response
 Content-Type: image/png # expect PNG
+Access-Control-Allow-Origin: * # CORS
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
@@ -24,6 +26,7 @@ GET {{host}}/static/css/email-5690e09e20c0b25fefebbc5049362b39.css
 Host: {{assets_host}}
 HTTP 200 # expect OK response
 Content-Type: text/css # expect CSS
+Access-Control-Allow-Origin: * # CORS
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
@@ -33,6 +36,7 @@ GET {{host}}/uploads/news/140/changelog-news-140.mp3
 Host: {{assets_host}}
 HTTP 200 # expect OK response
 Content-Type: audio/mpeg # expect MP3
+Access-Control-Allow-Origin: * # CORS
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish

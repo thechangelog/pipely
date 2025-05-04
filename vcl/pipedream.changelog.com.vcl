@@ -300,6 +300,11 @@ sub vcl_backend_response {
 # https://gist.github.com/leotsem/1246511/824cb9027a0a65d717c83e678850021dad84688d#file-default-vcl-pl
 # https://varnish-cache.org/docs/7.7/reference/vcl-var.html#obj
 sub vcl_deliver {
+  # Add CORS * header for all assets responses
+  if (req.http.x-backend == "assets") {
+    set resp.http.access-control-allow-origin = "*";
+  }
+
   set resp.http.cache-status = "EDGE";
 
   # Which region is serving this request?

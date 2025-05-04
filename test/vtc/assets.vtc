@@ -56,12 +56,11 @@ varnish v1 -vcl {
   }
 
   sub vcl_hash {
-	if (req.http.x-backend == "assets") {
-		set req.backend_hint = assets;
-	} else {
-		set req.backend_hint = app;
-	}
-	unset req.http.x-backend;
+    if (req.http.x-backend == "assets") {
+      set req.backend_hint = assets;
+    } else {
+      set req.backend_hint = app;
+    }
   }
 
   sub vcl_synth {
@@ -69,6 +68,12 @@ varnish v1 -vcl {
         && resp.status == 405) {
       set resp.http.allow = "GET, HEAD";
       return(deliver);
+    }
+  }
+
+  sub vcl_deliver {
+    if (req.http.x-backend == "assets") {
+      set resp.http.access-control-allow-origin = "*";
     }
   }
 
@@ -100,6 +105,7 @@ client c3 {
   txreq -method "HEAD" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: cdn.tld"
   rxresp
   expect resp.status == 200
+  expect resp.http.access-control-allow-origin == "*"
 } -run
 
 # /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png should go to assets backend
@@ -108,6 +114,7 @@ client c4 {
   rxresp
   expect resp.status == 200
   expect resp.body == "podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  expect resp.http.access-control-allow-origin == "*"
 } -run
 
 # /static/css/email-5690e09e20c0b25fefebbc5049362b39.css should go to assets backend
@@ -116,6 +123,7 @@ client c5 {
   rxresp
   expect resp.status == 200
   expect resp.body == "email-5690e09e20c0b25fefebbc5049362b39.css"
+  expect resp.http.access-control-allow-origin == "*"
 } -run
 
 # /uploads/news/140/changelog-news-140.mp3 should go to assets backend
@@ -124,4 +132,5 @@ client c6 {
   rxresp
   expect resp.status == 200
   expect resp.body == "changelog-news-140.mp3"
+  expect resp.http.access-control-allow-origin == "*"
 } -run
