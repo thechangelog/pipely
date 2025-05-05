@@ -58,19 +58,22 @@ bench-app: (bench "http://localhost:9000/" "2" "200000")
 bench-app-tls-proxy: (bench "http://localhost:5000/")
 
 # Benchmark app origin
-bench-app-origin: (bench "https://changelog-2024-01-12.fly.dev/")
+bench-app-origin: (bench "https://changelog-2025-05-05.fly.dev/")
 
-# Benchmark feeds via local Varnish
-bench-feeds: (bench "http://localhost:9000/feed" "2" "200000")
+# Benchmark feed via local Varnish
+bench-feed: (bench "http://localhost:9000/podcast/feed" "2" "500000")
 
 # Benchmark feeds TLS proxy
-bench-feeds-tls-proxy: (bench "http://localhost:5010/feed.xml")
+bench-feed-tls-proxy: (bench "http://localhost:5010/podcast.xml")
 
 # Benchmark feeds origin
-bench-feeds-origin: (bench "https://feeds.changelog.place/feed.xml")
+bench-feed-origin: (bench "https://feeds.changelog.place/podcast.xml")
 
-# Benchmark cdn
-bench-cdn: (bench "https://changelog.com/" "2" "100000")
+# Benchmark cdn (Fastly)
+bench-cdn: (bench "https://changelog.com/podcast/feed" "2" "5000")
 
-# Benchmark cdn2
-bench-cdn2: (bench "https://cdn2.changelog.com/" "2" "100000")
+# Benchmark Bunny CDN
+bench-bunny: (bench "https://bunny.changelog.com/podcast/feed" "2" "5000")
+
+# Benchmark cdn2 (Pipely)
+bench-cdn2: (bench "https://pipedream.changelog.com/podcast/feed" "2" "5000")
