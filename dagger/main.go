@@ -58,7 +58,7 @@ func New(
 	// +default="24h"
 	berespGrace string,
 
-	// +default="5000:changelog-2024-01-12.fly.dev:"
+	// +default="5000:changelog-2025-05-05.fly.dev:"
 	appProxy string,
 
 	// +default="5010:feeds.changelog.place:"

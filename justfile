@@ -114,7 +114,7 @@ DAGGER_FLY_MODULE := "github.com/gerhard/daggerverse/flyio@flyio/v0.2.0"
 
 # Deploy container image
 [group('team')]
-deploy tag=_DEFAULT_TAG:
+deploy tag=_DEFAULT_TAG: publish
   @just dagger --mod={{ DAGGER_FLY_MODULE }} call \
     --token=op://pipely/fly/credential \
     --org={{ FLY_ORG }} \
