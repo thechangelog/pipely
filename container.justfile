@@ -48,32 +48,32 @@ cache:
     varnishncsa -c -f '%m %u %h %{x-cache}o %{x-cache-hits}o'
 
 # Benchmark $url as http version $http with $reqs across $conns
-bench url="http://localhost:9000/" http="1.1" reqs="1000" conns="50":
+bench url="http://localhost:9000/" http="2" reqs="1000" conns="50":
     time oha -n {{ reqs }} -c {{ conns }} {{ url }} --http-version={{ http }}
 
 # Benchmark app via local Varnish
 bench-app: (bench "http://localhost:9000/" "2" "200000")
 
 # Benchmark app TLS proxy
-bench-app-tls-proxy: (bench "http://localhost:5000/")
+bench-app-tls-proxy: (bench "http://localhost:5000/" "1.1")
 
 # Benchmark app origin
 bench-app-origin: (bench "https://changelog-2025-05-05.fly.dev/")
 
 # Benchmark feed via local Varnish
-bench-feed: (bench "http://localhost:9000/podcast/feed" "2" "500000")
+bench-feed: (bench "http://localhost:9000/podcast/feed" "2" "100000" "50")
 
 # Benchmark feeds TLS proxy
-bench-feed-tls-proxy: (bench "http://localhost:5010/podcast.xml")
+bench-feed-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")
 
 # Benchmark feeds origin
 bench-feed-origin: (bench "https://feeds.changelog.place/podcast.xml")
 
 # Benchmark cdn (Fastly)
-bench-cdn: (bench "https://changelog.com/podcast/feed" "2" "5000")
+bench-cdn: (bench "https://changelog.com/podcast/feed")
 
 # Benchmark Bunny CDN
-bench-bunny: (bench "https://bunny.changelog.com/podcast/feed" "2" "5000")
+bench-bunny: (bench "https://bunny.changelog.com/podcast/feed")
 
 # Benchmark cdn2 (Pipely)
-bench-cdn2: (bench "https://pipedream.changelog.com/podcast/feed" "2" "5000")
+bench-cdn2: (bench "https://pipedream.changelog.com/podcast/feed")
