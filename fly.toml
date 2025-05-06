@@ -8,11 +8,11 @@ kill_timeout = 30
 
 [env]
 # We are leaving some room for "sidecar" processes (log drains, purge worker, etc.)
-VARNISH_SIZE = "800M"
+VARNISH_SIZE = "1600M"
 
 [[vm]]
-size = "shared-cpu-1x"
-memory = "1GB"
+size = "shared-cpu-2x"
+memory = "2GB"
 
 [deploy]
 strategy = "bluegreen"
