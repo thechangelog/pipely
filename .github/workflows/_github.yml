@@ -44,14 +44,6 @@ jobs:
           path: |
             tmp/test-acceptance-*
 
-      - name: "Publish..."
-        if: ${{ github.ref_name == 'main' && github.event_name == 'push' }}
-        run: |
-          just publish ${{ github.ref_name }}
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
-
       - name: "Publish & deploy tag..."
         if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' }}
         run: |
