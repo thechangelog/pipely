@@ -11,7 +11,7 @@ You are welcome to fork and build this your own.
 
 > 🧢 Jerod Santo - March 29, 2024 - <a href="https://changelog.com/friends/38#transcript-208" target="_blank">Changelog & Friends #38</a>
 
-## How is it going (a.k.a. Roadmap)
+## How is it going - a.k.a. The Roadmap to `v1.0`
 
 - ✅ Static backend, 1 day stale, stale on error, `x`-headers - [Initial commit](https://github.com/thechangelog/pipely/commit/17d3899a52d9dc887efd7f49de92b24249431234)
 - ✅ Dynamic backend, `cache-status` header - [PR #1](https://github.com/thechangelog/pipely/pull/1)
@@ -21,11 +21,20 @@ You are welcome to fork and build this your own.
 - ✅ Add Feeds backend - [PR #10](https://github.com/thechangelog/pipely/pull/10)
 - ✅ Add Assets backend - [PR #11](https://github.com/thechangelog/pipely/pull/11)
 - ✅ Send Varnish logs to Honeycomb.io - [PR #12](https://github.com/thechangelog/pipely/pull/12)
-- ✅ Enrich Varnish logs with GeoIP data- [PR #13](https://github.com/thechangelog/pipely/pull/13)
-- ☑️ Ensure that processes which crash are automatically restarted
+- ✅ Enrich Varnish logs with GeoIP data - [PR #13](https://github.com/thechangelog/pipely/pull/13)
+- ✅ Supervisor restarts crashed processes - [PR #14](https://github.com/thechangelog/pipely/pull/14)
+- ☑️ Require auth for `PURGE` requests
 - ☑️ Send logs to S3
 - ☑️ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl)
-- ☑️ Implement purge across all app instances (Fly.io machines)
+- ☑️ All contributors review & clean-up
+- ☑️ Tag & ship `v1.0-rc.1`
+- ☑️ Route 10% of production traffic through `v1.0-rc.1`
+- ☑️ Tag & ship `v1.0-rc.2` (component updates, etc.)
+- ☑️ Route 33% of production traffic through `v1.0-rc.2` (observe cold cache behaviour, etc.)
+- ☑️ Tag & ship `v1.0-rc.3` (component updates, etc.)
+- ☑️ Route 80% of production traffic through `v1.0-rc.3` (last chance to kick the tyres before `1.0`)
+- ☑️ Tag & ship `v1.0`
+- ☑️ Route 100% of production traffic through `v1.0`
 
 ## Local development and testing
 

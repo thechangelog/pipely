@@ -13,7 +13,7 @@ fmt:
 
 # Start all processes
 up:
-    goreman --set-ports=false start
+    overmind start --timeout=30 --no-port --auto-restart=all
 
 # Check $url
 check url="http://localhost:9000":

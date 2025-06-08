@@ -12,11 +12,11 @@ const (
 	// https://hub.docker.com/_/golang/tags?name=1.24
 	golangVersion = "1.24.4@sha256:db5d0afbfb4ab648af2393b92e87eaae9ad5e01132803d80caef91b5752d289c"
 
-	// https://github.com/mattn/goreman/releases
-	goremanVersion = "0.3.16"
-
 	// https://github.com/nabsul/tls-exterminator
 	tlsExterminatorVersion = "4226223f2380319e73300bc7d14fd652c56c6b4e"
+
+	// https://github.com/DarthSim/overmind/releases
+	overmindVersion = "2.5.1"
 
 	// https://hub.docker.com/r/timberio/vector/tags?name=debian
 	vectorVersion = "0.47.0-debian@sha256:a7c96178b5dd0800bb6a4a58559b61bca919a43979cd4c3ef12399175eea5ac7"
@@ -152,9 +152,9 @@ func (m *Pipely) app() *dagger.Container {
 		WithExec([]string{"go", "install", "github.com/nabsul/tls-exterminator@" + tlsExterminatorVersion}).
 		File("/go/bin/tls-exterminator")
 
-	goreman := m.Golang.
-		WithExec([]string{"go", "install", "github.com/mattn/goreman@v" + goremanVersion}).
-		File("/go/bin/goreman")
+	overmind := m.Golang.
+		WithExec([]string{"go", "install", "github.com/DarthSim/overmind/v2@v" + overmindVersion}).
+		File("/go/bin/overmind")
 
 	vectorContainer := dag.Container().From("timberio/vector:" + vectorVersion)
 
@@ -162,7 +162,7 @@ func (m *Pipely) app() *dagger.Container {
 app: tls-exterminator %s
 feeds: tls-exterminator %s
 assets: tls-exterminator %s
-logs: varnish-json-response | vector
+logs: bash -c 'coproc VARNISH_JSON_RESPONSE { varnish-json-response; }; vector <&${VARNISH_JSON_RESPONSE[0]}; kill ${VARNISH_JSON_RESPONSE_PID}'
 `, m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
 
 	return m.Varnish.
@@ -179,7 +179,12 @@ logs: varnish-json-response | vector
 				WithEnvVariable("ASSETS_HOST", m.AssetsProxy.Host)
 		}).
 		WithFile("/usr/local/bin/tls-exterminator", tlsExterminator).
-		WithFile("/usr/local/bin/goreman", goreman).
+		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
+		WithEnvVariable("TERM", "xterm-256color").
+		WithExec([]string{"apt-get", "update"}).
+		WithExec([]string{"apt-get", "install", "--yes", "tmux"}).
+		WithExec([]string{"tmux", "-V"}).
+		WithFile("/usr/local/bin/overmind", overmind).
 		With(func(c *dagger.Container) *dagger.Container {
 			return c.WithFile("/usr/bin/vector", vectorContainer.File("/usr/bin/vector")).
 				WithDirectory("/usr/share/vector", vectorContainer.Directory("/usr/share/vector")).
@@ -190,7 +195,7 @@ logs: varnish-json-response | vector
 		}).
 		WithNewFile("/Procfile", procfile).
 		WithWorkdir("/").
-		WithEntrypoint([]string{"goreman", "--set-ports=false", "start"})
+		WithEntrypoint([]string{"overmind", "start", "--timeout=30", "--no-port", "--auto-restart=all"})
 }
 
 func (m *Pipely) withConfigs(c *dagger.Container, env Env) *dagger.Container {
@@ -230,8 +235,8 @@ func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Containe
 	if env != Prod {
 		containerWithVectorConfigs = containerWithVectorConfigs.
 			WithFile(
-				"/etc/vector/debug.yaml",
-				m.Source.File("vector/pipedream.changelog.com/debug.yaml"))
+				"/etc/vector/debug_varnish.yaml",
+				m.Source.File("vector/pipedream.changelog.com/debug_varnish.yaml"))
 	}
 
 	geoipEnriched, _ := c.EnvVariable(ctx, "GEOIP_ENRICHED")
@@ -240,6 +245,13 @@ func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Containe
 			WithFile(
 				"/etc/vector/geoip.yaml",
 				m.Source.File("vector/pipedream.changelog.com/geoip.yaml"))
+	}
+
+	if geoipEnriched == "true" && env != Prod {
+		containerWithVectorConfigs = containerWithVectorConfigs.
+			WithFile(
+				"/etc/vector/debug_varnish_geoip.yaml",
+				m.Source.File("vector/pipedream.changelog.com/debug_varnish_geoip.yaml"))
 	}
 
 	return containerWithVectorConfigs.
@@ -265,9 +277,6 @@ func (m *Pipely) local(ctx context.Context) *dagger.Container {
 	hurlArchive := dag.HTTP("https://github.com/Orange-OpenSource/hurl/releases/download/" + hurlVersion + "/hurl-" + hurlVersion + "-" + altArchitecture(ctx) + "-unknown-linux-gnu.tar.gz")
 
 	return m.app().
-		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
-		WithEnvVariable("TERM", "xterm-256color").
-		WithExec([]string{"apt-get", "update"}).
 		With(func(c *dagger.Container) *dagger.Container {
 			return c.WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
 				WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
@@ -345,8 +354,6 @@ func (m *Pipely) Debug(ctx context.Context) *dagger.Container {
 	oha := dag.HTTP("https://github.com/hatoo/oha/releases/download/v" + ohaVersion + "/oha-linux-" + platform.Architecture)
 
 	return m.Dev(ctx).
-		WithExec([]string{"apt-get", "install", "--yes", "tmux"}).
-		WithExec([]string{"tmux", "-V"}).
 		WithExec([]string{"apt-get", "install", "--yes", "htop"}).
 		WithExec([]string{"htop", "-V"}).
 		WithExec([]string{"apt-get", "install", "--yes", "procps"}).
