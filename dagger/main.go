@@ -28,6 +28,14 @@ const (
 	ohaVersion = "1.8.0"
 )
 
+type Env int
+
+const (
+	Dev Env = iota
+	Test
+	Prod
+)
+
 type Pipely struct {
 	// Golang container
 	Golang *dagger.Container
@@ -75,6 +83,17 @@ func New(
 
 	// +default="5020:changelog.place:cdn2.changelog.com"
 	assetsProxy string,
+
+	// https://ui.honeycomb.io/changelog/datasets/pipely/overview
+	// +default="pipely"
+	honeycombDataset string,
+
+	// +optional
+	honeycombApiKey *dagger.Secret,
+
+	// https://dev.maxmind.com/geoip/updating-databases/#directly-downloading-databases
+	// +optional
+	maxMindAuth *dagger.Secret,
 ) (*Pipely, error) {
 	pipely := &Pipely{
 		Golang: dag.Container().From("golang:" + golangVersion),
@@ -83,10 +102,29 @@ func New(
 	}
 
 	pipely.Varnish = dag.Container().From("varnish:"+varnishVersion).
+		WithUser("root"). // a bunch of commands fail if we are not root, so YOLO & sandbox with Firecracker, Kata, etc.
 		WithEnvVariable("VARNISH_HTTP_PORT", fmt.Sprintf("%d", varnishPort)).
 		WithExposedPort(varnishPort).
 		WithEnvVariable("BERESP_TTL", berespTtl).
-		WithEnvVariable("BERESP_GRACE", berespGrace)
+		WithEnvVariable("BERESP_GRACE", berespGrace).
+		WithEnvVariable("HONEYCOMB_DATASET", honeycombDataset)
+
+	if honeycombApiKey != nil {
+		pipely.Varnish = pipely.Varnish.
+			WithSecretVariable("HONEYCOMB_API_KEY", honeycombApiKey)
+	}
+
+	if maxMindAuth != nil {
+		geoLite2CityArchive := dag.HTTP("https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz", dagger.HTTPOpts{
+			AuthHeader: maxMindAuth,
+		})
+		pipely.Varnish = pipely.Varnish.
+			WithExec([]string{"mkdir", "-p", "/usr/local/share/GeoIP"}).
+			WithMountedFile("/tmp/geolite2-city.tar.gz", geoLite2CityArchive).
+			WithExec([]string{"tar", "-zxvf", "/tmp/geolite2-city.tar.gz", "-C", "/usr/local/share/GeoIP", "--strip-components=1"}).
+			WithExec([]string{"ls", "/usr/local/share/GeoIP/GeoLite2-City.mmdb"}).
+			WithEnvVariable("GEOIP_ENRICHED", "true")
+	}
 
 	app, err := NewProxy(appProxy)
 	if err != nil {
@@ -128,7 +166,6 @@ logs: varnish-json-response | vector
 `, m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
 
 	return m.Varnish.
-		WithUser("root").
 		With(func(c *dagger.Container) *dagger.Container {
 			return c.WithEnvVariable("BACKEND_APP_FQDN", m.AppProxy.Fqdn).
 				WithEnvVariable("BACKEND_APP_HOST", "localhost").
@@ -156,10 +193,12 @@ logs: varnish-json-response | vector
 		WithEntrypoint([]string{"goreman", "--set-ports=false", "start"})
 }
 
-func (m *Pipely) withConfigs(c *dagger.Container) *dagger.Container {
+func (m *Pipely) withConfigs(c *dagger.Container, env Env) *dagger.Container {
 	return m.withVectorConfig(
 		m.withVarnishJsonResponse(
-			m.withVarnishConfig(c)))
+			m.withVarnishConfig(c),
+		),
+		env)
 }
 
 func (m *Pipely) withVarnishConfig(c *dagger.Container) *dagger.Container {
@@ -179,40 +218,71 @@ func (m *Pipely) withVarnishJsonResponse(c *dagger.Container) *dagger.Container 
 			})
 }
 
-func (m *Pipely) withVectorConfig(c *dagger.Container) *dagger.Container {
-	return c.
+func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Container {
+	ctx := context.Background()
+
+	containerWithVectorConfigs := c.
+		WithEnvVariable("VECTOR_CONFIG", "/etc/vector/*.yaml").
 		WithFile(
 			"/etc/vector/vector.yaml",
-			m.Source.File("vector/pipedream.changelog.com.yaml")).
+			m.Source.File("vector/pipedream.changelog.com/default.yaml"))
+
+	if env != Prod {
+		containerWithVectorConfigs = containerWithVectorConfigs.
+			WithFile(
+				"/etc/vector/debug.yaml",
+				m.Source.File("vector/pipedream.changelog.com/debug.yaml"))
+	}
+
+	geoipEnriched, _ := c.EnvVariable(ctx, "GEOIP_ENRICHED")
+	if geoipEnriched == "true" {
+		containerWithVectorConfigs = containerWithVectorConfigs.
+			WithFile(
+				"/etc/vector/geoip.yaml",
+				m.Source.File("vector/pipedream.changelog.com/geoip.yaml"))
+	}
+
+	return containerWithVectorConfigs.
 		WithExec([]string{"vector", "validate", "--skip-healthchecks"})
 }
 
 // Test container with various useful tools - use `just` as the starting point
 func (m *Pipely) Test(ctx context.Context) *dagger.Container {
+	return m.withConfigs(
+		m.local(ctx).
+			WithDirectory("/test", m.Source.Directory("test")),
+		Test)
+}
+
+// Dev container with various useful tools - use `just` as the starting point
+func (m *Pipely) Dev(ctx context.Context) *dagger.Container {
+	return m.withConfigs(
+		m.local(ctx),
+		Dev)
+}
+
+func (m *Pipely) local(ctx context.Context) *dagger.Container {
 	hurlArchive := dag.HTTP("https://github.com/Orange-OpenSource/hurl/releases/download/" + hurlVersion + "/hurl-" + hurlVersion + "-" + altArchitecture(ctx) + "-unknown-linux-gnu.tar.gz")
 
-	return m.withConfigs(
-		m.app().
-			WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
-			WithEnvVariable("TERM", "xterm-256color").
-			WithExec([]string{"apt-get", "update"}).
-			With(func(c *dagger.Container) *dagger.Container {
-				return c.WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
-					WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
-					WithExec([]string{"tar", "-zxvf", "/opt/hurl.tar.gz", "-C", "/opt/hurl", "--strip-components=1"}).
-					WithExec([]string{"ln", "-sf", "/opt/hurl/bin/hurl", "/usr/local/bin/hurl"}).
-					WithExec([]string{"apt-get", "install", "--yes", "curl"}).
-					WithExec([]string{"curl", "--version"}).
-					WithExec([]string{"apt-get", "install", "--yes", "libxml2"}).
-					WithExec([]string{"hurl", "--version"})
-			}).
-			With(func(c *dagger.Container) *dagger.Container {
-				return c.WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
-					WithFile("/justfile", m.Source.File("container.justfile")).
-					WithExec([]string{"just"})
-			}).
-			WithDirectory("/test", m.Source.Directory("test")),
-	)
+	return m.app().
+		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
+		WithEnvVariable("TERM", "xterm-256color").
+		WithExec([]string{"apt-get", "update"}).
+		With(func(c *dagger.Container) *dagger.Container {
+			return c.WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
+				WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
+				WithExec([]string{"tar", "-zxvf", "/opt/hurl.tar.gz", "-C", "/opt/hurl", "--strip-components=1"}).
+				WithExec([]string{"ln", "-sf", "/opt/hurl/bin/hurl", "/usr/local/bin/hurl"}).
+				WithExec([]string{"apt-get", "install", "--yes", "curl"}).
+				WithExec([]string{"curl", "--version"}).
+				WithExec([]string{"apt-get", "install", "--yes", "libxml2"}).
+				WithExec([]string{"hurl", "--version"})
+		}).
+		With(func(c *dagger.Container) *dagger.Container {
+			return c.WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
+				WithFile("/justfile", m.Source.File("container.justfile")).
+				WithExec([]string{"just"})
+		})
 }
 
 func altArchitecture(ctx context.Context) string {
@@ -274,7 +344,7 @@ func (m *Pipely) Debug(ctx context.Context) *dagger.Container {
 	platform := platforms.MustParse(string(p))
 	oha := dag.HTTP("https://github.com/hatoo/oha/releases/download/v" + ohaVersion + "/oha-linux-" + platform.Architecture)
 
-	return m.Test(ctx).
+	return m.Dev(ctx).
 		WithExec([]string{"apt-get", "install", "--yes", "tmux"}).
 		WithExec([]string{"tmux", "-V"}).
 		WithExec([]string{"apt-get", "install", "--yes", "htop"}).
@@ -311,7 +381,7 @@ func (m *Pipely) Publish(
 
 	registryPassword *dagger.Secret,
 ) (string, error) {
-	return m.withConfigs(m.app()).
+	return m.withConfigs(m.app(), Prod).
 		WithLabel("org.opencontainers.image.url", "https://pipely.tech").
 		WithLabel("org.opencontainers.image.description", "A single-purpose, single-tenant CDN running Varnish Cache (open source) on Fly.io").
 		WithLabel("org.opencontainers.image.authors", "@"+registryUsername).

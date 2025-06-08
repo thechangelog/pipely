@@ -36,8 +36,9 @@ test-reports:
 test-reports-rm:
     rm -fr tmp/*
 
-# Debug container image interactively
-debug: (dagger 'call --beresp-ttl=5s debug terminal --cmd=bash')
+# Debug container image interactively - assumes envrc-secrets was already run
+[group('team')]
+debug: (dagger 'call --beresp-ttl=5s --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential --max-mind-auth=op://pipely/maxmind/credential debug terminal --cmd=bash')
 
 # Open an interactive shell for high-level commands, e.g. `test`, `debug | terminal`, etc.
 shell:
@@ -59,10 +60,10 @@ how-many-lines:
 how-many-lines-raw:
     rg -cv '^.*#|^\$' varnish/*.vcl
 
-# Publish container image
+# Publish container image - assumes envrc-secrets was already run
 [group('team')]
 publish tag=_DEFAULT_TAG:
-    @just dagger call --tag={{ tag }} \
+    @just dagger call --tag={{ tag }} --max-mind-auth=op://pipely/maxmind/credential \
         publish --registry-username=$USER --registry-password=op://pipely/ghcr/credential --image={{ FLY_APP_IMAGE }}
 
 # Deploy container image
@@ -78,7 +79,7 @@ deploy tag=_DEFAULT_TAG: publish
 scale:
     flyctl scale count $(echo {{ FLY_APP_REGIONS }}, | grep -o ',' | wc -l) --max-per-region 1 --region {{ FLY_APP_REGIONS }} --app {{ FLY_APP }}
 
-# Set app secrets
+# Set app secrets - assumes envrc-secrets was already run
 [group('team')]
 secrets:
   flyctl secrets set --stage HONEYCOMB_API_KEY=$(op read op://pipely/honeycomb/credential --account changelog.1password.com --cache)

@@ -1,0 +1,14 @@
+# https://vector.dev/docs/reference/configuration/global-options/
+api:
+  enabled: true
+
+timezone: "UTC"
+
+data_dir: "/var/lib/vector"
+
+sources:
+  varnish:
+    # https://vector.dev/docs/reference/configuration/sources/stdin/
+    type: "stdin"
+    decoding:
+      codec: "json"
