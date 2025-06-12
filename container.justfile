@@ -61,7 +61,7 @@ bench-app-tls-proxy: (bench "http://localhost:5000/" "1.1")
 bench-app-origin: (bench "https://changelog-2025-05-05.fly.dev/")
 
 # Benchmark feed via local Varnish
-bench-feed: (bench "http://localhost:9000/podcast/feed" "2" "100000" "50")
+bench-feed: (bench "http://localhost:9000/podcast/feed" "2" "200000" "50")
 
 # Benchmark feeds TLS proxy
 bench-feed-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")

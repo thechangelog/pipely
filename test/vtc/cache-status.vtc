@@ -91,6 +91,15 @@ varnish v1 -vcl {
     }
   }
 
+  sub vcl_synth {
+    # Which region is serving this request?
+    var.set("region", std.getenv("FLY_REGION"));
+    if (var.get("region") == "") {
+      var.set("region", "LOCAL");
+    }
+    set resp.http.cache-status = "region=" + var.get("region") + "; synth";
+  }
+
   sub vcl_hash {
     if (req.http.x-backend == "assets") {
       set req.backend_hint = assets;
@@ -120,14 +129,12 @@ varnish v1 -vcl {
   }
 
   sub vcl_deliver {
-    set resp.http.cache-status = "EDGE";
-
     # Which region is serving this request?
     var.set("region", std.getenv("FLY_REGION"));
     if (var.get("region") == "") {
       var.set("region", "LOCAL");
     }
-    set resp.http.cache-status = resp.http.cache-status + "; region=" + var.get("region");
+    set resp.http.cache-status = "region=" + var.get("region");
 
     # Which origin is serving this request?
     set resp.http.cache-status = resp.http.cache-status + "; origin=" + req.backend_hint + "," + req.http.x-backend-fqdn;
@@ -165,7 +172,7 @@ client c1 {
   txreq -url "/varnish_health"
   rxresp
   expect resp.status == 204
-  expect resp.http.cache-status -eq <undef>
+  expect resp.http.cache-status == "region=LOCAL; synth"
 } -run
 
 # App health
@@ -173,7 +180,7 @@ client c2 {
   txreq -url "/app_health"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=app,app.tld; bypass"
+  expect resp.http.cache-status == "region=LOCAL; origin=app,app.tld; bypass"
 } -run
 
 # App homepage uncached
@@ -181,7 +188,7 @@ client c3 {
   txreq -url "/"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=app,app.tld; ttl=120.000; grace=10.000; miss; hits=0"
+  expect resp.http.cache-status == "region=LOCAL; origin=app,app.tld; ttl=120.000; grace=10.000; miss; hits=0"
 } -run
 
 # App homepage cached
@@ -189,7 +196,7 @@ client c4 {
   txreq -url "/"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "EDGE; region=LOCAL; origin=app,app.tld; ttl=1.+; grace=10.000; hit; hits=1"
+  expect resp.http.cache-status ~ "region=LOCAL; origin=app,app.tld; ttl=1.+; grace=10.000; hit; hits=1"
 } -run
 
 # Feeds health
@@ -197,7 +204,7 @@ client c5 {
   txreq -url "/feeds_health"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=feeds,feeds.tld; bypass"
+  expect resp.http.cache-status == "region=LOCAL; origin=feeds,feeds.tld; bypass"
 } -run
 
 # Feeds uncached
@@ -205,7 +212,7 @@ client c6 {
   txreq -url "/podcast/feed"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=feeds,feeds.tld; ttl=120.000; grace=10.000; miss; hits=0"
+  expect resp.http.cache-status == "region=LOCAL; origin=feeds,feeds.tld; ttl=120.000; grace=10.000; miss; hits=0"
 } -run
 
 # Feeds cached
@@ -213,7 +220,7 @@ client c7 {
   txreq -url "/podcast/feed"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "EDGE; region=LOCAL; origin=feeds,feeds.tld; ttl=1.+; grace=10.000; hit; hits=1"
+  expect resp.http.cache-status ~ "region=LOCAL; origin=feeds,feeds.tld; ttl=1.+; grace=10.000; hit; hits=1"
 } -run
 
 # Assets health
@@ -221,7 +228,7 @@ client c9 {
   txreq -url "/assets_health"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=assets,assets.tld; bypass"
+  expect resp.http.cache-status == "region=LOCAL; origin=assets,assets.tld; bypass"
 } -run
 
 # Assets uncached
@@ -229,7 +236,7 @@ client c10 {
   txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.tld"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status == "EDGE; region=LOCAL; origin=assets,assets.tld; ttl=120.000; grace=10.000; miss; hits=0"
+  expect resp.http.cache-status == "region=LOCAL; origin=assets,assets.tld; ttl=120.000; grace=10.000; miss; hits=0"
 } -run
 
 # Assets cached
@@ -237,5 +244,5 @@ client c11 {
   txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.tld"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "EDGE; region=LOCAL; origin=assets,assets.tld; ttl=1.+; grace=10.000; hit; hits=1"
+  expect resp.http.cache-status ~ "region=LOCAL; origin=assets,assets.tld; ttl=1.+; grace=10.000; hit; hits=1"
 } -run

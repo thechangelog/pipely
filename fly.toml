@@ -7,8 +7,11 @@ kill_signal = "SIGTERM"
 kill_timeout = 30
 
 [env]
-# We are leaving some room for "sidecar" processes (log drains, purge worker, etc.)
+# This leaves ~800M headroom from the machine's total available memory
+# Any less than this and Varnish makes the machine crash due to OOM errors.
 VARNISH_SIZE = "1200M"
+# https://ui.honeycomb.io/changelog/datasets/pipely/overview
+HONEYCOMB_DATASET = "pipely"
 
 [[vm]]
 size = "shared-cpu-2x"

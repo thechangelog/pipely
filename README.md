@@ -1,10 +1,9 @@
 # Pipely™️ - single-purpose, single-tenant CDN
 
-Based on [Varnish Cache](https://varnish-cache.org/releases/index.html) (open
-source). This started as the simplest CDN running on [fly.io](https://fly.io/changelog)
+Based on [Varnish Cache](https://varnish-cache.org/releases/index.html) (OSS FTW 💚). This started as the simplest CDN running on [fly.io](https://fly.io/changelog).
 for [changelog.com](https://changelog.com)
 
-You are welcome to fork and build this your own. OSS FTW 💚
+You are welcome to fork and build this your own.
 
 ## How it started
 
@@ -14,16 +13,18 @@ You are welcome to fork and build this your own. OSS FTW 💚
 
 ## How is it going (a.k.a. Roadmap)
 
-- ✅ Static backend, 1 day stale, stale on error, x-headers - [Initial commit](https://github.com/thechangelog/pipely/commit/17d3899a52d9dc887efd7f49de92b24249431234)
-- ✅ Dynamic backend, cache-status header - [PR #1](https://github.com/thechangelog/pipely/pull/1)
+- ✅ Static backend, 1 day stale, stale on error, `x`-headers - [Initial commit](https://github.com/thechangelog/pipely/commit/17d3899a52d9dc887efd7f49de92b24249431234)
+- ✅ Dynamic backend, `cache-status` header - [PR #1](https://github.com/thechangelog/pipely/pull/1)
 - ✅ Add tests - [PR #3](https://github.com/thechangelog/pipely/pull/3)
 - ✅ Make it easy to develop locally - [PR #7](https://github.com/thechangelog/pipely/pull/7)
 - ✅ Add support for TLS backends, publish & deploy to production - [PR #8](https://github.com/thechangelog/pipely/pull/8)
 - ✅ Add Feeds backend - [PR #10](https://github.com/thechangelog/pipely/pull/10)
 - ✅ Add Assets backend - [PR #11](https://github.com/thechangelog/pipely/pull/11)
-- ☑️ Send logs to Honeycomb.io (same structure as Fastly logs) - [JSON logging](https://info.varnish-software.com/blog/varnish-and-json-logging)
-- ☑️ Send logs to S3 (for stats)
-- ☑️ Add edge redirects from [Fastly service](https://manage.fastly.com/configure/services/7gKbcKSKGDyqU7IuDr43eG)
+- ✅ Send Varnish logs to Honeycomb.io - [PR #12](https://github.com/thechangelog/pipely/pull/12)
+- ☑️ Enrich logs with GeoIP data
+- ☑️ Ensure that processes which crash are automatically restarted
+- ☑️ Send logs to S3
+- ☑️ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl)
 - ☑️ Implement purge across all app instances (Fly.io machines)
 
 ## Local development and testing
@@ -87,6 +88,7 @@ See you in our [Zulip Chat](https://changelog.zulipchat.com/) 👋
 
 ## Contributors
 
-- [James A Rosen](https://www.jamesarosen.com/now), Staff Software Engineer
-- [Matt Johnson](https://github.com/mttjohnson), Senior Site Reliability Engineer
-- [Nabeel Sulieman](https://github.com/nabsul), Staff Software Engineer
+- [Gerhard Lazu](https://gerhard.io)
+- [James A Rosen](https://www.jamesarosen.com/now)
+- [Matt Johnson](https://github.com/mttjohnson)
+- [Nabeel Sulieman](https://github.com/nabsul)
