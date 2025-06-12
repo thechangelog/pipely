@@ -16,13 +16,6 @@ transforms:
       }
 
 sinks:
-  debug_varnish_geoip:
-    type: "console"
-    encoding:
-      codec: "json"
-    inputs:
-      - "varnish_geoip"
-
   honeycomb:
     # https://vector.dev/docs/reference/configuration/sinks/honeycomb/
     type: "honeycomb"

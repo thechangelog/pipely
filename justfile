@@ -68,7 +68,8 @@ publish tag=_DEFAULT_TAG:
 
 # Deploy container image
 [group('team')]
-deploy tag=_DEFAULT_TAG: publish
+deploy tag=_DEFAULT_TAG:
+    @just publish {{ tag }}
     @just dagger --mod={{ DAGGER_FLY_MODULE }} call \
       --token=op://pipely/fly/credential \
       --org={{ FLY_ORG }} \
