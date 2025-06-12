@@ -1,0 +1,32 @@
+enrichment_tables:
+  geoip:
+    type: "mmdb"
+    path: "/usr/local/share/GeoIP/GeoLite2-City.mmdb"
+
+transforms:
+  varnish_geoip:
+    type: "remap"
+    inputs:
+      - "varnish"
+    source: |
+      geoip_data, err = get_enrichment_table_record("geoip", {"ip": .client_ip})
+      if err == null {
+        .geo_city = geoip_data.city.names.en
+        .geo_country_code = geoip_data.country.iso_code
+      }
+
+sinks:
+  debug_varnish_geoip:
+    type: "console"
+    encoding:
+      codec: "json"
+    inputs:
+      - "varnish_geoip"
+
+  honeycomb:
+    # https://vector.dev/docs/reference/configuration/sinks/honeycomb/
+    type: "honeycomb"
+    inputs:
+      - "varnish_geoip"
+    api_key: ${HONEYCOMB_API_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    dataset: ${HONEYCOMB_DATASET:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}

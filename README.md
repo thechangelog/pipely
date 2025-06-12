@@ -21,7 +21,7 @@ You are welcome to fork and build this your own.
 - ✅ Add Feeds backend - [PR #10](https://github.com/thechangelog/pipely/pull/10)
 - ✅ Add Assets backend - [PR #11](https://github.com/thechangelog/pipely/pull/11)
 - ✅ Send Varnish logs to Honeycomb.io - [PR #12](https://github.com/thechangelog/pipely/pull/12)
-- ☑️ Enrich logs with GeoIP data
+- ✅ Enrich Varnish logs with GeoIP data- [PR #13](https://github.com/thechangelog/pipely/pull/13)
 - ☑️ Ensure that processes which crash are automatically restarted
 - ☑️ Send logs to S3
 - ☑️ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl)

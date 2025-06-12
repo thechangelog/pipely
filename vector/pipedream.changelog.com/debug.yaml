@@ -1,0 +1,7 @@
+sinks:
+  debug_varnish:
+    type: "console"
+    encoding:
+      codec: "json"
+    inputs:
+      - "varnish"
