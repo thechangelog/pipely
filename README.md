@@ -51,30 +51,32 @@ A few other commands that you may be interested in:
 # Requires https://github.com/casey/just
 just
 Available recipes:
-    debug                      # Debug container image interactively
-    how-many-lines             # How many lines of Varnish config?
-    how-many-lines-raw         # How many lines of Varnish config?
+    how-many-lines                  # How many lines of Varnish config?
+    how-many-lines-raw              # How many lines of Varnish config?
     http-profile url="https://pipedream.changelog.com/" # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
-    shell                      # Open an interactive shell for high-level commands, e.g. `test`, `debug | terminal`, etc.
-    test                       # Test everything
-    test-acceptance-cdn *ARGS  # Test remote CDN
-    test-acceptance-cdn2 *ARGS # Test remote CDN2 (a.k.a. Pipely, a.k.a. Pipedream)
-    test-acceptance-local      # Test local CDN
-    test-reports               # Open test reports
-    test-reports-rm            # Clear test reports
-    test-vtc                   # Test VCL config
+    shell                           # Open an interactive shell for high-level commands, e.g. `test`, `debug | terminal`, etc.
+    test                            # Test everything
+    test-acceptance-fastly *ARGS    # Test remote CDN
+    test-acceptance-local           # Test local CDN
+    test-acceptance-pipedream *ARGS # Test remote NEW CDN (a.k.a. Pipely, a.k.a. Pipedream)
+    test-reports                    # Open test reports
+    test-reports-rm                 # Clear test reports
+    test-vtc                        # Test VCL config
 
     [team]
-    cert fqdn                  # Add cert $fqdn to app
-    certs                      # Show app certs
-    deploy tag="dev-$USER"     # Deploy container image
-    envrc-secrets              # Create .envrc.secrets with credentials from 1Password
-    ips                        # Show app IPs
-    machines                   # Show app machines
-    publish tag="dev-$USER"    # Publish container image
-    restart                    # Restart ALL app machines, one-by-one
-    scale                      # Scale production app
-    status                     # Show app status
+    cert fqdn                       # Add cert $fqdn to app
+    certs                           # Show app certs
+    debug                           # Debug container image interactively - assumes envrc-secrets was already run
+    deploy tag=_DEFAULT_TAG         # Deploy container image
+    envrc-secrets                   # Create .envrc.secrets with credentials from 1Password
+    ips                             # Show app IPs
+    machines                        # Show app machines
+    publish tag=_DEFAULT_TAG        # Publish container image - assumes envrc-secrets was already run
+    restart                         # Restart ALL app machines, one-by-one
+    scale                           # Scale production app
+    secrets                         # Set app secrets - assumes envrc-secrets was already run
+    status                          # Show app status
+    tag tag sha discussion          # Tag a new release
 
 # Run the tests
 just test
