@@ -82,6 +82,7 @@ sub vcl_init {
 # to serve the request, how to do it, and, if applicable, which backend to use.
 sub vcl_recv {
   ### Figure out which is the best public IP to use
+  # This needs to happen first, otherwise the health-checker IP will not be set correctly
   # Prefer fly-client-ip header
   if (req.http.fly-client-ip) {
     std.log("client_ip:" + req.http.fly-client-ip);
@@ -94,120 +95,11 @@ sub vcl_recv {
   }
 
   ### Varnish health-check
-  # This is essential for ensuring that traffic does not get routed to unhealthy Varnish instances
+  # This is the first HTTP endpoint that will get hit, before traffic arrives for any of the following HTTP endpoints.
   if (req.url == "/health") {
     return(synth(204));
   }
-
-  ### Handle static assets requests first since these will be most frequent {
-  #
-  if (req.http.host == std.getenv("ASSETS_HOST")) {
-   	# Reject non-GET/HEAD requests
-   	if (req.method !~ "GET|HEAD") {
-      return(synth(405, "Method Not Allowed"));
-    }
-    set req.http.x-backend = "assets";
-    return(hash);
-  }
-
-  ### Second most popular are requests for the Feed backend
-  # Ordered by number of requests in April 2025 (most popular at the top)
-  # https://ui.honeycomb.io/changelog/datasets/fastly/board-query/xCqdG5ysitw/result/da96aC9mAQf
-  #
-  # TODO: Upload feed.json too?
-  #
-  # FWIW 🤦 https://github.com/varnishcache/varnish-cache/issues/2355
-  if (req.url == "/podcast/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/podcast.xml";
-    return(hash);
-  } else if (req.url == "/gotime/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/gotime.xml";
-    return(hash);
-  } else if (req.url == "/master/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/master.xml";
-    return(hash);
-  } else if (req.url == "/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/feed.xml";
-    return(hash);
-  } else if (req.url == "/jsparty/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/jsparty.xml";
-    return(hash);
-  } else if (req.url == "/shipit/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/shipit.xml";
-    return(hash);
-  } else if (req.url == "/news/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/news.xml";
-    return(hash);
-  } else if (req.url == "/brainscience/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/brainscience.xml";
-    return(hash);
-  } else if (req.url == "/founderstalk/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/founderstalk.xml";
-    return(hash);
-  } else if (req.url == "/interviews/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/interviews.xml";
-    return(hash);
-  } else if (req.url == "/friends/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/friends.xml";
-    return(hash);
-  } else if (req.url == "/feed/") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/feed.xml";
-    return(hash);
-  } else if (req.url == "/rfc/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/rfc.xml";
-    return(hash);
-  } else if (req.url == "/spotlight/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/spotlight.xml";
-    return(hash);
-  } else if (req.url == "/afk/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/afk.xml";
-    return(hash);
-  } else if (req.url == "/posts/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/posts.xml";
-    return(hash);
-  } else if (req.url == "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/plusplus.xml";
-    return(hash);
-  } else if (req.url == "/rss") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/feed.xml";
-    return(hash);
-  } else if (req.url ~ "^/feeds/") {
-    set req.http.x-backend = "feeds";
-    set req.url = req.url + ".xml";
-    return(hash);
-  }
-
-  ### practical.ai redirects
-  if (req.url == "/practicalai/feed"
-      || req.url == "/practicalai") {
-    return(synth(301, "Moved Permanently"));
-  }
-
-  ### Purging
-  # https://varnish-cache.org/docs/7.7/users-guide/purging.html
-  if (req.method == "PURGE") {
-    return(purge);
-  }
-
-  ### Configure health-checks
+  ### Configure health-checks for all backends
   # APP
   if (req.url == "/app_health") {
   set req.http.x-backend = "app";
@@ -225,6 +117,94 @@ sub vcl_recv {
     set req.http.x-backend = "assets";
     set req.url = "/health";
     return(pass);
+  }
+
+  ### practical.ai redirects
+  if (req.url == "/practicalai/feed"
+      || req.url == "/practicalai") {
+    return(synth(301, "Moved Permanently"));
+  }
+
+  ### Static assets requests
+  #
+  if (req.http.host == std.getenv("ASSETS_HOST")) {
+   	# Reject non-GET/HEAD/PURGE requests
+   	if (req.method !~ "GET|HEAD|PURGE") {
+      return(synth(405, "Method Not Allowed"));
+    }
+    set req.http.x-backend = "assets";
+  }
+
+  ### Feed requests
+  # Ordered by number of requests in April 2025 (most popular at the top)
+  # https://ui.honeycomb.io/changelog/datasets/fastly/board-query/xCqdG5ysitw/result/da96aC9mAQf
+  #
+  # TODO: Upload feed.json too?
+  #
+  # FWIW 🤦 https://github.com/varnishcache/varnish-cache/issues/2355
+  if (req.url == "/podcast/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/podcast.xml";
+  } else if (req.url == "/gotime/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/gotime.xml";
+  } else if (req.url == "/master/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/master.xml";
+  } else if (req.url == "/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/feed.xml";
+  } else if (req.url == "/jsparty/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/jsparty.xml";
+  } else if (req.url == "/shipit/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/shipit.xml";
+  } else if (req.url == "/news/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/news.xml";
+  } else if (req.url == "/brainscience/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/brainscience.xml";
+  } else if (req.url == "/founderstalk/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/founderstalk.xml";
+  } else if (req.url == "/interviews/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/interviews.xml";
+  } else if (req.url == "/friends/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/friends.xml";
+  } else if (req.url == "/feed/") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/feed.xml";
+  } else if (req.url == "/rfc/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/rfc.xml";
+  } else if (req.url == "/spotlight/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/spotlight.xml";
+  } else if (req.url == "/afk/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/afk.xml";
+  } else if (req.url == "/posts/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/posts.xml";
+  } else if (req.url == "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/plusplus.xml";
+  } else if (req.url == "/rss") {
+    set req.http.x-backend = "feeds";
+    set req.url = "/feed.xml";
+  } else if (req.url ~ "^/feeds/") {
+    set req.http.x-backend = "feeds";
+    set req.url = req.url + ".xml";
+  }
+
+  ### PURGE
+  # https://varnish-cache.org/docs/7.7/users-guide/purging.html
+  if (req.method == "PURGE") {
+    return(purge);
   }
 }
 
@@ -257,10 +237,10 @@ sub vcl_pass {
 }
 
 sub vcl_synth {
-	# Reject non-GET/HEAD requests
+	# Reject non-GET/HEAD/PURGE requests
 	if (req.http.host == std.getenv("BACKEND_ASSETS_FQDN")
 	    && resp.status == 405) {
-    set resp.http.allow = "GET, HEAD";
+    set resp.http.allow = "GET, HEAD, PURGE";
     return(deliver);
 	}
 

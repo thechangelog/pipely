@@ -47,11 +47,13 @@ varnish v1 -vcl {
 
   sub vcl_recv {
     if (req.http.host == "cdn.tld") {
-      if (req.method !~ "GET|HEAD") {
+      if (req.method !~ "GET|HEAD|PURGE") {
         return(synth(405, "Method Not Allowed"));
       }
       set req.http.x-backend = "assets";
-      return(hash);
+    }
+    if (req.method == "PURGE") {
+      return(purge);
     }
   }
 
@@ -66,7 +68,7 @@ varnish v1 -vcl {
   sub vcl_synth {
     if (req.http.host == "cdn.tld"
         && resp.status == 405) {
-      set resp.http.allow = "GET, HEAD";
+      set resp.http.allow = "GET, HEAD, PURGE";
       return(deliver);
     }
   }
@@ -97,7 +99,7 @@ client c2 {
   txreq -method "POST" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: cdn.tld"
   rxresp
   expect resp.status == 405
-  expect resp.http.allow == "GET, HEAD"
+  expect resp.http.allow == "GET, HEAD, PURGE"
 } -run
 
 # HEAD /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png should go to assets backend
@@ -108,9 +110,16 @@ client c3 {
   expect resp.http.access-control-allow-origin == "*"
 } -run
 
-# /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png should go to assets backend
+# PURGE /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png should work
 client c4 {
-  txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: cdn.tld"
+  txreq -method "PURGE" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: cdn.tld"
+  rxresp
+  expect resp.status == 200
+} -run
+
+# /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png should go to assets backend
+client c5 {
+  txreq -method "GET" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: cdn.tld"
   rxresp
   expect resp.status == 200
   expect resp.body == "podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
@@ -118,8 +127,8 @@ client c4 {
 } -run
 
 # /static/css/email-5690e09e20c0b25fefebbc5049362b39.css should go to assets backend
-client c5 {
-  txreq -url "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css" -hdr "Host: cdn.tld"
+client c6 {
+  txreq -method "GET" -url "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css" -hdr "Host: cdn.tld"
   rxresp
   expect resp.status == 200
   expect resp.body == "email-5690e09e20c0b25fefebbc5049362b39.css"
@@ -127,8 +136,8 @@ client c5 {
 } -run
 
 # /uploads/news/140/changelog-news-140.mp3 should go to assets backend
-client c6 {
-  txreq -url "/uploads/news/140/changelog-news-140.mp3" -hdr "Host: cdn.tld"
+client c7 {
+  txreq -method "GET" -url "/uploads/news/140/changelog-news-140.mp3" -hdr "Host: cdn.tld"
   rxresp
   expect resp.status == 200
   expect resp.body == "changelog-news-140.mp3"

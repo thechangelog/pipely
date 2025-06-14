@@ -24,7 +24,7 @@ jobs:
       - name: "Test acceptance of current CDN deployment..."
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
-          just test-acceptance-cdn
+          just test-acceptance-fastly
         env:
           TERM: xterm
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
       - name: "Test acceptance of NEW CDN deployment..."
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
-          just test-acceptance-cdn2
+          just test-acceptance-pipedream
         env:
           TERM: xterm
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}

@@ -41,7 +41,13 @@ test-vtc *ARGS:
 
 # Run acceptance tests
 test-acceptance-local *ARGS:
-    hurl --test --color --report-html /var/opt/hurl/test-acceptance-local --continue-on-error --variable host=http://localhost:9000 --variable assets_host=cdn2.changelog.com --variable delay_ms=6000 --variable delay_s=5 {{ ARGS }} test/acceptance/*.hurl test/acceptance/cdn2/*.hurl
+    hurl --test --color --continue-on-error --report-html /var/opt/hurl/test-acceptance-local \
+     --variable host=http://localhost:9000 \
+     --variable assets_host=cdn2.changelog.com \
+     --variable delay_ms=6000 \
+     --variable delay_s=5 \
+     {{ ARGS }} \
+     test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
 
 # Show Varnish cache stats
 cache:
@@ -60,20 +66,20 @@ bench-app-tls-proxy: (bench "http://localhost:5000/" "1.1")
 # Benchmark app origin
 bench-app-origin: (bench "https://changelog-2025-05-05.fly.dev/")
 
-# Benchmark feed via local Varnish
-bench-feed: (bench "http://localhost:9000/podcast/feed" "2" "200000" "50")
+# Benchmark feeds via local Varnish
+bench-feeds: (bench "http://localhost:9000/podcast/feed" "2" "200000" "50")
 
 # Benchmark feeds TLS proxy
-bench-feed-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")
+bench-feeds-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")
 
 # Benchmark feeds origin
-bench-feed-origin: (bench "https://feeds.changelog.place/podcast.xml")
+bench-feeds-origin: (bench "https://feeds.changelog.place/podcast.xml")
 
-# Benchmark cdn (Fastly)
+# Benchmark Fastly
 bench-cdn: (bench "https://changelog.com/podcast/feed")
 
 # Benchmark Bunny CDN
 bench-bunny: (bench "https://bunny.changelog.com/podcast/feed")
 
-# Benchmark cdn2 (Pipely)
-bench-cdn2: (bench "https://pipedream.changelog.com/podcast/feed")
+# Benchmark Pipedream
+bench-pipedream: (bench "https://pipedream.changelog.com/podcast/feed")

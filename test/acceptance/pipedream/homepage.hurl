@@ -16,4 +16,21 @@ GET {{host}}
 HTTP 200 # expect OK response
 [Asserts]
 duration < 100 # ensure that it loads sub 100ms when cached...
+header "fly-request-id" exists # served by Fly
+header "via" matches /[vV]arnish/ # served via Varnish
 header "cache-status" contains "hit" # definitely served from cache
+
+# Purge the homepage
+PURGE {{host}}
+HTTP 200 # expect OK response
+[Asserts]
+header "fly-request-id" not exists # NOT served by Fly
+header "server" == "Varnish" # served by Varnish
+
+# Get the homepage after PURGE
+GET {{host}}
+HTTP 200 # expect OK response
+[Asserts]
+header "fly-request-id" exists # served by Fly
+header "via" matches /[vV]arnish/ # served via Varnish
+header "cache-status" contains "miss" # fresh after purge
