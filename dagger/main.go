@@ -261,8 +261,7 @@ func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Containe
 // Test container with various useful tools - use `just` as the starting point
 func (m *Pipely) Test(ctx context.Context) *dagger.Container {
 	return m.withConfigs(
-		m.local(ctx).
-			WithDirectory("/test", m.Source.Directory("test")),
+		m.local(ctx),
 		Test)
 }
 
@@ -291,7 +290,8 @@ func (m *Pipely) local(ctx context.Context) *dagger.Container {
 			return c.WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
 				WithFile("/justfile", m.Source.File("container.justfile")).
 				WithExec([]string{"just"})
-		})
+		}).
+		WithDirectory("/test", m.Source.Directory("test"))
 }
 
 func altArchitecture(ctx context.Context) string {
@@ -324,7 +324,7 @@ func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
 
 	return m.Test(ctx).
 		WithServiceBinding("pipely", pipely).
-		WithExec([]string{"just", "test-acceptance-local", "--variable", "host=http://pipely:9000", "--verbose"})
+		WithExec([]string{"just", "test-acceptance-local", "--variable", "host=http://pipely:9000"})
 }
 
 // Test acceptance report

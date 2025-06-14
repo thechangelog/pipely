@@ -22,11 +22,11 @@ test-vtc: (dagger 'call test-varnish stdout')
 # Test local CDN
 test-acceptance-local: (dagger 'call --beresp-ttl=5s test-acceptance-report export --path=./tmp/test-acceptance-local')
 
-# Test remote CDN2 (a.k.a. Pipely, a.k.a. Pipedream)
-test-acceptance-cdn2 *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn2 --continue-on-error --variable host=https://pipedream.changelog.com --variable assets_host=cdn2.changelog.com --variable delay_ms=65000 --variable delay_s=60 " + ARGS + " test/acceptance/*.hurl test/acceptance/cdn2/*.hurl")
+# Test remote NEW CDN (a.k.a. Pipely, a.k.a. Pipedream)
+test-acceptance-pipedream *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn2 --continue-on-error --variable host=https://pipedream.changelog.com --variable assets_host=cdn2.changelog.com --variable delay_ms=65000 --variable delay_s=60 " + ARGS + " test/acceptance/*.hurl test/acceptance/pipedream/*.hurl")
 
 # Test remote CDN
-test-acceptance-cdn *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn --continue-on-error --variable host=https://changelog.com --variable assets_host=cdn.changelog.com " + ARGS + " test/acceptance/*.hurl test/acceptance/cdn/*.hurl")
+test-acceptance-fastly *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn --continue-on-error --variable host=https://changelog.com --variable assets_host=cdn.changelog.com " + ARGS + " test/acceptance/*.hurl test/acceptance/fastly/*.hurl")
 
 # Open test reports
 test-reports:
