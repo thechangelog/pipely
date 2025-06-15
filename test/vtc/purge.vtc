@@ -7,16 +7,35 @@ server s1 {
 
 varnish v1 -vcl+backend {
   sub vcl_recv {
-      # https://varnish-cache.org/docs/7.7/users-guide/purging.html
-      if (req.method == "PURGE") {
-        return (purge);
+    if (req.method == "PURGE") {
+      if (req.http.purge-token == "doit") {
+        return(purge);
+      } else {
+        return(synth(401, "Invalid PURGE token"));
       }
+    }
   }
 } -start
 
-# Test 1: Test PURGE method
+# PURGE with no token
 client c1 {
   txreq -method PURGE -url "/"
+  rxresp
+  expect resp.status == 401
+  expect resp.body ~ "Invalid PURGE token"
+} -run
+
+# PURGE with invalid token
+client c2 {
+  txreq -method PURGE -url "/" -hdr "purge-token: do"
+  rxresp
+  expect resp.status == 401
+  expect resp.body ~ "Invalid PURGE token"
+} -run
+
+# PURGE with correct token
+client c3 {
+  txreq -method PURGE -url "/" -hdr "purge-token: doit"
   rxresp
   expect resp.status == 200
 } -run

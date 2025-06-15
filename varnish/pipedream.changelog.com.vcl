@@ -142,69 +142,71 @@ sub vcl_recv {
   # TODO: Upload feed.json too?
   #
   # FWIW 🤦 https://github.com/varnishcache/varnish-cache/issues/2355
-  if (req.url == "/podcast/feed") {
+  if (req.url ~ "^/podcast/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/podcast.xml";
-  } else if (req.url == "/gotime/feed") {
+  } else if (req.url ~ "^/gotime/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/gotime.xml";
-  } else if (req.url == "/master/feed") {
+  } else if (req.url ~ "^/master/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/master.xml";
-  } else if (req.url == "/feed") {
+  } else if (req.url ~ "^/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/feed.xml";
-  } else if (req.url == "/jsparty/feed") {
+  } else if (req.url ~ "^/jsparty/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/jsparty.xml";
-  } else if (req.url == "/shipit/feed") {
+  } else if (req.url ~ "^/shipit/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/shipit.xml";
-  } else if (req.url == "/news/feed") {
+  } else if (req.url ~ "^/news/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/news.xml";
-  } else if (req.url == "/brainscience/feed") {
+  } else if (req.url ~ "^/brainscience/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/brainscience.xml";
-  } else if (req.url == "/founderstalk/feed") {
+  } else if (req.url ~ "^/founderstalk/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/founderstalk.xml";
-  } else if (req.url == "/interviews/feed") {
+  } else if (req.url ~ "^/interviews/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/interviews.xml";
-  } else if (req.url == "/friends/feed") {
+  } else if (req.url ~ "^/friends/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/friends.xml";
-  } else if (req.url == "/feed/") {
-    set req.http.x-backend = "feeds";
-    set req.url = "/feed.xml";
-  } else if (req.url == "/rfc/feed") {
+  } else if (req.url ~ "^/rfc/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/rfc.xml";
-  } else if (req.url == "/spotlight/feed") {
+  } else if (req.url ~ "^/spotlight/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/spotlight.xml";
-  } else if (req.url == "/afk/feed") {
+  } else if (req.url ~ "^/afk/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/afk.xml";
-  } else if (req.url == "/posts/feed") {
+  } else if (req.url ~ "^/posts/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/posts.xml";
-  } else if (req.url == "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed") {
+  } else if (req.url ~ "^/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/plusplus.xml";
-  } else if (req.url == "/rss") {
+  } else if (req.url ~ "^/rss/?(\?.*)?$") {
     set req.http.x-backend = "feeds";
     set req.url = "/feed.xml";
-  } else if (req.url ~ "^/feeds/") {
+  } else if (req.url ~ "^/feeds/.*(\?.*)?$") {
     set req.http.x-backend = "feeds";
-    set req.url = req.url + ".xml";
+    set req.url = regsub(req.url, "^(/feeds/[^?]*)(\?.*)?$", "\1.xml");
   }
 
   ### PURGE
   # https://varnish-cache.org/docs/7.7/users-guide/purging.html
   if (req.method == "PURGE") {
-    return(purge);
+    # If no token token is configured allow un-authenticated PURGEs, otherwise require it.
+    if (std.getenv("PURGE_TOKEN") == "" || req.http.purge-token == std.getenv("PURGE_TOKEN")) {
+      return(purge);
+    } else {
+      return(synth(401, "Invalid PURGE token"));
+    }
   }
 }
 

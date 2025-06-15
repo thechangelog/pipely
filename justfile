@@ -13,20 +13,40 @@ fmt:
     just --fmt --check --unstable
     just --version
 
-# Test everything
+# Test VTC + acceptance locally
 test: test-vtc test-acceptance-local
 
 # Test VCL config
-test-vtc: (dagger 'call test-varnish stdout')
+test-vtc:
+    @just dagger call test-varnish stdout
 
-# Test local CDN
-test-acceptance-local: (dagger 'call --beresp-ttl=5s test-acceptance-report export --path=./tmp/test-acceptance-local')
+# Test local setup
+test-acceptance-local:
+    @PURGE_TOKEN="test-acceptance-local" just dagger call \
+      --beresp-ttl=5s \
+      --purge-token=env:PURGE_TOKEN \
+      test-acceptance-report export \
+        --path=./tmp/test-acceptance-local
 
-# Test remote NEW CDN (a.k.a. Pipely, a.k.a. Pipedream)
-test-acceptance-pipedream *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn2 --continue-on-error --variable host=https://pipedream.changelog.com --variable assets_host=cdn2.changelog.com --variable delay_ms=65000 --variable delay_s=60 " + ARGS + " test/acceptance/*.hurl test/acceptance/pipedream/*.hurl")
+# Test NEW production - Pipedream, the Changelog variant of Pipely
+[group('team')]
+test-acceptance-pipedream *ARGS:
+    @just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
+      --variable host=https://pipedream.changelog.com \
+      --variable assets_host=cdn2.changelog.com \
+      --variable delay_ms=65000 \
+      --variable delay_s=60 \
+      --variable purge_token=$(op read op://pipely/purge/credential --account changelog.1password.com --cache) \
+      {{ ARGS }} \
+      test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
 
-# Test remote CDN
-test-acceptance-fastly *ARGS: (hurl "--test --color --report-html tmp/test-acceptance-cdn --continue-on-error --variable host=https://changelog.com --variable assets_host=cdn.changelog.com " + ARGS + " test/acceptance/*.hurl test/acceptance/fastly/*.hurl")
+# Test CURRENT production
+test-acceptance-fastly *ARGS:
+    @just hurl --test --color --report-html tmp/test-acceptance-fastly --continue-on-error \
+      --variable host=https://changelog.com \
+      --variable assets_host=cdn.changelog.com \
+      {{ ARGS }} \
+      test/acceptance/*.hurl test/acceptance/fastly/*.hurl
 
 # Open test reports
 test-reports:
@@ -38,11 +58,12 @@ test-reports-rm:
 
 # Debug container image interactively - assumes envrc-secrets was already run
 [group('team')]
-debug: (dagger 'call --beresp-ttl=5s --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential --max-mind-auth=op://pipely/maxmind/credential debug terminal --cmd=bash')
-
-# Open an interactive shell for high-level commands, e.g. `test`, `debug | terminal`, etc.
-shell:
-    @just dagger shell
+debug:
+    @PURGE_TOKEN="debug" just dagger call --beresp-ttl=5s \
+      --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
+      --max-mind-auth=op://pipely/maxmind/credential \
+      --purge-token=env:PURGE_TOKEN \
+        debug terminal --cmd=bash
 
 # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
 http-profile url="https://pipedream.changelog.com/":
@@ -73,7 +94,7 @@ deploy tag=_DEFAULT_TAG:
     @just dagger --mod={{ DAGGER_FLY_MODULE }} call \
       --token=op://pipely/fly/credential \
       --org={{ FLY_ORG }} \
-          deploy --dir=. --image={{ FLY_APP_IMAGE }}:{{ tag }}
+          deploy --dir=. --image=$(just publish {{ tag }})
 
 # Scale production app
 [group('team')]
@@ -83,7 +104,10 @@ scale:
 # Set app secrets - assumes envrc-secrets was already run
 [group('team')]
 secrets:
-  flyctl secrets set --stage HONEYCOMB_API_KEY=$(op read op://pipely/honeycomb/credential --account changelog.1password.com --cache)
+    flyctl secrets set --stage \
+      HONEYCOMB_API_KEY=$(op read op://pipely/honeycomb/credential --account changelog.1password.com --cache) \
+      PURGE_TOKEN=$(op read op://pipely/purge/credential --account changelog.1password.com --cache)
+    flyctl secrets list
 
 # Add cert $fqdn to app
 [group('team')]

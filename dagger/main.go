@@ -10,10 +10,12 @@ import (
 
 const (
 	// https://hub.docker.com/_/golang/tags?name=1.24
-	golangVersion = "1.24.4@sha256:db5d0afbfb4ab648af2393b92e87eaae9ad5e01132803d80caef91b5752d289c"
+	golangVersion = "1.24.4@sha256:10c131810f80a4802c49cab0961bbe18a16f4bb2fb99ef16deaa23e4246fc817"
 
 	// https://github.com/nabsul/tls-exterminator
 	tlsExterminatorVersion = "4226223f2380319e73300bc7d14fd652c56c6b4e"
+	// 😵 https://github.com/nabsul/tls-exterminator/pull/12#issuecomment-3016801769
+	// tlsExterminatorVersion = "af547186a97d0fbe4e304cf155a4c3a0d1569cd2"
 
 	// https://github.com/DarthSim/overmind/releases
 	overmindVersion = "2.5.1"
@@ -25,7 +27,7 @@ const (
 	hurlVersion = "6.1.1"
 
 	// https://github.com/hatoo/oha/releases
-	ohaVersion = "1.8.0"
+	ohaVersion = "1.9.0"
 )
 
 type Env int
@@ -42,7 +44,9 @@ type Pipely struct {
 	// Varnish container
 	Varnish *dagger.Container
 	// Source code
-	Source *dagger.Directory
+	// Varnish PURGE token
+	VarnishPurgeToken *dagger.Secret
+	Source            *dagger.Directory
 	// Container image tag
 	Tag string
 	// App proxy
@@ -75,6 +79,9 @@ func New(
 	// +default="24h"
 	berespGrace string,
 
+	// +optional
+	purgeToken *dagger.Secret,
+
 	// +default="5000:changelog-2025-05-05.fly.dev:"
 	appProxy string,
 
@@ -96,9 +103,10 @@ func New(
 	maxMindAuth *dagger.Secret,
 ) (*Pipely, error) {
 	pipely := &Pipely{
-		Golang: dag.Container().From("golang:" + golangVersion),
-		Tag:    tag,
-		Source: source,
+		Golang:            dag.Container().From("golang:" + golangVersion),
+		Tag:               tag,
+		Source:            source,
+		VarnishPurgeToken: purgeToken,
 	}
 
 	pipely.Varnish = dag.Container().From("varnish:"+varnishVersion).
@@ -108,6 +116,11 @@ func New(
 		WithEnvVariable("BERESP_TTL", berespTtl).
 		WithEnvVariable("BERESP_GRACE", berespGrace).
 		WithEnvVariable("HONEYCOMB_DATASET", honeycombDataset)
+
+	if pipely.VarnishPurgeToken != nil {
+		pipely.Varnish = pipely.Varnish.
+			WithSecretVariable("PURGE_TOKEN", pipely.VarnishPurgeToken)
+	}
 
 	if honeycombApiKey != nil {
 		pipely.Varnish = pipely.Varnish.
@@ -315,16 +328,28 @@ func (m *Pipely) TestVarnish(ctx context.Context) *dagger.Container {
 
 // Test acceptance
 func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
-	pipely, err := m.Test(ctx).
-		AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true}).
-		Start(ctx)
-	if err != nil {
-		panic(err)
+	// pipely, err := m.Test(ctx).
+	// 	AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true}).
+	// 	Start(ctx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	pipely := m.Test(ctx).
+		AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true})
+
+	testAcceptanceCmd := []string{"just", "test-acceptance-local", "--variable", "host=http://pipely:9000"}
+	if m.VarnishPurgeToken != nil {
+		purgeToken, err := m.VarnishPurgeToken.Plaintext(ctx)
+		if err != nil {
+			panic(err)
+		}
+		testAcceptanceCmd = append(testAcceptanceCmd, "--variable", "purge_token="+purgeToken)
 	}
 
 	return m.Test(ctx).
 		WithServiceBinding("pipely", pipely).
-		WithExec([]string{"just", "test-acceptance-local", "--variable", "host=http://pipely:9000"})
+		WithExec(testAcceptanceCmd)
 }
 
 // Test acceptance report
