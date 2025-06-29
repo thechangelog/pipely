@@ -1,5 +1,5 @@
 # Get the homepage
-GET {{host}}
+GET {{host}}?hurl=true
 HTTP 200 # expect OK response
 [Asserts]
 duration < 500 # ensure that it loads sub 500ms when cache is cold...
@@ -12,7 +12,7 @@ header "cache-status" contains "ttl=" # ttl is set
 header "cache-status" contains "grace=" # grace is set
 
 # Get the homepage AGAIN
-GET {{host}}
+GET {{host}}?hurl=true
 HTTP 200 # expect OK response
 [Asserts]
 duration < 100 # ensure that it loads sub 100ms when cached...
@@ -21,14 +21,16 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "cache-status" contains "hit" # definitely served from cache
 
 # Purge the homepage
-PURGE {{host}}
+PURGE {{host}}?purge=true
+Purge-Token: {{purge_token}}
 HTTP 200 # expect OK response
 [Asserts]
-header "fly-request-id" not exists # NOT served by Fly
-header "server" == "Varnish" # served by Varnish
+header "x-varnish" exists # served by Varnish
+header "cache-status" contains "synth" # synthetic response
 
 # Get the homepage after PURGE
-GET {{host}}
+GET {{host}}?purge=true
+Purge-Token: {{purge_token}}
 HTTP 200 # expect OK response
 [Asserts]
 header "fly-request-id" exists # served by Fly

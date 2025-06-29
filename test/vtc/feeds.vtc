@@ -8,7 +8,17 @@ server s1 {
 
 # Feeds mock server with responses for all feed requests
 server s2 {
-  # Test for /podcast/feed
+# Test for /podcast/feed
+  rxreq
+  expect req.url == "/podcast.xml"
+  txresp -status 200 -body "podcast.xml"
+
+  # Test for /podcast/feed/
+  rxreq
+  expect req.url == "/podcast.xml"
+  txresp -status 200 -body "podcast.xml"
+
+  # Test for /podcast/feed?arg=first&arg=second
   rxreq
   expect req.url == "/podcast.xml"
   txresp -status 200 -body "podcast.xml"
@@ -18,7 +28,27 @@ server s2 {
   expect req.url == "/gotime.xml"
   txresp -status 200 -body "gotime.xml"
 
+  # Test for /gotime/feed/
+  rxreq
+  expect req.url == "/gotime.xml"
+  txresp -status 200 -body "gotime.xml"
+
+  # Test for /gotime/feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/gotime.xml"
+  txresp -status 200 -body "gotime.xml"
+
   # Test for /master/feed
+  rxreq
+  expect req.url == "/master.xml"
+  txresp -status 200 -body "master.xml"
+
+  # Test for /master/feed/
+  rxreq
+  expect req.url == "/master.xml"
+  txresp -status 200 -body "master.xml"
+
+  # Test for /master/feed?arg=first&arg=second
   rxreq
   expect req.url == "/master.xml"
   txresp -status 200 -body "master.xml"
@@ -28,7 +58,27 @@ server s2 {
   expect req.url == "/feed.xml"
   txresp -status 200 -body "feed.xml"
 
+  # Test for /feed/
+  rxreq
+  expect req.url == "/feed.xml"
+  txresp -status 200 -body "feed.xml"
+
+  # Test for /feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/feed.xml"
+  txresp -status 200 -body "feed.xml"
+
   # Test for /jsparty/feed
+  rxreq
+  expect req.url == "/jsparty.xml"
+  txresp -status 200 -body "jsparty.xml"
+
+  # Test for /jsparty/feed/
+  rxreq
+  expect req.url == "/jsparty.xml"
+  txresp -status 200 -body "jsparty.xml"
+
+  # Test for /jsparty/feed?arg=first&arg=second
   rxreq
   expect req.url == "/jsparty.xml"
   txresp -status 200 -body "jsparty.xml"
@@ -38,7 +88,27 @@ server s2 {
   expect req.url == "/shipit.xml"
   txresp -status 200 -body "shipit.xml"
 
+  # Test for /shipit/feed/
+  rxreq
+  expect req.url == "/shipit.xml"
+  txresp -status 200 -body "shipit.xml"
+
+  # Test for /shipit/feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/shipit.xml"
+  txresp -status 200 -body "shipit.xml"
+
   # Test for /news/feed
+  rxreq
+  expect req.url == "/news.xml"
+  txresp -status 200 -body "news.xml"
+
+  # Test for /news/feed/
+  rxreq
+  expect req.url == "/news.xml"
+  txresp -status 200 -body "news.xml"
+
+  # Test for /news/feed?arg=first&arg=second
   rxreq
   expect req.url == "/news.xml"
   txresp -status 200 -body "news.xml"
@@ -48,7 +118,27 @@ server s2 {
   expect req.url == "/brainscience.xml"
   txresp -status 200 -body "brainscience.xml"
 
+  # Test for /brainscience/feed/
+  rxreq
+  expect req.url == "/brainscience.xml"
+  txresp -status 200 -body "brainscience.xml"
+
+  # Test for /brainscience/feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/brainscience.xml"
+  txresp -status 200 -body "brainscience.xml"
+
   # Test for /founderstalk/feed
+  rxreq
+  expect req.url == "/founderstalk.xml"
+  txresp -status 200 -body "founderstalk.xml"
+
+  # Test for /founderstalk/feed/
+  rxreq
+  expect req.url == "/founderstalk.xml"
+  txresp -status 200 -body "founderstalk.xml"
+
+  # Test for /founderstalk/feed?arg=first&arg=second
   rxreq
   expect req.url == "/founderstalk.xml"
   txresp -status 200 -body "founderstalk.xml"
@@ -58,17 +148,42 @@ server s2 {
   expect req.url == "/interviews.xml"
   txresp -status 200 -body "interviews.xml"
 
+  # Test for /interviews/feed/
+  rxreq
+  expect req.url == "/interviews.xml"
+  txresp -status 200 -body "interviews.xml"
+
+  # Test for /interviews/feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/interviews.xml"
+  txresp -status 200 -body "interviews.xml"
+
   # Test for /friends/feed
   rxreq
   expect req.url == "/friends.xml"
   txresp -status 200 -body "friends.xml"
 
-  # Test for /feed/
+  # Test for /friends/feed/
   rxreq
-  expect req.url == "/feed.xml"
-  txresp -status 200 -body "feed.xml"
+  expect req.url == "/friends.xml"
+  txresp -status 200 -body "friends.xml"
+
+  # Test for /friends/feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/friends.xml"
+  txresp -status 200 -body "friends.xml"
 
   # Test for /rfc/feed
+  rxreq
+  expect req.url == "/rfc.xml"
+  txresp -status 200 -body "rfc.xml"
+
+  # Test for /rfc/feed/
+  rxreq
+  expect req.url == "/rfc.xml"
+  txresp -status 200 -body "rfc.xml"
+
+  # Test for /rfc/feed?arg=first&arg=second
   rxreq
   expect req.url == "/rfc.xml"
   txresp -status 200 -body "rfc.xml"
@@ -78,7 +193,27 @@ server s2 {
   expect req.url == "/spotlight.xml"
   txresp -status 200 -body "spotlight.xml"
 
+  # Test for /spotlight/feed/
+  rxreq
+  expect req.url == "/spotlight.xml"
+  txresp -status 200 -body "spotlight.xml"
+
+  # Test for /spotlight/feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/spotlight.xml"
+  txresp -status 200 -body "spotlight.xml"
+
   # Test for /afk/feed
+  rxreq
+  expect req.url == "/afk.xml"
+  txresp -status 200 -body "afk.xml"
+
+  # Test for /afk/feed/
+  rxreq
+  expect req.url == "/afk.xml"
+  txresp -status 200 -body "afk.xml"
+
+  # Test for /afk/feed?arg=first&arg=second
   rxreq
   expect req.url == "/afk.xml"
   txresp -status 200 -body "afk.xml"
@@ -88,7 +223,27 @@ server s2 {
   expect req.url == "/posts.xml"
   txresp -status 200 -body "posts.xml"
 
+  # Test for /posts/feed/
+  rxreq
+  expect req.url == "/posts.xml"
+  txresp -status 200 -body "posts.xml"
+
+  # Test for /posts/feed?arg=first&arg=second
+  rxreq
+  expect req.url == "/posts.xml"
+  txresp -status 200 -body "posts.xml"
+
   # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed
+  rxreq
+  expect req.url == "/plusplus.xml"
+  txresp -status 200 -body "plusplus.xml"
+
+  # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/
+  rxreq
+  expect req.url == "/plusplus.xml"
+  txresp -status 200 -body "plusplus.xml"
+
+  # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed?arg=first&arg=second
   rxreq
   expect req.url == "/plusplus.xml"
   txresp -status 200 -body "plusplus.xml"
@@ -98,7 +253,22 @@ server s2 {
   expect req.url == "/feed.xml"
   txresp -status 200 -body "feed.xml"
 
+  # Test for /rss/
+  rxreq
+  expect req.url == "/feed.xml"
+  txresp -status 200 -body "feed.xml"
+
+  # Test for /rss?arg=first&arg=second
+  rxreq
+  expect req.url == "/feed.xml"
+  txresp -status 200 -body "feed.xml"
+
   # Test for /feeds/* path
+  rxreq
+  expect req.url == "/feeds/0284CC5C777C51D158BBECCBBB56422A.xml"
+  txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
+
+  # Test for /feeds/*?arg=first&arg=second path
   rxreq
   expect req.url == "/feeds/0284CC5C777C51D158BBECCBBB56422A.xml"
   txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
@@ -123,82 +293,60 @@ varnish v1 -vcl {
   sub vcl_recv {
     set req.http.x-backend = "app";
 
-    if (req.url == "/podcast/feed") {
+    if (req.url ~ "^/podcast/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/podcast.xml";
-      return(hash);
-    } else if (req.url == "/gotime/feed") {
+    } else if (req.url ~ "^/gotime/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/gotime.xml";
-      return(hash);
-    } else if (req.url == "/master/feed") {
+    } else if (req.url ~ "^/master/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/master.xml";
-      return(hash);
-    } else if (req.url == "/feed") {
+    } else if (req.url ~ "^/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/feed.xml";
-      return(hash);
-    } else if (req.url == "/jsparty/feed") {
+    } else if (req.url ~ "^/jsparty/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/jsparty.xml";
-      return(hash);
-    } else if (req.url == "/shipit/feed") {
+    } else if (req.url ~ "^/shipit/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/shipit.xml";
-      return(hash);
-    } else if (req.url == "/news/feed") {
+    } else if (req.url ~ "^/news/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/news.xml";
-      return(hash);
-    } else if (req.url == "/brainscience/feed") {
+    } else if (req.url ~ "^/brainscience/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/brainscience.xml";
-      return(hash);
-    } else if (req.url == "/founderstalk/feed") {
+    } else if (req.url ~ "^/founderstalk/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/founderstalk.xml";
-      return(hash);
-    } else if (req.url == "/interviews/feed") {
+    } else if (req.url ~ "^/interviews/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/interviews.xml";
-      return(hash);
-    } else if (req.url == "/friends/feed") {
+    } else if (req.url ~ "^/friends/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/friends.xml";
-      return(hash);
-    } else if (req.url == "/feed/") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/feed.xml";
-      return(hash);
-    } else if (req.url == "/rfc/feed") {
+    } else if (req.url ~ "^/rfc/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/rfc.xml";
-      return(hash);
-    } else if (req.url == "/spotlight/feed") {
+    } else if (req.url ~ "^/spotlight/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/spotlight.xml";
-      return(hash);
-    } else if (req.url == "/afk/feed") {
+    } else if (req.url ~ "^/afk/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/afk.xml";
-      return(hash);
-    } else if (req.url == "/posts/feed") {
+    } else if (req.url ~ "^/posts/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/posts.xml";
-      return(hash);
-    } else if (req.url == "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed") {
+    } else if (req.url ~ "^/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/plusplus.xml";
-      return(hash);
-    } else if (req.url == "/rss") {
+    } else if (req.url ~ "^/rss/?(\?.*)?$") {
       set req.http.x-backend = "feeds";
       set req.url = "/feed.xml";
-      return(hash);
-    } else if (req.url ~ "^/feeds/") {
+    } else if (req.url ~ "^/feeds/.*(\?.*)?$") {
       set req.http.x-backend = "feeds";
-      set req.url = req.url + ".xml";
-      return(hash);
+      set req.url = regsub(req.url, "^(/feeds/[^?]*)(\?.*)?$", "\1.xml");
     }
   }
 
@@ -234,145 +382,417 @@ client c2 {
   expect resp.body == "podcast.xml"
 } -run
 
-# /gotime/feed should go to feeds backend
+# /podcast/feed/ should go to feeds backend
 client c3 {
+  txreq -url "/podcast/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "podcast.xml"
+} -run
+
+# /podcast/feed?arg=first&arg=second should go to feeds backend
+client c4 {
+  txreq -url "/podcast/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "podcast.xml"
+} -run
+
+# /gotime/feed should go to feeds backend
+client c5 {
   txreq -url "/gotime/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "gotime.xml"
 } -run
 
+# /gotime/feed/ should go to feeds backend
+client c6 {
+  txreq -url "/gotime/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "gotime.xml"
+} -run
+
+# /gotime/feed?arg=first&arg=second should go to feeds backend
+client c7 {
+  txreq -url "/gotime/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "gotime.xml"
+} -run
+
 # /master/feed should go to feeds backend
-client c4 {
+client c8 {
   txreq -url "/master/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "master.xml"
 } -run
 
+# /master/feed/ should go to feeds backend
+client c9 {
+  txreq -url "/master/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "master.xml"
+} -run
+
+# /master/feed?arg=first&arg=second should go to feeds backend
+client c10 {
+  txreq -url "/master/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "master.xml"
+} -run
+
 # /feed should go to feeds backend
-client c5 {
+client c11 {
   txreq -url "/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "feed.xml"
 } -run
 
-# /jsparty/feed should go to feeds backend
-client c6 {
-  txreq -url "/jsparty/feed"
-  rxresp
-  expect resp.status == 200
-  expect resp.body == "jsparty.xml"
-} -run
-
-# /shipit/feed should go to feeds backend
-client c7 {
-  txreq -url "/shipit/feed"
-  rxresp
-  expect resp.status == 200
-  expect resp.body == "shipit.xml"
-} -run
-
-# /news/feed should go to feeds backend
-client c8 {
-  txreq -url "/news/feed"
-  rxresp
-  expect resp.status == 200
-  expect resp.body == "news.xml"
-} -run
-
-# /brainscience/feed should go to feeds backend
-client c9 {
-  txreq -url "/brainscience/feed"
-  rxresp
-  expect resp.status == 200
-  expect resp.body == "brainscience.xml"
-} -run
-
-# /founderstalk/feed should go to feeds backend
-client c10 {
-  txreq -url "/founderstalk/feed"
-  rxresp
-  expect resp.status == 200
-  expect resp.body == "founderstalk.xml"
-} -run
-
-# /interviews/feed should go to feeds backend
-client c11 {
-  txreq -url "/interviews/feed"
-  rxresp
-  expect resp.status == 200
-  expect resp.body == "interviews.xml"
-} -run
-
-# /friends/feed should go to feeds backend
-client c12 {
-  txreq -url "/friends/feed"
-  rxresp
-  expect resp.status == 200
-  expect resp.body == "friends.xml"
-} -run
-
 # /feed/ should go to feeds backend
-client c13 {
+client c12 {
   txreq -url "/feed/"
   rxresp
   expect resp.status == 200
   expect resp.body == "feed.xml"
 } -run
 
-# /rfc/feed should go to feeds backend
+# /feed?arg=first&arg=second should go to feeds backend
+client c13 {
+  txreq -url "/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "feed.xml"
+} -run
+
+# /jsparty/feed should go to feeds backend
 client c14 {
+  txreq -url "/jsparty/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "jsparty.xml"
+} -run
+
+# /jsparty/feed/ should go to feeds backend
+client c15 {
+  txreq -url "/jsparty/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "jsparty.xml"
+} -run
+
+# /jsparty/feed?arg=first&arg=second should go to feeds backend
+client c16 {
+  txreq -url "/jsparty/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "jsparty.xml"
+} -run
+
+# /shipit/feed should go to feeds backend
+client c17 {
+  txreq -url "/shipit/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "shipit.xml"
+} -run
+
+# /shipit/feed/ should go to feeds backend
+client c18 {
+  txreq -url "/shipit/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "shipit.xml"
+} -run
+
+# /shipit/feed?arg=first&arg=second should go to feeds backend
+client c19 {
+  txreq -url "/shipit/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "shipit.xml"
+} -run
+
+# /news/feed should go to feeds backend
+client c20 {
+  txreq -url "/news/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "news.xml"
+} -run
+
+# /news/feed/ should go to feeds backend
+client c21 {
+  txreq -url "/news/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "news.xml"
+} -run
+
+# /news/feed?arg=first&arg=second should go to feeds backend
+client c22 {
+  txreq -url "/news/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "news.xml"
+} -run
+
+# /brainscience/feed should go to feeds backend
+client c23 {
+  txreq -url "/brainscience/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "brainscience.xml"
+} -run
+
+# /brainscience/feed/ should go to feeds backend
+client c24 {
+  txreq -url "/brainscience/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "brainscience.xml"
+} -run
+
+# /brainscience/feed?arg=first&arg=second should go to feeds backend
+client c25 {
+  txreq -url "/brainscience/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "brainscience.xml"
+} -run
+
+# /founderstalk/feed should go to feeds backend
+client c26 {
+  txreq -url "/founderstalk/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "founderstalk.xml"
+} -run
+
+# /founderstalk/feed/ should go to feeds backend
+client c27 {
+  txreq -url "/founderstalk/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "founderstalk.xml"
+} -run
+
+# /founderstalk/feed?arg=first&arg=second should go to feeds backend
+client c28 {
+  txreq -url "/founderstalk/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "founderstalk.xml"
+} -run
+
+# /interviews/feed should go to feeds backend
+client c29 {
+  txreq -url "/interviews/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "interviews.xml"
+} -run
+
+# /interviews/feed/ should go to feeds backend
+client c30 {
+  txreq -url "/interviews/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "interviews.xml"
+} -run
+
+# /interviews/feed?arg=first&arg=second should go to feeds backend
+client c31 {
+  txreq -url "/interviews/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "interviews.xml"
+} -run
+
+# /friends/feed should go to feeds backend
+client c32 {
+  txreq -url "/friends/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "friends.xml"
+} -run
+
+# /friends/feed/ should go to feeds backend
+client c33 {
+  txreq -url "/friends/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "friends.xml"
+} -run
+
+# /friends/feed?arg=first&arg=second should go to feeds backend
+client c34 {
+  txreq -url "/friends/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "friends.xml"
+} -run
+
+# /rfc/feed should go to feeds backend
+client c35 {
   txreq -url "/rfc/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "rfc.xml"
 } -run
 
+# /rfc/feed/ should go to feeds backend
+client c36 {
+  txreq -url "/rfc/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "rfc.xml"
+} -run
+
+# /rfc/feed?arg=first&arg=second should go to feeds backend
+client c37 {
+  txreq -url "/rfc/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "rfc.xml"
+} -run
+
 # /spotlight/feed should go to feeds backend
-client c15 {
+client c38 {
   txreq -url "/spotlight/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "spotlight.xml"
 } -run
 
+# /spotlight/feed/ should go to feeds backend
+client c39 {
+  txreq -url "/spotlight/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "spotlight.xml"
+} -run
+
+# /spotlight/feed?arg=first&arg=second should go to feeds backend
+client c40 {
+  txreq -url "/spotlight/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "spotlight.xml"
+} -run
+
 # /afk/feed should go to feeds backend
-client c16 {
+client c41 {
   txreq -url "/afk/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "afk.xml"
 } -run
 
+# /afk/feed/ should go to feeds backend
+client c42 {
+  txreq -url "/afk/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "afk.xml"
+} -run
+
+# /afk/feed?arg=first&arg=second should go to feeds backend
+client c43 {
+  txreq -url "/afk/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "afk.xml"
+} -run
+
 # /posts/feed should go to feeds backend
-client c17 {
+client c44 {
   txreq -url "/posts/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "posts.xml"
 } -run
 
+# /posts/feed/ should go to feeds backend
+client c45 {
+  txreq -url "/posts/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "posts.xml"
+} -run
+
+# /posts/feed?arg=first&arg=second should go to feeds backend
+client c46 {
+  txreq -url "/posts/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "posts.xml"
+} -run
+
 # /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed should go to feeds backend
-client c18 {
+client c47 {
   txreq -url "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed"
   rxresp
   expect resp.status == 200
   expect resp.body == "plusplus.xml"
 } -run
 
+# /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/ should go to feeds backend
+client c48 {
+  txreq -url "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "plusplus.xml"
+} -run
+
+# /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed?arg=first&arg=second should go to feeds backend
+client c49 {
+  txreq -url "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "plusplus.xml"
+} -run
+
 # /rss should go to feeds backend
-client c18 {
+client c50 {
   txreq -url "/rss"
   rxresp
   expect resp.status == 200
   expect resp.body == "feed.xml"
 } -run
 
+# /rss/ should go to feeds backend
+client c51 {
+  txreq -url "/rss/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "feed.xml"
+} -run
+
+# /rss?arg=first&arg=second should go to feeds backend
+client c52 {
+  txreq -url "/rss?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "feed.xml"
+} -run
+
 # /feeds/* should go to feeds backend
-client c19 {
+client c53 {
   txreq -url "/feeds/0284CC5C777C51D158BBECCBBB56422A"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "0284CC5C777C51D158BBECCBBB56422A.xml"
+} -run
+
+# /feeds/*?arg=first&arg=second should go to feeds backend
+client c54 {
+  txreq -url "/feeds/0284CC5C777C51D158BBECCBBB56422A?arg=first&arg=second"
   rxresp
   expect resp.status == 200
   expect resp.body == "0284CC5C777C51D158BBECCBBB56422A.xml"
