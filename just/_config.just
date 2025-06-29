@@ -1,4 +1,5 @@
 set shell := ["bash", "-uc"]
+set windows-shell := ["bash.exe", "-uc"]
 
 [private]
 OS := if os() == "macos" { "apple" } else { "unknown" }
