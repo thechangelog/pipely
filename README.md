@@ -23,7 +23,7 @@ You are welcome to fork and build this your own.
 - ✅ Send Varnish logs to Honeycomb.io - [PR #12](https://github.com/thechangelog/pipely/pull/12)
 - ✅ Enrich Varnish logs with GeoIP data - [PR #13](https://github.com/thechangelog/pipely/pull/13)
 - ✅ Supervisor restarts crashed processes - [PR #14](https://github.com/thechangelog/pipely/pull/14)
-- ✅ Auth `PURGE` requests
+- ✅ Auth `PURGE` requests - [PR #16](https://github.com/thechangelog/pipely/pull/16)
 - ☑️ Send logs to S3
 - ☑️ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl)
 - ☑️ All contributors review & clean-up
