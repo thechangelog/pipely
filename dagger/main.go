@@ -110,7 +110,7 @@ func New(
 	}
 
 	pipely.Varnish = dag.Container().From("varnish:"+varnishVersion).
-		WithUser("root"). // a bunch of commands fail if we are not root, so YOLO & sandbox with Firecracker, Kata, etc.
+		WithUser("root"). // a bunch of commands fail if we are not root, so YOLO & sandbox with Firecracker, Kata Containers, etc.
 		WithEnvVariable("VARNISH_HTTP_PORT", fmt.Sprintf("%d", varnishPort)).
 		WithExposedPort(varnishPort).
 		WithEnvVariable("BERESP_TTL", berespTtl).
@@ -179,33 +179,35 @@ logs: bash -c 'coproc VARNISH_JSON_RESPONSE { varnish-json-response; }; vector <
 `, m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
 
 	return m.Varnish.
-		With(func(c *dagger.Container) *dagger.Container {
-			return c.WithEnvVariable("BACKEND_APP_FQDN", m.AppProxy.Fqdn).
-				WithEnvVariable("BACKEND_APP_HOST", "localhost").
-				WithEnvVariable("BACKEND_APP_PORT", m.AppProxy.Port).
-				WithEnvVariable("BACKEND_FEEDS_FQDN", m.FeedsProxy.Fqdn).
-				WithEnvVariable("BACKEND_FEEDS_HOST", "localhost").
-				WithEnvVariable("BACKEND_FEEDS_PORT", m.FeedsProxy.Port).
-				WithEnvVariable("BACKEND_ASSETS_FQDN", m.AssetsProxy.Fqdn).
-				WithEnvVariable("BACKEND_ASSETS_HOST", "localhost").
-				WithEnvVariable("BACKEND_ASSETS_PORT", m.AssetsProxy.Port).
-				WithEnvVariable("ASSETS_HOST", m.AssetsProxy.Host)
-		}).
+		// Configure various environment variables
+		WithEnvVariable("BACKEND_APP_FQDN", m.AppProxy.Fqdn).
+		WithEnvVariable("BACKEND_APP_HOST", "localhost").
+		WithEnvVariable("BACKEND_APP_PORT", m.AppProxy.Port).
+		WithEnvVariable("BACKEND_FEEDS_FQDN", m.FeedsProxy.Fqdn).
+		WithEnvVariable("BACKEND_FEEDS_HOST", "localhost").
+		WithEnvVariable("BACKEND_FEEDS_PORT", m.FeedsProxy.Port).
+		WithEnvVariable("BACKEND_ASSETS_FQDN", m.AssetsProxy.Fqdn).
+		WithEnvVariable("BACKEND_ASSETS_HOST", "localhost").
+		WithEnvVariable("BACKEND_ASSETS_PORT", m.AssetsProxy.Port).
+		WithEnvVariable("ASSETS_HOST", m.AssetsProxy.Host).
+		// Add tls-exterminator
 		WithFile("/usr/local/bin/tls-exterminator", tlsExterminator).
+		// Prepare apt packages
 		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
 		WithEnvVariable("TERM", "xterm-256color").
 		WithExec([]string{"apt-get", "update"}).
+		// Install tmux
 		WithExec([]string{"apt-get", "install", "--yes", "tmux"}).
 		WithExec([]string{"tmux", "-V"}).
+		// Install vector.dev
+		WithFile("/usr/bin/vector", vectorContainer.File("/usr/bin/vector")).
+		WithDirectory("/usr/share/vector", vectorContainer.Directory("/usr/share/vector")).
+		WithDirectory("/usr/share/doc/vector", vectorContainer.Directory("/usr/share/doc/vector")).
+		WithDirectory("/etc/vector", vectorContainer.Directory("/etc/vector")).
+		WithDirectory("/var/lib/vector", vectorContainer.Directory("/var/lib/vector")).
+		WithExec([]string{"vector", "--version"}).
+		// Install & configure overmind
 		WithFile("/usr/local/bin/overmind", overmind).
-		With(func(c *dagger.Container) *dagger.Container {
-			return c.WithFile("/usr/bin/vector", vectorContainer.File("/usr/bin/vector")).
-				WithDirectory("/usr/share/vector", vectorContainer.Directory("/usr/share/vector")).
-				WithDirectory("/usr/share/doc/vector", vectorContainer.Directory("/usr/share/doc/vector")).
-				WithDirectory("/etc/vector", vectorContainer.Directory("/etc/vector")).
-				WithDirectory("/var/lib/vector", vectorContainer.Directory("/var/lib/vector")).
-				WithExec([]string{"vector", "--version"})
-		}).
 		WithNewFile("/Procfile", procfile).
 		WithWorkdir("/").
 		WithEntrypoint([]string{"overmind", "start", "--timeout=30", "--no-port", "--auto-restart=all"})
@@ -220,20 +222,18 @@ func (m *Pipely) withConfigs(c *dagger.Container, env Env) *dagger.Container {
 }
 
 func (m *Pipely) withVarnishConfig(c *dagger.Container) *dagger.Container {
-	return c.
-		WithFile(
-			"/etc/varnish/default.vcl",
-			m.Source.File("varnish/pipedream.changelog.com.vcl"))
+	return c.WithFile(
+		"/etc/varnish/default.vcl",
+		m.Source.File("varnish/pipedream.changelog.com.vcl"))
 }
 
 func (m *Pipely) withVarnishJsonResponse(c *dagger.Container) *dagger.Container {
-	return c.
-		WithFile(
-			"/usr/local/bin/varnish-json-response",
-			m.Source.File("varnish/varnish-json-response.bash"),
-			dagger.ContainerWithFileOpts{
-				Permissions: 755,
-			})
+	return c.WithFile(
+		"/usr/local/bin/varnish-json-response",
+		m.Source.File("varnish/varnish-json-response.bash"),
+		dagger.ContainerWithFileOpts{
+			Permissions: 755,
+		})
 }
 
 func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Container {
@@ -278,8 +278,8 @@ func (m *Pipely) Test(ctx context.Context) *dagger.Container {
 		Test)
 }
 
-// Dev container with various useful tools - use `just` as the starting point
-func (m *Pipely) Dev(ctx context.Context) *dagger.Container {
+// Production container for local use with various useful debugging tools - use `just` as the starting point
+func (m *Pipely) LocalProduction(ctx context.Context) *dagger.Container {
 	return m.withConfigs(
 		m.local(ctx),
 		Dev)
@@ -288,22 +288,66 @@ func (m *Pipely) Dev(ctx context.Context) *dagger.Container {
 func (m *Pipely) local(ctx context.Context) *dagger.Container {
 	hurlArchive := dag.HTTP("https://github.com/Orange-OpenSource/hurl/releases/download/" + hurlVersion + "/hurl-" + hurlVersion + "-" + altArchitecture(ctx) + "-unknown-linux-gnu.tar.gz")
 
+	// https://github.com/davecheney/httpstat
+	httpstat := m.Golang.
+		WithExec([]string{"go", "install", "github.com/davecheney/httpstat@v1.2.1"}).
+		File("/go/bin/httpstat")
+
+	// https://github.com/fabio42/sasqwatch
+	sasqwatch := m.Golang.
+		WithExec([]string{"go", "install", "github.com/fabio42/sasqwatch@8564c29ceaa03d5211b8b6d7a3012f9acf691fd1"}).
+		File("/go/bin/sasqwatch")
+
+	// https://github.com/xxxserxxx/gotop
+	gotop := m.Golang.
+		WithExec([]string{"go", "install", "github.com/xxxserxxx/gotop/v4/cmd/gotop@bba42d08624edee8e339ac98c1a9c46810414f78"}).
+		File("/go/bin/gotop")
+
+	p, _ := dag.DefaultPlatform(ctx)
+	platform := platforms.MustParse(string(p))
+	oha := dag.HTTP("https://github.com/hatoo/oha/releases/download/v" + ohaVersion + "/oha-linux-" + platform.Architecture)
+
 	return m.app().
-		With(func(c *dagger.Container) *dagger.Container {
-			return c.WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
-				WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
-				WithExec([]string{"tar", "-zxvf", "/opt/hurl.tar.gz", "-C", "/opt/hurl", "--strip-components=1"}).
-				WithExec([]string{"ln", "-sf", "/opt/hurl/bin/hurl", "/usr/local/bin/hurl"}).
-				WithExec([]string{"apt-get", "install", "--yes", "curl"}).
-				WithExec([]string{"curl", "--version"}).
-				WithExec([]string{"apt-get", "install", "--yes", "libxml2"}).
-				WithExec([]string{"hurl", "--version"})
+		// Install hurl.dev + dependencies (curl & libxml2)
+		WithExec([]string{"apt-get", "install", "--yes", "curl"}).
+		WithExec([]string{"curl", "--version"}).
+		WithExec([]string{"apt-get", "install", "--yes", "libxml2"}).
+		WithExec([]string{"mkdir", "-p", "/opt/hurl"}).
+		WithMountedFile("/opt/hurl.tar.gz", hurlArchive).
+		WithExec([]string{"tar", "-zxvf", "/opt/hurl.tar.gz", "-C", "/opt/hurl", "--strip-components=1"}).
+		WithExec([]string{"ln", "-sf", "/opt/hurl/bin/hurl", "/usr/local/bin/hurl"}).
+		WithExec([]string{"hurl", "--version"}).
+		// Install htop
+		WithExec([]string{"apt-get", "install", "--yes", "htop"}).
+		WithExec([]string{"htop", "-V"}).
+		// Install procps
+		WithExec([]string{"apt-get", "install", "--yes", "procps"}).
+		WithExec([]string{"ps", "-V"}).
+		// Install neovim
+		WithExec([]string{"apt-get", "install", "--yes", "neovim"}).
+		WithExec([]string{"nvim", "--version"}).
+		// Install jq
+		WithExec([]string{"apt-get", "install", "--yes", "jq"}).
+		WithExec([]string{"jq", "--version"}).
+		// Install httpstat
+		WithFile("/usr/local/bin/httpstat", httpstat).
+		WithExec([]string{"httpstat", "-v"}).
+		// Install sasqwatch
+		WithFile("/usr/local/bin/sasqwatch", sasqwatch).
+		WithExec([]string{"sasqwatch", "-v"}).
+		// Install gotop
+		WithFile("/usr/local/bin/gotop", gotop).
+		WithExec([]string{"gotop", "-v"}).
+		// Install oha
+		WithFile("/usr/local/bin/oha", oha, dagger.ContainerWithFileOpts{
+			Permissions: 755,
 		}).
-		With(func(c *dagger.Container) *dagger.Container {
-			return c.WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
-				WithFile("/justfile", m.Source.File("container.justfile")).
-				WithExec([]string{"just"})
-		}).
+		WithExec([]string{"oha", "--version"}).
+		// Install just.systems
+		WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
+		WithFile("/justfile", m.Source.File("container.justfile")).
+		WithExec([]string{"just"}).
+		// Add test directory
 		WithDirectory("/test", m.Source.Directory("test"))
 }
 
@@ -328,13 +372,6 @@ func (m *Pipely) TestVarnish(ctx context.Context) *dagger.Container {
 
 // Test acceptance
 func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
-	// pipely, err := m.Test(ctx).
-	// 	AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true}).
-	// 	Start(ctx)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
 	pipely := m.Test(ctx).
 		AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true})
 
@@ -355,48 +392,6 @@ func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
 // Test acceptance report
 func (m *Pipely) TestAcceptanceReport(ctx context.Context) *dagger.Directory {
 	return m.TestAcceptance(ctx).Directory("/var/opt/hurl/test-acceptance-local")
-}
-
-// Debug container with various useful tools - use `just` as the starting point
-func (m *Pipely) Debug(ctx context.Context) *dagger.Container {
-	// https://github.com/davecheney/httpstat
-	httpstat := m.Golang.
-		WithExec([]string{"go", "install", "github.com/davecheney/httpstat@v1.2.1"}).
-		File("/go/bin/httpstat")
-
-	// https://github.com/fabio42/sasqwatch
-	sasqwatch := m.Golang.
-		WithExec([]string{"go", "install", "github.com/fabio42/sasqwatch@8564c29ceaa03d5211b8b6d7a3012f9acf691fd1"}).
-		File("/go/bin/sasqwatch")
-
-	// https://github.com/xxxserxxx/gotop
-	gotop := m.Golang.
-		WithExec([]string{"go", "install", "github.com/xxxserxxx/gotop/v4/cmd/gotop@bba42d08624edee8e339ac98c1a9c46810414f78"}).
-		File("/go/bin/gotop")
-
-	p, _ := dag.DefaultPlatform(ctx)
-	platform := platforms.MustParse(string(p))
-	oha := dag.HTTP("https://github.com/hatoo/oha/releases/download/v" + ohaVersion + "/oha-linux-" + platform.Architecture)
-
-	return m.Dev(ctx).
-		WithExec([]string{"apt-get", "install", "--yes", "htop"}).
-		WithExec([]string{"htop", "-V"}).
-		WithExec([]string{"apt-get", "install", "--yes", "procps"}).
-		WithExec([]string{"ps", "-V"}).
-		WithExec([]string{"apt-get", "install", "--yes", "neovim"}).
-		WithExec([]string{"nvim", "--version"}).
-		WithExec([]string{"apt-get", "install", "--yes", "jq"}).
-		WithExec([]string{"jq", "--version"}).
-		WithFile("/usr/local/bin/httpstat", httpstat).
-		WithExec([]string{"httpstat", "-v"}).
-		WithFile("/usr/local/bin/sasqwatch", sasqwatch).
-		WithExec([]string{"sasqwatch", "-v"}).
-		WithFile("/usr/local/bin/gotop", gotop).
-		WithExec([]string{"gotop", "-v"}).
-		WithFile("/usr/local/bin/oha", oha, dagger.ContainerWithFileOpts{
-			Permissions: 755,
-		}).
-		WithExec([]string{"oha", "--version"})
 }
 
 // Publish app container

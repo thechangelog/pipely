@@ -13,6 +13,16 @@ fmt:
     just --fmt --check --unstable
     just --version
 
+# Debug container locally
+local-debug:
+    @just dagger call --beresp-ttl=5s \
+        local-production terminal --cmd=bash
+
+# Run container locally: available on http://localhost:9000
+local-run:
+    @just dagger call --beresp-ttl=5s \
+        local-production as-service --use-entrypoint=true up
+
 # Test VTC + acceptance locally
 test: test-vtc test-acceptance-local
 
@@ -56,14 +66,23 @@ test-reports:
 test-reports-rm:
     rm -fr tmp/*
 
-# Debug container image interactively - assumes envrc-secrets was already run
+# Debug production container locally - assumes envrc-secrets has already run
 [group('team')]
-debug:
-    @PURGE_TOKEN="debug" just dagger call --beresp-ttl=5s \
+local-production-debug:
+    @PURGE_TOKEN="local-production" just dagger call --beresp-ttl=5s \
       --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
       --max-mind-auth=op://pipely/maxmind/credential \
       --purge-token=env:PURGE_TOKEN \
-        debug terminal --cmd=bash
+        local-production terminal --cmd=bash
+
+# Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
+[group('team')]
+local-production-run:
+    @PURGE_TOKEN="local-production" just dagger call --beresp-ttl=5s \
+      --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
+      --max-mind-auth=op://pipely/maxmind/credential \
+      --purge-token=env:PURGE_TOKEN \
+        local-production as-service --use-entrypoint=true up
 
 # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
 http-profile url="https://pipedream.changelog.com/":

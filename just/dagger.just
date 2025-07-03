@@ -3,7 +3,7 @@
 [private]
 DAGGER_VERSION := "0.18.12"
 [private]
-DAGGER_DIR := BIN_PATH / "dagger-" + DAGGER_VERSION
+DAGGER_DIR := BIN_PATH / "pipely-dagger-" + DAGGER_VERSION
 [private]
 DAGGER := DAGGER_DIR / "dagger"
 

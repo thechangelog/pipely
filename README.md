@@ -49,19 +49,17 @@ While it's fun watching other people experiment with digital resin (varnish
 😂), it's a whole lot more fun when you can repeat those experiments yourself,
 understand more how it works, and make your own modifications.
 
-You can find some instructions and notes for kicking the tires and [developing
-& testing this locally](docs/local_dev.md).
-
-A few other commands that you may be interested in:
+Use 🤖 [`just`](https://github.com/casey/just?tab=readme-ov-file#installation) `v1.27.0` or newer as the starting point:
 
 ```bash
-# Requires https://github.com/casey/just
 just
 Available recipes:
     how-many-lines                  # How many lines of Varnish config?
     how-many-lines-raw              # How many lines of Varnish config?
     http-profile url="https://pipedream.changelog.com/" # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
-    test                            # Test everything
+    local-debug                     # Debug container locally
+    local-run                       # Run container locally: available on http://localhost:9000
+    test                            # Test VTC + acceptance locally
     test-acceptance-fastly *ARGS    # Test CURRENT production
     test-acceptance-local           # Test local setup
     test-reports                    # Open test reports
@@ -71,10 +69,11 @@ Available recipes:
     [team]
     cert fqdn                       # Add cert $fqdn to app
     certs                           # Show app certs
-    debug                           # Debug container image interactively - assumes envrc-secrets was already run
     deploy tag=_DEFAULT_TAG         # Deploy container image
     envrc-secrets                   # Create .envrc.secrets with credentials from 1Password
     ips                             # Show app IPs
+    local-production-debug          # Debug production container locally - assumes envrc-secrets has already run
+    local-production-run            # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
     machines                        # Show app machines
     publish tag=_DEFAULT_TAG        # Publish container image - assumes envrc-secrets was already run
     restart                         # Restart ALL app machines, one-by-one
@@ -87,6 +86,8 @@ Available recipes:
 # Run the tests
 just test
 ```
+
+The only other pre-requisite for the commands that run services locally is 🐳 [Docker](https://docs.docker.com/engine/install/)
 
 ## How can you help
 

@@ -14,7 +14,7 @@ LOCAL_PATH := home_dir() / ".local"
 BIN_PATH := LOCAL_PATH / "bin"
 
 [private]
-_DEFAULT_TAG := "dev-" + env("USER")
+_DEFAULT_TAG := "dev-" + env("USER", "piper")
 
 [private]
 DAGGER_FLY_MODULE := "github.com/gerhard/daggerverse/flyio@flyio/v0.2.0"
