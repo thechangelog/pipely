@@ -224,7 +224,10 @@ func (m *Pipely) withConfigs(c *dagger.Container, env Env) *dagger.Container {
 func (m *Pipely) withVarnishConfig(c *dagger.Container) *dagger.Container {
 	return c.WithFile(
 		"/etc/varnish/default.vcl",
-		m.Source.File("varnish/pipedream.changelog.com.vcl"))
+		m.Source.File("varnish/pipedream.changelog.com.vcl")).
+		WithFile(
+		"/etc/varnish/pipedream-redirects.changelog.com.vcl",
+		m.Source.File("varnish/pipedream-redirects.changelog.com.vcl"))
 }
 
 func (m *Pipely) withVarnishJsonResponse(c *dagger.Container) *dagger.Container {
