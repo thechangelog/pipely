@@ -76,22 +76,28 @@ test-reports-rm:
 
 # Debug production container locally - assumes envrc-secrets has already run
 [group('team')]
-local-production-debug:
+local-debug-production:
     @PURGE_TOKEN="local-production" \
     just dagger call --beresp-ttl=5s \
       --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
       --max-mind-auth=op://pipely/maxmind/credential \
       --purge-token=env:PURGE_TOKEN \
+      --aws-region=eu-west-1 \
+      --aws-access-key-id=op://pipely/aws-s3-logs/access-key-id \
+      --aws-secret-access-key=op://pipely/aws-s3-logs/secret-access-key \
         local-production terminal --cmd=bash
 
 # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
 [group('team')]
-local-production-run:
+local-run-production:
     @PURGE_TOKEN="local-production" \
     just dagger call --beresp-ttl=5s \
       --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
       --max-mind-auth=op://pipely/maxmind/credential \
       --purge-token=env:PURGE_TOKEN \
+      --aws-region=eu-west-1 \
+      --aws-access-key-id=op://pipely/aws-s3-logs/access-key-id \
+      --aws-secret-access-key=op://pipely/aws-s3-logs/secret-access-key \
         local-production as-service --use-entrypoint=true up
 
 # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
@@ -134,13 +140,20 @@ scale:
 secrets:
     PURGE_TOKEN="op://pipely/purge/credential" \
     HONEYCOMB_API_KEY="op://pipely/honeycomb/credential" \
-    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN"'
+    AWS_ACCESS_KEY_ID=op://pipely/aws-s3-logs/access-key-id \
+    AWS_SECRET_ACCESS_KEY=op://pipely/aws-s3-logs/secret-access-key \
+    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"'
     flyctl secrets list
 
 # Add cert $fqdn to app
 [group('team')]
-cert fqdn:
+cert-add fqdn:
     flyctl certs add {{ fqdn }} --app {{ FLY_APP }}
+
+# Show cert $fqdn for app
+[group('team')]
+cert fqdn:
+    flyctl certs show {{ fqdn }} --app {{ FLY_APP }}
 
 # Show app certs
 [group('team')]
