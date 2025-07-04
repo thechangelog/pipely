@@ -1,0 +1,69 @@
+varnishtest "Test new edge redirects"
+
+# App mock server
+server s1 {
+  rxreq
+  txresp -status 404 -body "App backend"
+} -start
+
+# Start varnish with our VCL
+varnish v1 -vcl {
+  vcl 4.1;
+
+  import std;
+
+  # include the separate redirects vcl file
+  include "/etc/varnish/pipedream-redirects.changelog.com.vcl";
+
+  backend app {
+    .host = "${s1_addr}";
+    .port = "${s1_port}";
+  }
+
+  sub vcl_recv {
+    set req.http.x-backend = "app";
+  }
+
+  # Disable caching for testing
+  sub vcl_backend_response {
+    set beresp.uncacheable = true;
+    return(deliver);
+  }
+} -start
+
+# / should go to app backend simulating a page not found
+client c1 {
+  txreq -url "/not-found"
+  rxresp
+  expect resp.status == 404
+  expect resp.body == "App backend"
+} -run
+
+# test basic redirect returning different path and status code
+client c2 {
+  txreq -url "/uploads/podcast/news-2022-06-27/the-changelog-news-2022-06-27.mp3"
+  rxresp
+  expect resp.status == 308
+  expect resp.http.Location == "https://127.0.0.1/uploads/news/1/changelog-news-1.mp3"
+} -run
+
+# test basic redirect returning different path and status code and including the query string
+client c3 {
+  txreq -url "/uploads/podcast/news-2022-06-27/the-changelog-news-2022-06-27.mp3?this=is&a=query&string"
+  rxresp
+  expect resp.status == 308
+  expect resp.http.Location == "https://127.0.0.1/uploads/news/1/changelog-news-1.mp3?this=is&a=query&string"
+} -run
+
+# test a few additional redirect entries
+client c4 {
+  txreq -url "/uploads/podcast/news-2022-07-04/the-changelog-news-2022-07-04.mp3"
+  rxresp
+  expect resp.status == 308
+  expect resp.http.Location == "https://127.0.0.1/uploads/news/2/changelog-news-2.mp3"
+
+  txreq -url "/uploads/podcast/news-2022-07-11/the-changelog-news-2022-07-11.mp3"
+  rxresp
+  expect resp.status == 308
+  expect resp.http.Location == "https://127.0.0.1/uploads/news/3/changelog-news-3.mp3"
+} -run
