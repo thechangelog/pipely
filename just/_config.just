@@ -37,6 +37,9 @@ FLY_APP_IMAGE := env("FLY_APP_IMAGE", "ghcr.io/thechangelog/pipely")
 [private]
 FLY_APP_REGIONS := env("FLY_APP_REGIONS", "sjc,dfw,ord,iad,scl,lhr,fra,jnb,sin,syd")
 
+[private]
+export PURGE_TOKEN := env("PURGE_TOKEN", "local-purge")
+
 # https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/
 
 [private]

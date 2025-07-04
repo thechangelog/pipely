@@ -46,7 +46,7 @@ test-acceptance-local *ARGS:
      --variable assets_host=cdn2.changelog.com \
      --variable delay_ms=6000 \
      --variable delay_s=5 \
-     --variable purge_token=${PURGE_TOKEN:-""} \
+     --variable purge_token="{{ env("PURGE_TOKEN") }}" \
      {{ ARGS }} \
      test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
 
