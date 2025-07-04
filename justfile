@@ -76,22 +76,32 @@ test-reports-rm:
 
 # Debug production container locally - assumes envrc-secrets has already run
 [group('team')]
-local-production-debug:
+local-debug-production:
     @PURGE_TOKEN="local-production" \
     just dagger call --beresp-ttl=5s \
-      --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
-      --max-mind-auth=op://pipely/maxmind/credential \
+      --honeycomb-dataset=${HONEYCOMB_DATASET} \
+      --honeycomb-api-key=env:HONEYCOMB_API_KEY \
+      --max-mind-auth=env:MAXMIND_AUTH \
       --purge-token=env:PURGE_TOKEN \
+      --aws-region=${AWS_REGION} \
+      --aws-local-production-s3-bucket-suffix=${AWS_S3_BUCKET_SUFFIX} \
+      --aws-access-key-id=env:AWS_ACCESS_KEY_ID \
+      --aws-secret-access-key=env:AWS_SECRET_ACCESS_KEY \
         local-production terminal --cmd=bash
 
 # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
 [group('team')]
-local-production-run:
+local-run-production:
     @PURGE_TOKEN="local-production" \
     just dagger call --beresp-ttl=5s \
-      --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
-      --max-mind-auth=op://pipely/maxmind/credential \
+      --honeycomb-dataset=${HONEYCOMB_DATASET} \
+      --honeycomb-api-key=env:HONEYCOMB_API_KEY \
+      --max-mind-auth=env:MAXMIND_AUTH \
       --purge-token=env:PURGE_TOKEN \
+      --aws-region=${AWS_REGION} \
+      --aws-local-production-s3-bucket-suffix=${AWS_S3_BUCKET_SUFFIX} \
+      --aws-access-key-id=env:AWS_ACCESS_KEY_ID \
+      --aws-secret-access-key=env:AWS_SECRET_ACCESS_KEY \
         local-production as-service --use-entrypoint=true up
 
 # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
@@ -113,8 +123,8 @@ how-many-lines-raw:
 # Publish container image - assumes envrc-secrets was already run
 [group('team')]
 publish tag=_DEFAULT_TAG:
-    @just dagger call --tag={{ tag }} --max-mind-auth=op://pipely/maxmind/credential \
-        publish --registry-username=$USER --registry-password=op://pipely/ghcr/credential --image={{ FLY_APP_IMAGE }}
+    @just dagger call --tag={{ tag }} --max-mind-auth=env:MAXMIND_AUTH \
+        publish --registry-username=$USER --registry-password=env:GHCR_PASS --image={{ FLY_APP_IMAGE }}
 
 # Deploy container image
 [group('team')]
@@ -133,14 +143,22 @@ scale:
 [group('team')]
 secrets:
     PURGE_TOKEN="op://pipely/purge/credential" \
+    HONEYCOMB_DATASET="pipedream"
     HONEYCOMB_API_KEY="op://pipely/honeycomb/credential" \
-    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN"'
+    AWS_ACCESS_KEY_ID="op://pipely/aws-s3-logs/access-key-id" \
+    AWS_SECRET_ACCESS_KEY="op://pipely/aws-s3-logs/secret-access-key" \
+    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_DATASET="$HONEYCOMB_DATASET" HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"'
     flyctl secrets list
 
 # Add cert $fqdn to app
 [group('team')]
-cert fqdn:
+cert-add fqdn:
     flyctl certs add {{ fqdn }} --app {{ FLY_APP }}
+
+# Show cert $fqdn for app
+[group('team')]
+cert fqdn:
+    flyctl certs show {{ fqdn }} --app {{ FLY_APP }}
 
 # Show app certs
 [group('team')]
@@ -185,7 +203,7 @@ tag tag sha discussion:
 # Create .envrc.secrets with credentials from 1Password
 [group('team')]
 envrc-secrets:
-    op inject --in-file envrc.secrets.op --out-file .envrc.secrets
+    just op inject --in-file envrc.secrets.op --out-file .envrc.secrets
 
 [private]
 create:

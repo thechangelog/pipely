@@ -1,19 +1,214 @@
 enrichment_tables:
+  # https://vector.dev/docs/reference/configuration/#enrichment-tables
   geoip:
     type: "mmdb"
     path: "/usr/local/share/GeoIP/GeoLite2-City.mmdb"
 
 transforms:
   varnish_geoip:
+    # https://vector.dev/docs/reference/configuration/transforms/remap/
     type: "remap"
     inputs:
       - "varnish"
     source: |
+      .transform = "varnish_geoip"
       geoip_data, err = get_enrichment_table_record("geoip", {"ip": .client_ip})
       if err == null {
         .geo_city = geoip_data.city.names.en
         .geo_country_code = geoip_data.country.iso_code
+        .geo_country_name = geoip_data.country.names.en
+        .geo_continent_code = geoip_data.continent.code
+        .geo_latitude = geoip_data.location.latitude
+        .geo_longitude = geoip_data.location.longitude
       }
+
+  s3_json_feeds:
+    # https://vector.dev/docs/reference/configuration/transforms/remap/
+    type: "remap"
+    inputs:
+      - "varnish_geoip"
+    source: |
+      .transform = "s3_json_feeds"
+      url_string = string!(.url) || ""
+      url_parts = parse_url!("http://for.vector.parse-url.local" + url_string)
+      url_parts.path = string!(url_parts.path)
+      if starts_with(url_parts.path, "/feeds/") || ends_with(url_parts.path, "/feed") {
+        .message = {
+          "timestamp": parse_timestamp!(.time, format: "%Y-%m-%dT%H:%M:%SZ"),
+          "client_ip": .client_ip,
+          "geo_country": downcase!(.geo_country_name || ""),
+          "geo_city": downcase!(.geo_city || ""),
+          "host": .host,
+          "url": .url,
+          "request_method": .request,
+          "request_protocol": .protocol,
+          "request_referer": .request_referer,
+          "request_user_agent": .request_user_agent,
+          "response_state": .cache_status,
+          "response_status": .status,
+          "response_reason": "",
+          "response_body_size": .resp_body_size,
+          "server_datacenter": .server_datacenter
+        }
+      } else {
+        abort
+      }
+
+  s3_csv:
+    # https://vector.dev/docs/reference/configuration/transforms/remap/
+    type: "remap"
+    inputs:
+      - "varnish_geoip"
+    source: |
+      .transform = "s3_csv"
+      formatted_time = format_timestamp!(now(), "%d/%b/%Y:%H:%M:%S %z")
+      parsed_time, err = parse_timestamp(.time, "%+")
+      if err == null {
+        formatted_time = format_timestamp!(parsed_time, "%d/%b/%Y:%H:%M:%S %z")
+      }
+      .formatted_time = "[" + formatted_time + "]"
+      .geo_city = downcase!(.geo_city || "")
+      .geo_country_name = downcase!(.geo_country_name || "")
+
+  s3_csv_changelog:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/podcast/")
+
+  s3_csv_gotime:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/gotime/")
+
+  s3_csv_rfc:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/rfc/")
+
+  s3_csv_founderstalk:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/founderstalk/")
+
+  s3_csv_spotlight:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/spotlight/")
+
+  s3_csv_jsparty:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/jsparty/")
+
+  s3_csv_practicalai:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/practicalai/")
+
+  s3_csv_reactpodcast:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/reactpodcast/")
+
+  s3_csv_afk:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/afk/")
+
+  s3_csv_backstage:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/backstage/")
+
+  s3_csv_brainscience:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/brainscience/")
+
+  s3_csv_shipit:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/shipit/")
+
+  s3_csv_news:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/news/")
+
+  s3_csv_friends:
+    # https://vector.dev/docs/reference/configuration/transforms/filter/
+    type: "filter"
+    inputs:
+      - "s3_csv"
+    condition:
+      type: "vrl"
+      source: |
+        starts_with(string!(.url), "/uploads/friends/")
 
 sinks:
   honeycomb:
@@ -23,3 +218,484 @@ sinks:
       - "varnish_geoip"
     api_key: ${HONEYCOMB_API_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
     dataset: ${HONEYCOMB_DATASET:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_feeds:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_json_feeds"
+    bucket: "changelog-logs-feeds${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_changelog:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_changelog"
+    bucket: "changelog-logs-podcast${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_gotime:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_gotime"
+    bucket: "changelog-logs-gotime${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_rfc:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_rfc"
+    bucket: "changelog-logs-rfc${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_founderstalk:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_founderstalk"
+    bucket: "changelog-logs-founderstalk${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_spotlight:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_spotlight"
+    bucket: "changelog-logs-spotlight${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_jsparty:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_jsparty"
+    bucket: "changelog-logs-jsparty${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_practicalai:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_practicalai"
+    bucket: "changelog-logs-practicalai${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_reactpodcast:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_reactpodcast"
+    bucket: "changelog-logs-reactpodcast${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_afk:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_afk"
+    bucket: "changelog-logs-afk${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_backstage:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_backstage"
+    bucket: "changelog-logs-backstage${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_brainscience:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_brainscience"
+    bucket: "changelog-logs-brainscience${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_shipit:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_shipit"
+    bucket: "changelog-logs-shipit${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_news:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_news"
+    bucket: "changelog-logs-news${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_friends:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_friends"
+    bucket: "changelog-logs-friends${S3_BUCKET_SUFFIX:-}"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%Y-%m-%dT%H:%M%z-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      # https://vector.dev/docs/reference/configuration/sinks/file/#encoding.csv.fields
+      codec: "csv"
+      csv:
+        fields:
+          - client_ip
+          - formatted_time
+          - url
+          - resp_body_size
+          - status
+          - request_user_agent
+          - geo_latitude
+          - geo_longitude
+          - geo_city
+          - geo_continent_code
+          - geo_country_name
+    compression: "none"
+    batch:
+      max_bytes: 102400 # write to S3 when 100KB worth of events are stored in memory
+      timeout_secs: 60 # write to S3 once per minute if any events in memory (matches the key_prefix)
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
