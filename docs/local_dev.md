@@ -27,12 +27,16 @@ To work effectively on the container, you're going to want to start up tmux. Thi
 
 If you're not familiar with tmux, I highly recommend taking a quick tutorial, but to jump right in:
 
-- Get into the local container with `just local-debug`
-- type `tmux`
-- Start the server with `just up`
-- Create a new window by pressing `ctrl-b` followed by `c`
-- Try fetching the front page from the locally running server with `curl http://localhost:9000`
-- Run a benchmark test such as `just bench-app-4-pipedream`
+- Get into the local container with `just local-debug`.
+- type `tmux`.
+- Start the server with `just up`.
+- Create a new window by pressing `ctrl-b` followed by `c`.
+- Try fetching the front page from the locally running server with `curl http://localhost:9000`.
+- Run a benchmark test such as `just bench-app-4-pipedream`.
+- Switch back to the other window and check out the live logs feed with `ctrl-b b`.
+- Quit the server with `ctrl-c`.
+- Close your two tmux windows with `exit` and `exit`.
+- Close your container prompt with `exit` again.
 
 ## Architecture
 
