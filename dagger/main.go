@@ -358,8 +358,7 @@ func (m *Pipely) local(ctx context.Context) *dagger.Container {
 		WithExec([]string{"just"}).
 		// Add test directory
 		WithDirectory("/test", m.Source.Directory("test")).
-		WithExec([]string{"bash", "-c", "echo 'export PS1=\"[pipely-local-debug] \\u@\\h:\\w\\$ \"' >> ~/.bashrc"}).
-		WithExec([]string{"bash", "-c", "echo 'cat /test/welcome.txt' >> ~/.bashrc"})
+		WithExec([]string{"bash", "-c", "cat /test/pipely-local.bashrc >> ~/.bashrc"})
 }
 
 func altArchitecture(ctx context.Context) string {
