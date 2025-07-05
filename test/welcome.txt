@@ -1,0 +1,4 @@
+🎉 Welcome to the Pipely local debug environment!
+📚 To get started with local development, check out docs/local_dev.md in the repo
+💡 Available tools: just, hurl, httpstat, sasqwatch, gotop, oha, neovim, htop
+🔧 Run `just` to see available commands
