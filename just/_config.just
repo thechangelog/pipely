@@ -8,6 +8,12 @@ OS := if os() == "macos" { "apple" } else { "unknown" }
 OS_ALT := if os() == "macos" { "darwin" } else { "linux-gnu" }
 
 [private]
+OS_ALT2 := if os() == "macos" { "darwin" } else { "linux" }
+
+[private]
+ARCH_ALT := if arch() == "x86_64" { "amd64" } else { "arm64" }
+
+[private]
 LOCAL_PATH := home_dir() / ".local"
 
 [private]

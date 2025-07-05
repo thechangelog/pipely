@@ -3,6 +3,7 @@
 import 'just/_config.just'
 import 'just/hurl.just'
 import 'just/dagger.just'
+import 'just/op.just'
 
 [private]
 default:
@@ -41,14 +42,15 @@ test-acceptance-local:
 # Test NEW production - Pipedream, the Changelog variant of Pipely
 [group('team')]
 test-acceptance-pipedream *ARGS:
-    @just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
-      --variable host=https://pipedream.changelog.com \
-      --variable assets_host=cdn2.changelog.com \
-      --variable delay_ms=65000 \
-      --variable delay_s=60 \
-      --variable purge_token=$(op read op://pipely/purge/credential --account changelog.1password.com --cache) \
-      {{ ARGS }} \
-      test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
+    HURL_purge_token="op://pipely/purge/credential" \
+    just op run -- \
+      just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
+        --variable host=https://pipedream.changelog.com \
+        --variable assets_host=cdn2.changelog.com \
+        --variable delay_ms=65000 \
+        --variable delay_s=60 \
+        {{ ARGS }} \
+        test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
 
 # Test CURRENT production
 test-acceptance-fastly *ARGS:
@@ -69,7 +71,8 @@ test-reports-rm:
 # Debug production container locally - assumes envrc-secrets has already run
 [group('team')]
 local-production-debug:
-    @PURGE_TOKEN="local-production" just dagger call --beresp-ttl=5s \
+    @PURGE_TOKEN="local-production" \
+    just dagger call --beresp-ttl=5s \
       --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
       --max-mind-auth=op://pipely/maxmind/credential \
       --purge-token=env:PURGE_TOKEN \
@@ -78,7 +81,8 @@ local-production-debug:
 # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
 [group('team')]
 local-production-run:
-    @PURGE_TOKEN="local-production" just dagger call --beresp-ttl=5s \
+    @PURGE_TOKEN="local-production" \
+    just dagger call --beresp-ttl=5s \
       --honeycomb-dataset=pipely-dev --honeycomb-api-key=op://pipely/honeycomb/credential \
       --max-mind-auth=op://pipely/maxmind/credential \
       --purge-token=env:PURGE_TOKEN \
@@ -109,11 +113,10 @@ publish tag=_DEFAULT_TAG:
 # Deploy container image
 [group('team')]
 deploy tag=_DEFAULT_TAG:
-    @just publish {{ tag }}
     @just dagger --mod={{ DAGGER_FLY_MODULE }} call \
       --token=op://pipely/fly/credential \
       --org={{ FLY_ORG }} \
-          deploy --dir=. --image=$(just publish {{ tag }})
+          deploy --dir=. --image={{ tag }}
 
 # Scale production app
 [group('team')]
@@ -123,9 +126,9 @@ scale:
 # Set app secrets - assumes envrc-secrets was already run
 [group('team')]
 secrets:
-    flyctl secrets set --stage \
-      HONEYCOMB_API_KEY=$(op read op://pipely/honeycomb/credential --account changelog.1password.com --cache) \
-      PURGE_TOKEN=$(op read op://pipely/purge/credential --account changelog.1password.com --cache)
+    PURGE_TOKEN="op://pipely/purge/credential" \
+    HONEYCOMB_API_KEY="op://pipely/honeycomb/credential" \
+    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN"'
     flyctl secrets list
 
 # Add cert $fqdn to app
@@ -156,9 +159,9 @@ restart:
     | while read machine; do \
       echo -en "\n♻️ "; \
       flyctl machine stop $machine; \
-      sleep 3; \
+      sleep 10; \
       flyctl machine start $machine \
-      || (sleep 5; flyctl machine start $machine); \
+      || (sleep 10; flyctl machine start $machine); \
     done
     @echo {{ _MAGENTA }}🧐 Any stopped machines?{{ _RESET }}
     @just machines | grep stop || echo ✨
