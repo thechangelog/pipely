@@ -45,6 +45,17 @@ You are welcome to fork and build this your own.
 
 ## Local development and testing
 
+### Prerequisites
+
+- Docker or equivalent
+- Just version 1.27.0 or higher
+
+And that's about it. Everything else is containerized with Dagger.
+
+**For Windows Developers:**
+
+The project's toolchain is made for Linux-like systems. On a Windows machine you will need to have the Windows Subsystem for Linux (WSL) installed in addition to Docker. `Just` should be installed inside your WSL Linux operating system. You might be able to run Just natively from Windows, but there are some known bugs related to home directory filenames, so better to avoid that altogether and work directly in WSL.
+
 While it's fun watching other people experiment with digital resin (varnish
 😂), it's a whole lot more fun when you can repeat those experiments yourself,
 understand more how it works, and make your own modifications.
