@@ -3,6 +3,11 @@ name: GitHub
 on:
   workflow_call:
 
+env:
+  DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+  OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+  TERM: xterm
+
 jobs:
   run:
     runs-on: ubuntu-24.04
@@ -17,26 +22,16 @@ jobs:
       - name: "Test all (including local acceptance)..."
         run: |
           just test
-        env:
-          TERM: xterm
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
 
       - name: "Test acceptance of current CDN deployment..."
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
           just test-acceptance-fastly
-        env:
-          TERM: xterm
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
 
       - name: "Test acceptance of NEW CDN deployment..."
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
           just test-acceptance-pipedream
-        env:
-          TERM: xterm
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
 
       - name: "Archive test acceptance reports..."
         uses: actions/upload-artifact@v4
@@ -50,6 +45,3 @@ jobs:
         run: |
           just publish ${{ github.ref_name }}
           just deploy ${{ github.ref_name }}
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
