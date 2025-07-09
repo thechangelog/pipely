@@ -10,7 +10,7 @@ import var;
 # So that we can resolve backend hosts via DNS
 import dynamic;
 
-include "pipedream-redirects.changelog.com.vcl";
+include "news-redirects.vcl";
 
 # Disable default backend as we are using dynamic backends **only** so that we
 # can handle new origin instances (e.g. new app version gets deployed)
