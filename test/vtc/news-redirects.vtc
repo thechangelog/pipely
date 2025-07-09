@@ -13,7 +13,7 @@ varnish v1 -vcl {
   import std;
 
   # include the separate redirects vcl file
-  include "/etc/varnish/pipedream-redirects.changelog.com.vcl";
+  include "/etc/varnish/news-redirects.vcl";
 
   backend app {
     .host = "${s1_addr}";
