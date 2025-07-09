@@ -101,7 +101,7 @@ sub vcl_recv {
     }
 
     if (req.http.X-Redirect) {
-        return (synth(308, ""));
+        return (synth(308, "Permanent Redirect"));
     }
 }
 
