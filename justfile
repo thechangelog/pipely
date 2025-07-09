@@ -16,12 +16,16 @@ fmt:
 
 # Debug container locally
 local-debug:
-    @just dagger call --beresp-ttl=5s \
-        local-production terminal --cmd=bash
+    @just dagger call \
+      --beresp-ttl=5s \
+      --purge-token=env:PURGE_TOKEN \
+      local-production terminal --cmd=bash
 
 # Run container locally: available on http://localhost:9000
 local-run:
-    @just dagger call --beresp-ttl=5s \
+    @just dagger call \
+      --beresp-ttl=5s \
+      --purge-token=env:PURGE_TOKEN \
         local-production as-service --use-entrypoint=true up
 
 # Test VTC + acceptance locally
@@ -33,7 +37,7 @@ test-vtc:
 
 # Test local setup
 test-acceptance-local:
-    @PURGE_TOKEN="test-acceptance-local" just dagger call \
+    @just dagger call \
       --beresp-ttl=5s \
       --purge-token=env:PURGE_TOKEN \
       test-acceptance-report export \
