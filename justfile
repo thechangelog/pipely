@@ -46,7 +46,8 @@ test-acceptance-local:
 [group('team')]
 test-acceptance-pipedream *ARGS:
     @just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
-      --variable host=https://pipedream.changelog.com \
+      --variable proto=https \
+      --variable host=pipedream.changelog.com \
       --variable assets_host=cdn2.changelog.com \
       --variable delay_ms=65000 \
       --variable delay_s=60 \
@@ -57,7 +58,8 @@ test-acceptance-pipedream *ARGS:
 # Test CURRENT production
 test-acceptance-fastly *ARGS:
     @just hurl --test --color --report-html tmp/test-acceptance-fastly --continue-on-error \
-      --variable host=https://changelog.com \
+      --variable proto=https \
+      --variable host=changelog.com \
       --variable assets_host=cdn.changelog.com \
       {{ ARGS }} \
       test/acceptance/*.hurl test/acceptance/fastly/*.hurl

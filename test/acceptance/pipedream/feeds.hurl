@@ -1,4 +1,4 @@
-GET {{host}}/rss
+GET {{proto}}://{{host}}/rss
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare

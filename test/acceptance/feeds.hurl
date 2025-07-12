@@ -1,4 +1,4 @@
-GET {{host}}/podcast/feed
+GET {{proto}}://{{host}}/podcast/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -6,7 +6,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/gotime/feed
+GET {{proto}}://{{host}}/gotime/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -14,7 +14,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/master/feed
+GET {{proto}}://{{host}}/master/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -22,7 +22,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/feed
+GET {{proto}}://{{host}}/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -30,7 +30,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/jsparty/feed
+GET {{proto}}://{{host}}/jsparty/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -38,7 +38,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/shipit/feed
+GET {{proto}}://{{host}}/shipit/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -46,7 +46,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/news/feed
+GET {{proto}}://{{host}}/news/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -54,7 +54,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/brainscience/feed
+GET {{proto}}://{{host}}/brainscience/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -62,7 +62,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/founderstalk/feed
+GET {{proto}}://{{host}}/founderstalk/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -70,7 +70,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/interviews/feed
+GET {{proto}}://{{host}}/interviews/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -78,7 +78,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/feed/
+GET {{proto}}://{{host}}/feed/
 [Options]
 skip: true
 HTTP 200 # expect OK response
@@ -88,7 +88,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/rfc/feed
+GET {{proto}}://{{host}}/rfc/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -96,7 +96,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/spotlight/feed
+GET {{proto}}://{{host}}/spotlight/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -104,7 +104,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/afk/feed
+GET {{proto}}://{{host}}/afk/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -112,7 +112,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/posts/feed
+GET {{proto}}://{{host}}/posts/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
@@ -120,7 +120,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
-GET {{host}}/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed
+GET {{proto}}://{{host}}/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare

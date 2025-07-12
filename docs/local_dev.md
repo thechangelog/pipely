@@ -1,6 +1,6 @@
 # Local Development and Testing
 
-> [!NOTE]  
+> [!NOTE]
 > If `/default.vlc` is changed, these examples may need to be updated to reflect any backend domain changes.
 
 The notes here should help guide you through recreating the steps needed to run
@@ -113,7 +113,7 @@ setopt INTERACTIVE_COMMENTS
 docker container list
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > Environment variables can be passed into the nginx container which will build
 > a custome nginx config based on the included template file
 
@@ -129,8 +129,8 @@ NGINX_BACK_REV_PROXY_LOC_MATCH="/feed"
 NGINX_BACK_REV_PROXY="http://feeds.changelog.place/feed.xml"
 
 # Start up nginx connecting it to the ipv6 brdige
-# This may produce a couple errors that can be ignored if there isn't an 
-# existing container running that it tries to stop or remove, but it should 
+# This may produce a couple errors that can be ignored if there isn't an
+# existing container running that it tries to stop or remove, but it should
 # proceed to creating a new container
 (docker container stop dev-nginx || true) \
    && (docker container rm dev-nginx || true) \
@@ -159,14 +159,14 @@ backend_host_domain=${backend_host_domain}
 docker exec --user root dev-nginx /bin/bash -c 'cat /etc/nginx/conf.d/default.conf '
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > Environment variables can be passed into the varnish container for detail
 > about the backend domain and IP addresses to override DNS responses with
 > dnsmasq configs.
 
 Start the varnish container, update the dnsmasq config if needed, then start dnsmasq:
 ```bash
-# Start the varnish container and change dns resolver to use localhost 
+# Start the varnish container and change dns resolver to use localhost
 # (expecting dnsmasq to start shortly after the container is started).
 (docker container stop dev-varnish || true) \
    && (docker container rm dev-varnish || true) \
@@ -176,8 +176,8 @@ Start the varnish container, update the dnsmasq config if needed, then start dns
       -e VARNISH_BACKEND_IPV6="${nginx_container_ip6}" \
       dev-varnish:latest
 
-# Update the /etc/dnsmasq.conf file if environment variables passed into the 
-# container are different from the ones set by default in the container 
+# Update the /etc/dnsmasq.conf file if environment variables passed into the
+# container are different from the ones set by default in the container
 # image's dev-varnish.Dockerfile.
 docker exec --user root dev-varnish /bin/bash -c 'sed -i -r "s|^address=/([A-Za-z0-9.-]+)/([0-9.]+)\s*$|address=/${VARNISH_BACKEND_DOMAIN}/${VARNISH_BACKEND_IPV4}|" /etc/dnsmasq.conf'
 docker exec --user root dev-varnish /bin/bash -c 'sed -i -r "s|^address=/([A-Za-z0-9.-]+)/([A-Fa-f:0-9]+)\s*$|address=/${VARNISH_BACKEND_DOMAIN}/${VARNISH_BACKEND_IPV6}|" /etc/dnsmasq.conf'
@@ -235,7 +235,7 @@ $ hurl --test --color --report-html tmp --insecure --variable host="https://127.
 error: Assert failure
   --> test/admin.hurl:10:0
    |
-   | GET {{host}}/admin
+   | GET {{proto}}://{{host}}/admin
    | ...
 10 | header "age" == "0" # NOT stored in cache
    |   actual:   string <1213>
@@ -245,7 +245,7 @@ error: Assert failure
 error: Assert failure
   --> test/admin.hurl:11:0
    |
-   | GET {{host}}/admin
+   | GET {{proto}}://{{host}}/admin
    | ...
 11 | header "cache-status" contains "hits=0" # double-check that it's NOT stored in cache
    |   actual:   string <Edge; ttl=-1153.423; grace=86400.000; hit; stale; hits=1; region=>
@@ -255,7 +255,7 @@ error: Assert failure
 error: Assert failure
   --> test/admin.hurl:12:0
    |
-   | GET {{host}}/admin
+   | GET {{proto}}://{{host}}/admin
    | ...
 12 | header "cache-status" contains "miss" # NOT served from cache
    |   actual:   string <Edge; ttl=-1153.423; grace=86400.000; hit; stale; hits=1; region=>
@@ -296,7 +296,7 @@ Useful commands to use inside the Varnish container:
 # swap out VCL configs (https://ma.ttias.be/reload-varnish-vcl-without-losing-cache-data/)
 TIME=$(date +%s)
 varnishadm vcl.load varnish_$TIME /etc/varnish/default.vcl
-varnishadm vcl.use varnish_$TIME 
+varnishadm vcl.use varnish_$TIME
 
 # reload varnish configs
 varnishreload
@@ -310,7 +310,7 @@ varnishadm backend.list
 # Monitoring vmod-dynamic with varnishlog
 # This will show you the DNS resolution that is occurring when the vmod is trying
 # to dynamically resolve the domain for the backends. If the varnish config has an
-# acl for only allowing IPv6 addresses, you will see errors when it gets an IPv4 
+# acl for only allowing IPv6 addresses, you will see errors when it gets an IPv4
 # response from the dns query.
 varnishlog -g raw -q '* ~ vmod-dynamic'
 

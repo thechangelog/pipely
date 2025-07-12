@@ -376,7 +376,7 @@ func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
 	pipely := m.Test(ctx).
 		AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true})
 
-	testAcceptanceCmd := []string{"just", "test-acceptance-local", "--variable", "host=http://pipely:9000"}
+	testAcceptanceCmd := []string{"just", "test-acceptance-local", "--variable", "proto=http", "--variable", "host=pipely:9000"}
 	if m.VarnishPurgeToken != nil {
 		purgeToken, err := m.VarnishPurgeToken.Plaintext(ctx)
 		if err != nil {
@@ -387,6 +387,7 @@ func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
 
 	return m.Test(ctx).
 		WithServiceBinding("pipely", pipely).
+		WithServiceBinding("www.pipely", pipely).
 		WithExec(testAcceptanceCmd)
 }
 

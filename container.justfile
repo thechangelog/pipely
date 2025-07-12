@@ -42,13 +42,14 @@ test-vtc *ARGS:
 # Run acceptance tests
 test-acceptance-local *ARGS:
     hurl --test --color --continue-on-error --report-html /var/opt/hurl/test-acceptance-local \
-     --variable host=http://localhost:9000 \
+     --variable proto=http \
+     --variable host=localhost:9000 \
      --variable assets_host=cdn2.changelog.com \
      --variable delay_ms=6000 \
      --variable delay_s=5 \
      --variable purge_token="{{ env("PURGE_TOKEN") }}" \
      {{ ARGS }} \
-     test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
+     test/acceptance/*.hurl test/acceptance/local/*.hurl test/acceptance/pipedream/*.hurl
 
 # Show Varnish cache stats
 cache:
