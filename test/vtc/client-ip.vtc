@@ -1,4 +1,4 @@
-varnishtest "Test client_ip handling"
+varnishtest "Test client-ip handling"
 
 server s1 {
   rxreq

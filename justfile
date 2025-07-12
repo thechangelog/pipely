@@ -59,7 +59,8 @@ test-acceptance-pipedream *ARGS:
 # Test CURRENT production
 test-acceptance-fastly *ARGS:
     @just hurl --test --color --report-html tmp/test-acceptance-fastly --continue-on-error \
-      --variable host=https://changelog.com \
+      --variable proto=https \
+      --variable host=changelog.com \
       --variable assets_host=cdn.changelog.com \
       {{ ARGS }} \
       test/acceptance/*.hurl test/acceptance/fastly/*.hurl

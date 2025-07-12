@@ -42,13 +42,14 @@ test-vtc *ARGS:
 # Run acceptance tests
 test-acceptance-local *ARGS:
     hurl --test --color --continue-on-error --report-html /var/opt/hurl/test-acceptance-local \
-     --variable host=http://localhost:9000 \
+     --variable proto=http \
+     --variable host=localhost:9000 \
      --variable assets_host=cdn2.changelog.com \
      --variable delay_ms=6000 \
      --variable delay_s=5 \
      --variable purge_token="{{ env("PURGE_TOKEN") }}" \
      {{ ARGS }} \
-     test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
+     test/acceptance/*.hurl test/acceptance/local/*.hurl test/acceptance/pipedream/*.hurl
 
 # Show Varnish cache stats
 cache:
@@ -93,3 +94,41 @@ bench-feed-5-local: (bench "http://localhost:9000/podcast/feed" "2" "10000" "50"
 
 # Benchmark feed TLS proxy
 bench-feed-6-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")
+
+# https://williamyaps.github.io/wlmjavascript/servercli.html
+
+# Speedtest Los Angeles
+speedtest-los-angeles:
+    speedtest-go -s 9916
+
+# Speedtest Denver
+speedtest-denver:
+    speedtest-go -s 9912
+
+# Speedtest Chicago
+speedtest-chicago:
+    speedtest-go -s 11750
+
+# Speedtest Toronto
+speedtest-toronto:
+    speedtest-go -s 9911
+
+# Speedtest Ashburn
+speedtest-ashburn:
+    speedtest-go -s 6030
+
+# Speedtest London
+speedtest-london:
+    speedtest-go -s 6032
+
+# Speedtest Paris
+speedtest-paris:
+    speedtest-go -s 6027
+
+# Speedtest Amsterdam
+speedtest-amsterdam:
+    speedtest-go -s 9913
+
+# Speedtest Frankfurt
+speedtest-frankfurt:
+    speedtest-go -s 10010

@@ -1,4 +1,4 @@
-varnishtest "Test new edge redirects"
+varnishtest "Test news mp3 redirects"
 
 # App mock server
 server s1 {
@@ -13,7 +13,7 @@ varnish v1 -vcl {
   import std;
 
   # include the separate redirects vcl file
-  include "/etc/varnish/news-redirects.vcl";
+  include "/etc/varnish/news-mp3.vcl";
 
   backend app {
     .host = "${s1_addr}";
@@ -55,15 +55,4 @@ client c3 {
   expect resp.http.Location == "https://127.0.0.1/uploads/news/1/changelog-news-1.mp3?this=is&a=query&string"
 } -run
 
-# test a few additional redirect entries
-client c4 {
-  txreq -url "/uploads/podcast/news-2022-07-04/the-changelog-news-2022-07-04.mp3"
-  rxresp
-  expect resp.status == 308
-  expect resp.http.Location == "https://127.0.0.1/uploads/news/2/changelog-news-2.mp3"
-
-  txreq -url "/uploads/podcast/news-2022-07-11/the-changelog-news-2022-07-11.mp3"
-  rxresp
-  expect resp.status == 308
-  expect resp.http.Location == "https://127.0.0.1/uploads/news/3/changelog-news-3.mp3"
-} -run
+# we use acceptance tests for the other redirects, so that we compare the behaviour of both CDNs

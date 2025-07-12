@@ -43,6 +43,11 @@ You are welcome to fork and build this your own.
 - ☑️ Tag & ship `v1.0`
 - ☑️ Route 100% of production traffic through `v1.0`
 
+## What next?
+
+- Refactor VCL to use `include`
+  - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://cdn2.changelog.com/uploads/podcast/news-2023-04-03/the-changelog-news-2023-04-03.mp3)
+
 ## Local development and testing
 
 While it's fun watching other people experiment with digital resin (varnish

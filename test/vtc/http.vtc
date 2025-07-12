@@ -1,0 +1,39 @@
+varnishtest "Test http redirects"
+
+server s1 -repeat 3 {
+  rxreq
+  txresp
+} -start
+
+varnish v1 -vcl+backend {
+  vcl 4.1;
+  include "/etc/varnish/http.vcl";
+
+  # Disable caching for testing
+  sub vcl_backend_response {
+    set beresp.uncacheable = true;
+    return(deliver);
+  }
+} -start
+
+# no x-forwarded-proto
+client c1 {
+  txreq -url "/"
+  rxresp
+  expect resp.status == 200
+} -run
+
+# x-forwarded-proto=https
+client c2 {
+  txreq -url "/" -hdr "X-Forwarded-Proto: https"
+  rxresp
+  expect resp.status == 200
+} -run
+
+# x-forwarded-proto=http
+client c3 {
+  txreq -url "/" -hdr "X-Forwarded-Proto: http" -hdr "Host: cdn.tld"
+  rxresp
+  expect resp.status == 301
+  expect resp.http.Location == "https://cdn.tld/"
+} -run

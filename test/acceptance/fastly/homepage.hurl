@@ -1,5 +1,5 @@
 # Get the homepage
-GET {{host}}
+GET {{proto}}://{{host}}
 HTTP 200 # expect OK response
 [Asserts]
 duration < 1000 # ensure that it loads sub 1s when cache is cold...
@@ -8,7 +8,7 @@ header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 
 # Get the homepage AGAIN
-GET {{host}}
+GET {{proto}}://{{host}}
 HTTP 200 # expect OK response
 [Asserts]
 duration < 100 # ensure that it loads sub 100ms when cached...
