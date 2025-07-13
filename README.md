@@ -34,6 +34,7 @@ You are welcome to fork and build this your own.
   - What would make this more contribution-friendly?
   - How easy is this to use as your own deployment?
   - [Add debug welcome message and prompt #25](https://github.com/thechangelog/pipely/pull/25)
+  - [Update documentation and do some local dev tests #22](https://github.com/thechangelog/pipely/pull/22)
 - ☑️ Tag & ship `v1.0-rc.1`
 - ☑️ Route 10% of production traffic through `v1.0-rc.1`
 - ☑️ Tag & ship `v1.0-rc.2` (component updates, etc.)
@@ -49,6 +50,17 @@ You are welcome to fork and build this your own.
   - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://cdn2.changelog.com/uploads/podcast/news-2023-04-03/the-changelog-news-2023-04-03.mp3)
 
 ## Local development and testing
+
+### Prerequisites
+
+- Docker or equivalent
+- Just version 1.27.0 or higher
+
+And that's about it. Everything else is containerized with Dagger.
+
+**For Windows Developers:**
+
+The project's toolchain is made for Linux-like systems. On a Windows machine you will need to have the Windows Subsystem for Linux (WSL) installed in addition to Docker. `Just` should be installed inside your WSL Linux operating system. You might be able to run Just natively from Windows, but there are some known bugs related to home directory filenames, so better to avoid that altogether and work directly in WSL.
 
 While it's fun watching other people experiment with digital resin (varnish
 😂), it's a whole lot more fun when you can repeat those experiments yourself,
