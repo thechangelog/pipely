@@ -1,6 +1,6 @@
 {
   "name": "pipely",
-  "engineVersion": "v0.18.9",
+  "engineVersion": "v0.18.12",
   "sdk": {
     "source": "go"
   },

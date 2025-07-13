@@ -354,11 +354,15 @@ func (m *Pipely) local(ctx context.Context) *dagger.Container {
 		WithExec([]string{"oha", "--version"}).
 		// Install just.systems
 		WithExec([]string{"bash", "-c", "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"}).
-		WithFile("/justfile", m.Source.File("container.justfile")).
+		WithFile("/justfile", m.Source.File("container/justfile")).
 		WithExec([]string{"just"}).
 		// Add test directory
 		WithDirectory("/test", m.Source.Directory("test")).
-		WithExec([]string{"bash", "-c", "cat /test/pipely-local.bashrc >> ~/.bashrc"})
+		// Add dics directory
+		WithDirectory("/docs", m.Source.Directory("docs")).
+		// Add welcome message
+		WithMountedFile("/tmp/welcome.bashrc", m.Source.File("container/welcome.bashrc")).
+		WithExec([]string{"bash", "-c", "cat /tmp/welcome.bashrc >> ~/.bashrc"})
 }
 
 func altArchitecture(ctx context.Context) string {
