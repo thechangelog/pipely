@@ -27,13 +27,13 @@ You are welcome to fork and build this your own.
 - ☑️ Send logs to S3
 - ✅ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl) - [PR #19](https://github.com/thechangelog/pipely/pull/19)
 - ☑️ All contributors review & clean-up
-  - `just bench-feed-*`
   - Is the VCL as clean & efficient as it could be?
   - Does everything work as expected?
   - Anything that can be removed?
   - How do we make this friendlier to new users?
   - What would make this more contribution-friendly?
   - How easy is this to use as your own deployment?
+  - [Add debug welcome message and prompt #25](https://github.com/thechangelog/pipely/pull/25)
 - ☑️ Tag & ship `v1.0-rc.1`
 - ☑️ Route 10% of production traffic through `v1.0-rc.1`
 - ☑️ Tag & ship `v1.0-rc.2` (component updates, etc.)
