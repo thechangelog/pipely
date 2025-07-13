@@ -121,7 +121,7 @@ deploy tag=_DEFAULT_TAG:
     @just dagger --mod={{ DAGGER_FLY_MODULE }} call \
       --token=op://pipely/fly/credential \
       --org={{ FLY_ORG }} \
-          deploy --dir=. --image={{ tag }}
+          deploy --dir=. --image={{ FLY_APP_IMAGE }}:{{ tag }}
 
 # Scale production app
 [group('team')]
