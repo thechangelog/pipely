@@ -10,6 +10,10 @@ import var;
 # So that we can resolve backend hosts via DNS
 import dynamic;
 
+include "http.vcl";
+include "www.vcl";
+include "news-mp3.vcl";
+
 # Disable default backend as we are using dynamic backends **only** so that we
 # can handle new origin instances (e.g. new app version gets deployed)
 backend default none;

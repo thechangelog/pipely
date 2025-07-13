@@ -25,7 +25,7 @@ You are welcome to fork and build this your own.
 - ✅ Supervisor restarts crashed processes - [PR #14](https://github.com/thechangelog/pipely/pull/14)
 - ✅ Auth `PURGE` requests - [PR #16](https://github.com/thechangelog/pipely/pull/16)
 - ☑️ Send logs to S3
-- ☑️ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl)
+- ✅ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl) - [PR #19](https://github.com/thechangelog/pipely/pull/19)
 - ☑️ All contributors review & clean-up
   - `just bench-feed-*`
   - Is the VCL as clean & efficient as it could be?
@@ -42,6 +42,11 @@ You are welcome to fork and build this your own.
 - ☑️ Route 80% of production traffic through `v1.0-rc.3` (last chance to kick the tyres before `1.0`)
 - ☑️ Tag & ship `v1.0`
 - ☑️ Route 100% of production traffic through `v1.0`
+
+## What next?
+
+- Refactor VCL to use `include`
+  - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://cdn2.changelog.com/uploads/podcast/news-2023-04-03/the-changelog-news-2023-04-03.mp3)
 
 ## Local development and testing
 

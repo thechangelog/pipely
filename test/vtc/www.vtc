@@ -1,0 +1,25 @@
+varnishtest "Test www redirects"
+
+server s1 {
+  rxreq
+  txresp
+} -start
+
+varnish v1 -vcl+backend {
+  vcl 4.1;
+  include "/etc/varnish/www.vcl";
+
+  # Disable caching for testing
+  sub vcl_backend_response {
+    set beresp.uncacheable = true;
+    return(deliver);
+  }
+} -start
+
+# test basic redirect returning different path and status code
+client c1 {
+  txreq -url "/" -hdr "Host: www.cdn.tld"
+  rxresp
+  expect resp.status == 301
+  expect resp.http.Location == "https://cdn.tld/"
+} -run

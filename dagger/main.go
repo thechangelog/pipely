@@ -222,9 +222,10 @@ func (m *Pipely) withConfigs(c *dagger.Container, env Env) *dagger.Container {
 }
 
 func (m *Pipely) withVarnishConfig(c *dagger.Container) *dagger.Container {
-	return c.WithFile(
-		"/etc/varnish/default.vcl",
-		m.Source.File("varnish/pipedream.changelog.com.vcl"))
+	return c.
+		WithDirectory(
+			"/etc/varnish",
+			m.Source.Directory("varnish/vcl"))
 }
 
 func (m *Pipely) withVarnishJsonResponse(c *dagger.Container) *dagger.Container {
@@ -303,6 +304,11 @@ func (m *Pipely) local(ctx context.Context) *dagger.Container {
 		WithExec([]string{"go", "install", "github.com/xxxserxxx/gotop/v4/cmd/gotop@bba42d08624edee8e339ac98c1a9c46810414f78"}).
 		File("/go/bin/gotop")
 
+	// https://github.com/showwin/speedtest-go
+	speedtest := m.Golang.
+		WithExec([]string{"go", "install", "github.com/showwin/speedtest-go@v1.7.10"}).
+		File("/go/bin/speedtest-go")
+
 	p, _ := dag.DefaultPlatform(ctx)
 	platform := platforms.MustParse(string(p))
 	oha := dag.HTTP("https://github.com/hatoo/oha/releases/download/v" + ohaVersion + "/oha-linux-" + platform.Architecture)
@@ -334,10 +340,13 @@ func (m *Pipely) local(ctx context.Context) *dagger.Container {
 		WithExec([]string{"httpstat", "-v"}).
 		// Install sasqwatch
 		WithFile("/usr/local/bin/sasqwatch", sasqwatch).
-		WithExec([]string{"sasqwatch", "-v"}).
+		WithExec([]string{"sasqwatch", "--version"}).
 		// Install gotop
 		WithFile("/usr/local/bin/gotop", gotop).
-		WithExec([]string{"gotop", "-v"}).
+		WithExec([]string{"gotop", "--version"}).
+		// Install speedtest-go
+		WithFile("/usr/local/bin/speedtest-go", speedtest).
+		WithExec([]string{"speedtest-go", "--version"}).
 		// Install oha
 		WithFile("/usr/local/bin/oha", oha, dagger.ContainerWithFileOpts{
 			Permissions: 755,
@@ -375,7 +384,7 @@ func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
 	pipely := m.Test(ctx).
 		AsService(dagger.ContainerAsServiceOpts{UseEntrypoint: true})
 
-	testAcceptanceCmd := []string{"just", "test-acceptance-local", "--variable", "host=http://pipely:9000"}
+	testAcceptanceCmd := []string{"just", "test-acceptance-local", "--variable", "proto=http", "--variable", "host=pipely:9000"}
 	if m.VarnishPurgeToken != nil {
 		purgeToken, err := m.VarnishPurgeToken.Plaintext(ctx)
 		if err != nil {
@@ -386,6 +395,7 @@ func (m *Pipely) TestAcceptance(ctx context.Context) *dagger.Container {
 
 	return m.Test(ctx).
 		WithServiceBinding("pipely", pipely).
+		WithServiceBinding("www.pipely", pipely).
 		WithExec(testAcceptanceCmd)
 }
 

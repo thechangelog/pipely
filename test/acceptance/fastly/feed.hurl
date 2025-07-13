@@ -1,5 +1,5 @@
 # Get the changelog feed
-GET {{host}}/podcast/feed
+GET {{proto}}://{{host}}/podcast/feed
 HTTP 200 # expect OK response
 [Asserts]
 duration < 1000 # ensure that it loads sub 1s when cache is cold...
@@ -9,7 +9,7 @@ header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
 
 # Get the changelog feed AGAIN
-GET {{host}}/podcast/feed
+GET {{proto}}://{{host}}/podcast/feed
 [Options]
 HTTP 200 # expect OK response
 [Asserts]

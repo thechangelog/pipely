@@ -1,5 +1,5 @@
 # Get the admin homepage
-GET {{host}}/admin
+GET {{proto}}://{{host}}/admin
 [Options]
 repeat: 2 # repeat so that we confirm caching behaviour
 HTTP 302 # expect found redirect
