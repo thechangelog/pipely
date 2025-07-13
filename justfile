@@ -49,7 +49,8 @@ test-acceptance-pipedream *ARGS:
     HURL_purge_token="op://pipely/purge/credential" \
     just op run -- \
       just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
-        --variable host=https://pipedream.changelog.com \
+        --variable proto=https \
+        --variable host=pipedream.changelog.com \
         --variable assets_host=cdn2.changelog.com \
         --variable delay_ms=65000 \
         --variable delay_s=60 \

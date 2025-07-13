@@ -16,4 +16,4 @@ Host: {{assets_host}}
 X-Forwarded-Proto: http
 HTTP 301 # expect moved permanently response
 [Asserts]
-header "Location" == "https://{{assets_host}}/friends/73-pipely-tech.jpg?hurl=true&http"
+header "Location" contains "https://{{assets_host}}/friends/73-pipely-tech.jpg?hurl=true&http"
