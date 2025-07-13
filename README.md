@@ -34,6 +34,7 @@ You are welcome to fork and build this your own.
   - What would make this more contribution-friendly?
   - How easy is this to use as your own deployment?
   - [Add debug welcome message and prompt #25](https://github.com/thechangelog/pipely/pull/25)
+  - [Update documentation and do some local dev tests #22](https://github.com/thechangelog/pipely/pull/22)
 - ☑️ Tag & ship `v1.0-rc.1`
 - ☑️ Route 10% of production traffic through `v1.0-rc.1`
 - ☑️ Tag & ship `v1.0-rc.2` (component updates, etc.)
