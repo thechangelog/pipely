@@ -13,7 +13,7 @@ OS_ALT2 := if os() == "macos" { "darwin" } else { "linux" }
 ARCH_ALT := if arch() == "x86_64" { "amd64" } else { "arm64" }
 
 [private]
-LOCAL_PATH := home_dir() / ".local"
+LOCAL_PATH := "~/.local"
 
 [private]
 BIN_PATH := LOCAL_PATH / "bin"
