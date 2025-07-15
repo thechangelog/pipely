@@ -13,6 +13,225 @@ transforms:
       if err == null {
         .geo_city = geoip_data.city.names.en
         .geo_country_code = geoip_data.country.iso_code
+        .geo_country_name = geoip_data.country.names.en
+        .geo_continent_code = geoip_data.continent.code
+        .geo_latitude = geoip_data.location.latitude
+        .geo_longitude = geoip_data.location.longitude
+      }
+
+  s3_csv:
+    type: "remap"
+    inputs:
+      - "varnish_geoip"
+    source: |
+      formatted_time = format_timestamp!(now(), "%d/%b/%Y:%H:%M:%S %z")
+      parsed_time, err = parse_timestamp(.time, "%+")
+      if err == null {
+        formatted_time = format_timestamp!(parsed_time, "%d/%b/%Y:%H:%M:%S %z")
+      }
+
+      values = [
+        to_string!(.client_ip || ""),
+        "[" + formatted_time + "]",
+        replace!(.url || "", "\\?.*$", ""),
+        to_string!(.resp_body_size || ""),
+        to_string!(.status || ""),
+        "\"" + to_string!(.request_user_agent) + "\"",
+        to_string!(.geo_latitude || ""),
+        to_string!(.geo_longitude || ""),
+        "\"" + downcase!(.geo_city || "") + "\"",
+        to_string!(.geo_continent_code || "") ,
+        to_string!(.geo_country_code || ""),
+        "\"" + downcase!(.geo_country_name || "") + "\""
+      ]
+
+      .message = {
+        .url = .url
+        .csv = join!(values, ",")
+      }
+
+  s3_csv_changelog:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/podcast/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_gotime:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/gotime/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_rfc:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/rfc/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_founderstalk:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/founderstalk/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_spotlight:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/spotlight/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_jsparty:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/jsparty/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_practicalai:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/practicalai/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_reactpodcast:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/reactpodcast/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_afk:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/afk/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_backstage:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/backstage/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_brainscience:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/brainscience/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_shipit:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/shipit/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_news:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/news/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_csv_friends:
+    type: "remap"
+    inputs:
+      - "s3_csv"
+    source: |
+      if starts_with(string!(.url), "/uploads/friends/") {
+        .message = .csv
+      } else {
+        abort
+      }
+
+  s3_json_feeds:
+    type: "remap"
+    inputs:
+      - "varnish_geoip"
+    source: |
+      url_string = string!(.url) || ""
+      url_parts = parse_url!("http://for.vector.parse-url.local" + url_string)
+      url_parts.path = string!(url_parts.path)
+      if starts_with(url_parts.path, "/feeds/") || ends_with(url_parts.path, "/feed") {
+        .message = {
+          "timestamp": parse_timestamp!(.time, format: "%Y-%m-%dT%H:%M:%SZ"),
+          "client_ip": .client_ip,
+          "geo_country": downcase!(.geo_country_name || ""),
+          "geo_city": downcase!(.geo_city || ""),
+          "host": .host,
+          "url": .url,
+          "request_method": .request,
+          "request_protocol": .protocol,
+          "request_referer": .request_referer,
+          "request_user_agent": .request_user_agent,
+          "response_state": .cache_status,
+          "response_status": .status,
+          "response_reason": "",
+          "response_body_size": .resp_body_size,
+          "server_datacenter": .server_datacenter
+        }
+      } else {
+        abort
       }
 
 sinks:
@@ -23,3 +242,288 @@ sinks:
       - "varnish_geoip"
     api_key: ${HONEYCOMB_API_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
     dataset: ${HONEYCOMB_DATASET:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_changelog:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_changelog"
+    bucket: "changelog-logs-podcast"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_gotime:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_gotime"
+    bucket: "changelog-logs-gotime"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_rfc:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_rfc"
+    bucket: "changelog-logs-rfc"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_founderstalk:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_founderstalk"
+    bucket: "changelog-logs-founderstalk"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_spotlight:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_spotlight"
+    bucket: "changelog-logs-spotlight"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_jsparty:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_jsparty"
+    bucket: "changelog-logs-jsparty"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_practicalai:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_practicalai"
+    bucket: "changelog-logs-practicalai"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_reactpodcast:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_reactpodcast"
+    bucket: "changelog-logs-reactpodcast"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_afk:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_afk"
+    bucket: "changelog-logs-afk"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_backstage:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_backstage"
+    bucket: "changelog-logs-backstage"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_brainscience:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_brainscience"
+    bucket: "changelog-logs-brainscience"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_shipit:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_shipit"
+    bucket: "changelog-logs-shipit"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_news:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_news"
+    bucket: "changelog-logs-news"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_friends:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_csv_friends"
+    bucket: "changelog-logs-friends"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+
+  s3_logs_feeds:
+    # https://vector.dev/docs/reference/configuration/sinks/aws_s3/
+    type: "aws_s3"
+    inputs:
+      - "s3_json_feeds"
+    bucket: "changelog-logs-feeds"
+    region: ${AWS_REGION:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+    key_prefix: "%+-${FLY_REGION:-LOCAL}-"
+    filename_append_uuid: false
+    encoding:
+      codec: "text"
+    compression: "none"
+    batch:
+      max_bytes: 1048576 # 1 MB per file
+      timeout_secs: 300 # 5 minutes max per file
+    auth:
+      access_key_id: ${AWS_ACCESS_KEY_ID:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}
+      secret_access_key: ${AWS_SECRET_ACCESS_KEY:-REMEMBER_TO_SET_THIS_IN_PRODUCTION}

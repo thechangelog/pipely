@@ -1,0 +1,8 @@
+sinks:
+  debug_s3:
+    type: "console"
+    encoding:
+      codec: "text"
+    inputs:
+      - "s3_csv"
+      - "s3_json_feeds"

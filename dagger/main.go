@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/pipely/internal/dagger"
+	"errors"
 	"fmt"
 
 	"github.com/containerd/platforms"
@@ -101,6 +102,15 @@ func New(
 	// https://dev.maxmind.com/geoip/updating-databases/#directly-downloading-databases
 	// +optional
 	maxMindAuth *dagger.Secret,
+
+	// +default="us-east-1"
+	awsRegion string,
+
+	// +optional
+	awsAccessKeyId *dagger.Secret,
+
+	// +optional
+	awsSecretAccessKey *dagger.Secret,
 ) (*Pipely, error) {
 	pipely := &Pipely{
 		Golang:            dag.Container().From("golang:" + golangVersion),
@@ -115,7 +125,8 @@ func New(
 		WithExposedPort(varnishPort).
 		WithEnvVariable("BERESP_TTL", berespTtl).
 		WithEnvVariable("BERESP_GRACE", berespGrace).
-		WithEnvVariable("HONEYCOMB_DATASET", honeycombDataset)
+		WithEnvVariable("HONEYCOMB_DATASET", honeycombDataset).
+		WithEnvVariable("AWS_REGION", awsRegion)
 
 	if pipely.VarnishPurgeToken != nil {
 		pipely.Varnish = pipely.Varnish.
@@ -125,6 +136,16 @@ func New(
 	if honeycombApiKey != nil {
 		pipely.Varnish = pipely.Varnish.
 			WithSecretVariable("HONEYCOMB_API_KEY", honeycombApiKey)
+	}
+
+	if awsAccessKeyId != nil {
+		if awsSecretAccessKey == nil {
+			return nil, errors.New("--aws-secret-access-key is required")
+		}
+
+		pipely.Varnish = pipely.Varnish.
+			WithSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId).
+			WithSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
 	}
 
 	if maxMindAuth != nil {
@@ -265,7 +286,10 @@ func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Containe
 		containerWithVectorConfigs = containerWithVectorConfigs.
 			WithFile(
 				"/etc/vector/debug_varnish_geoip.yaml",
-				m.Source.File("vector/pipedream.changelog.com/debug_varnish_geoip.yaml"))
+				m.Source.File("vector/pipedream.changelog.com/debug_varnish_geoip.yaml")).
+			WithFile(
+				"/etc/vector/debug_s3.yaml",
+				m.Source.File("vector/pipedream.changelog.com/debug_s3.yaml"))
 	}
 
 	return containerWithVectorConfigs.
