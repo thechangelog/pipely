@@ -147,8 +147,8 @@ The raw authorization header for basic authentication is a base64 encoded value 
 
 ```bash
 curl -v -u YOUR_ACCOUNT_ID:YOUR_LICENSE_KEY https://download.maxmind.com/ 2>&1 | grep Authorization
-# > Authorization: Basic WU9VUl9BQ0NPVU5UX0lEOllPVVJfTElDRU5TRV9LRVk=
-echo "WU9VUl9BQ0NPVU5UX0lEOllPVVJfTElDRU5TRV9LRVk=" | base64 -d
+# > Authorization: Basic <BASE64_ENCODED_AUTH>
+echo "<BASE64_ENCODED_AUTH>" | base64 -d
 ```
 
 To generate the value that needs to be stored in 1Password it should include `Basic ` followed by the base64 encoded credentials.
