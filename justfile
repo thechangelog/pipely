@@ -123,8 +123,8 @@ how-many-lines-raw:
 # Publish container image - assumes envrc-secrets was already run
 [group('team')]
 publish tag=_DEFAULT_TAG:
-    @just dagger call --tag={{ tag }} --max-mind-auth=env:MAXMIND_AUTH \
-        publish --registry-username=$USER --registry-password=env:GHCR_PASS --image={{ FLY_APP_IMAGE }}
+    @just dagger call --tag={{ tag }} --max-mind-auth=op://pipely/maxmind/credential \
+        publish --registry-username=$USER --registry-password=op://pipely/ghcr/credential --image={{ FLY_APP_IMAGE }}
 
 # Deploy container image
 [group('team')]

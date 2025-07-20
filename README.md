@@ -37,19 +37,20 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - [Add debug welcome message and prompt #25](https://github.com/thechangelog/pipely/pull/25)
   - [Avoid using home_dir() due to Windows issues #26](https://github.com/thechangelog/pipely/pull/26)
   - [Add troubleshooting and misc to local dev docs #29](https://github.com/thechangelog/pipely/pull/29)
-- ☑️ Tag & ship `v1.0-rc.1`
-- ☑️ Route 10% of production traffic through `v1.0-rc.1`
-- ☑️ Tag & ship `v1.0-rc.2` (component updates, etc.)
-- ☑️ Route 33% of production traffic through `v1.0-rc.2` (observe cold cache behaviour, etc.)
-- ☑️ Tag & ship `v1.0-rc.3` (component updates, etc.)
-- ☑️ Route 80% of production traffic through `v1.0-rc.3` (last chance to kick the tyres before `1.0`)
-- ☑️ Tag & ship `v1.0` during [changelog.com/live](https://changelog.com/live)
-- ☑️ Route 100% of production traffic through `v1.0`
+- ✅ Tag & ship `v1.0.0-rc.1`
+- ☑️ Route 10% of production traffic through `v1.0.0-rc.1`
+- ☑️ Tag & ship `v1.0.0-rc.2` (component updates, etc.)
+- ☑️ Route 33% of production traffic through `v1.0.0-rc.2` (observe cold cache behaviour, etc.)
+- ☑️ Tag & ship `v1.0.0-rc.3` (component updates, etc.)
+- ☑️ Route 80% of production traffic through `v1.0.0-rc.3` (last chance to kick the tyres before `1.0`)
+- ☑️ Tag & ship `v1.0.0` during [changelog.com/live](https://changelog.com/live)
+- ☑️ Route 100% of production traffic through `v1.0.0`
 
 ## Post `v1.0`
 
 - Refactor VCL to use `include`
   - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://cdn2.changelog.com/uploads/podcast/news-2023-04-03/the-changelog-news-2023-04-03.mp3)
+- [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
 
 ## Local development and testing
 
@@ -120,7 +121,7 @@ See you in our [Zulip Chat](https://changelog.zulipchat.com/#narrow/channel/5137
 
 ## Contributors
 
-- [Gerhard Lazu](https://gerhard.io)
-- [James A Rosen](https://www.jamesarosen.com/now)
-- [Matt Johnson](https://github.com/mttjohnson)
 - [Nabeel Sulieman](https://github.com/nabsul)
+- [Matt Johnson](https://github.com/mttjohnson)
+- [James A Rosen](https://www.jamesarosen.com/now)
+- [Gerhard Lazu](https://gerhard.io)
