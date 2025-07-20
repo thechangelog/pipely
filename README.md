@@ -51,6 +51,7 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - Refactor VCL to use `include`
   - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://cdn2.changelog.com/uploads/podcast/news-2023-04-03/the-changelog-news-2023-04-03.mp3)
 - [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
+- Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
 
 ## Local development and testing
 
