@@ -5,7 +5,7 @@ GET http://{{host}}/
 X-Forwarded-Proto: http
 HTTP 301 # expect moved permanently response
 [Asserts]
-header "Location" == "https://{{host}}/"
+header "location" == "https://{{host}}/"
 
 # Test the assets_host
 GET http://{{host}}/friends/73-pipely-tech.jpg?hurl=true&http
@@ -16,4 +16,4 @@ Host: {{assets_host}}
 X-Forwarded-Proto: http
 HTTP 301 # expect moved permanently response
 [Asserts]
-header "Location" contains "https://{{assets_host}}/friends/73-pipely-tech.jpg?hurl=true&http"
+header "location" contains "https://{{assets_host}}/friends/73-pipely-tech.jpg?hurl=true&http"

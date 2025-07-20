@@ -3,6 +3,7 @@ sub vcl_recv {
   if (req.http.host ~ "^www\.") {
     # Remove www. from the host
     set req.http.host = regsub(req.http.host, "^www\.", "");
+    set req.http.www = "true";
 
     # Return a 301 redirect to the non-www version
     return (synth(301, "Moved Permanently"));
@@ -15,7 +16,8 @@ sub vcl_recv {
 
 sub vcl_synth {
   # Handle the redirect
-  if (resp.status == 301) {
+  if (req.http.www == "true"
+      && resp.status == 301) {
     set resp.http.Location = "https://" + req.http.host + req.url;
     return (deliver);
   }

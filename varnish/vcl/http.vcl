@@ -7,7 +7,8 @@ sub vcl_recv {
 
 sub vcl_synth {
   # Handle the redirect
-  if (resp.status == 301) {
+  if (req.http.x-forwarded-proto == "http"
+      && resp.status == 301) {
     set resp.http.Location = "https://" + req.http.host + req.url;
     return (deliver);
   }
