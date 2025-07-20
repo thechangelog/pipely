@@ -36,6 +36,7 @@ You are welcome to fork and build this your own.
   - [Update documentation and do some local dev tests #22](https://github.com/thechangelog/pipely/pull/22)
   - [Add debug welcome message and prompt #25](https://github.com/thechangelog/pipely/pull/25)
   - [Avoid using home_dir() due to Windows issues #26](https://github.com/thechangelog/pipely/pull/26)
+  - [Add troubleshooting and misc to local dev docs #29](https://github.com/thechangelog/pipely/pull/29)
 - ☑️ Tag & ship `v1.0-rc.1`
 - ☑️ Route 10% of production traffic through `v1.0-rc.1`
 - ☑️ Tag & ship `v1.0-rc.2` (component updates, etc.)
