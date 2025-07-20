@@ -106,7 +106,7 @@ func New(
 	// +default="us-east-1"
 	awsRegion string,
 
-	// +default="-local-pipely"
+	// +optional
 	awsLocalProductionS3BucketSuffix string,
 
 	// +optional
