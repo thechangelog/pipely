@@ -1,7 +1,8 @@
 sinks:
+  # https://vector.dev/docs/reference/configuration/sinks/console/
   debug_varnish_geoip:
     type: "console"
     encoding:
-      codec: "json"
+      codec: "logfmt"
     inputs:
       - "varnish_geoip"

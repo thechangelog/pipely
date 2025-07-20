@@ -1,8 +1,9 @@
 sinks:
   # https://vector.dev/docs/reference/configuration/sinks/console/
-  debug_varnish:
+  debug_s3:
     type: "console"
     encoding:
       codec: "logfmt"
     inputs:
-      - "varnish"
+      - "s3_csv"
+      - "s3_json_feeds"

@@ -1,9 +1,9 @@
 # Pipely™️ - single-purpose, single-tenant CDN
 
-Based on [Varnish Cache](https://varnish-cache.org/releases/index.html) (OSS FTW 💚). This started as the simplest CDN running on [fly.io](https://fly.io/changelog)
+Based on [Varnish Cache](https://varnish-cache.org/releases/index.html). This started as the simplest CDN running on [fly.io](https://fly.io/changelog)
 for [changelog.com](https://changelog.com)
 
-You are welcome to fork and build this your own.
+You are welcome to fork this and build your own - OSS FTW 💚
 
 ## How it started
 
@@ -11,7 +11,7 @@ You are welcome to fork and build this your own.
 
 > 🧢 Jerod Santo - March 29, 2024 - <a href="https://changelog.com/friends/38#transcript-208" target="_blank">Changelog & Friends #38</a>
 
-## How is it going - a.k.a. The Roadmap to `v1.0`
+## How it's going - a.k.a. roadmap to `v1.0`
 
 - ✅ Static backend, 1 day stale, stale on error, `x`-headers - [Initial commit](https://github.com/thechangelog/pipely/commit/17d3899a52d9dc887efd7f49de92b24249431234)
 - ✅ Dynamic backend, `cache-status` header - [PR #1](https://github.com/thechangelog/pipely/pull/1)
@@ -24,9 +24,9 @@ You are welcome to fork and build this your own.
 - ✅ Enrich Varnish logs with GeoIP data - [PR #13](https://github.com/thechangelog/pipely/pull/13)
 - ✅ Supervisor restarts crashed processes - [PR #14](https://github.com/thechangelog/pipely/pull/14)
 - ✅ Auth `PURGE` requests - [PR #16](https://github.com/thechangelog/pipely/pull/16)
-- ☑️ Send logs to S3
 - ✅ Add redirects from [Fastly VCL](./varnish/changelog.com.vcl) - [PR #19](https://github.com/thechangelog/pipely/pull/19)
-- ☑️ All contributors review & clean-up
+- ✅ Send Varnish logs to S3 - [PR #27](https://github.com/thechangelog/pipely/pull/27)
+- ✅ All contributors review & clean-up
   - Is the VCL as clean & efficient as it could be?
   - Does everything work as expected?
   - Anything that can be removed?
@@ -42,32 +42,28 @@ You are welcome to fork and build this your own.
 - ☑️ Route 33% of production traffic through `v1.0-rc.2` (observe cold cache behaviour, etc.)
 - ☑️ Tag & ship `v1.0-rc.3` (component updates, etc.)
 - ☑️ Route 80% of production traffic through `v1.0-rc.3` (last chance to kick the tyres before `1.0`)
-- ☑️ Tag & ship `v1.0`
+- ☑️ Tag & ship `v1.0` during [changelog.com/live](https://changelog.com/live)
 - ☑️ Route 100% of production traffic through `v1.0`
 
-## What next?
+## Post `v1.0`
 
 - Refactor VCL to use `include`
   - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://cdn2.changelog.com/uploads/podcast/news-2023-04-03/the-changelog-news-2023-04-03.mp3)
 
 ## Local development and testing
 
+While it's fun watching other people experiment with digital resin (varnish 😂), it's a whole lot more fun when you can repeat those experiments yourself, understand more how it works, and make your own modifications.
+
 ### Prerequisites
 
-- Docker or equivalent
-- Just version 1.27.0 or higher
+- 🐳 [Docker](https://docs.docker.com/engine/install/)
+- 🤖 [Just](https://github.com/casey/just?tab=readme-ov-file#installation) version `1.27.0` or higher
 
 And that's about it. Everything else is containerized with Dagger.
 
-**For Windows Developers:**
-
-The project's toolchain is made for Linux-like systems. On a Windows machine you will need to have the Windows Subsystem for Linux (WSL) installed in addition to Docker. `Just` should be installed inside your WSL Linux operating system. You might be able to run Just natively from Windows, but there are some known bugs related to home directory filenames, so better to avoid that altogether and work directly in WSL.
-
-While it's fun watching other people experiment with digital resin (varnish
-😂), it's a whole lot more fun when you can repeat those experiments yourself,
-understand more how it works, and make your own modifications.
-
-Use 🤖 [`just`](https://github.com/casey/just?tab=readme-ov-file#installation) `v1.27.0` or newer as the starting point:
+> [!NOTE]
+>  **For Windows Developers:**
+> The project's toolchain is made for Linux-like systems. On a Windows machine you will need to have the Windows Subsystem for Linux (WSL) installed in addition to Docker. `just` should be installed inside your WSL Linux operating system. You might be able to run Just natively from Windows, but there are some known bugs related to home directory filenames, so better to avoid that altogether and work directly in WSL.
 
 ```bash
 just
@@ -85,13 +81,14 @@ Available recipes:
     test-vtc                        # Test VCL config
 
     [team]
-    cert fqdn                       # Add cert $fqdn to app
+    cert fqdn                       # Show cert $fqdn for app
+    cert-add fqdn                   # Add cert $fqdn to app
     certs                           # Show app certs
     deploy tag=_DEFAULT_TAG         # Deploy container image
     envrc-secrets                   # Create .envrc.secrets with credentials from 1Password
     ips                             # Show app IPs
-    local-production-debug          # Debug production container locally - assumes envrc-secrets has already run
-    local-production-run            # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
+    local-debug-production          # Debug production container locally - assumes envrc-secrets has already run
+    local-run-production            # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
     machines                        # Show app machines
     publish tag=_DEFAULT_TAG        # Publish container image - assumes envrc-secrets was already run
     restart                         # Restart ALL app machines, one-by-one
@@ -105,8 +102,6 @@ Available recipes:
 just test
 ```
 
-The only other pre-requisite for the commands that run services locally is 🐳 [Docker](https://docs.docker.com/engine/install/)
-
 ## How can you help
 
 If you have any ideas on how to improve this, please open an issue or go
@@ -115,7 +110,7 @@ straight for a pull request. We make this as easy as possible:
 - This repository is kept small & simple (single purpose: build the simplest CDN on Fly.io)
 - Slow & thoughtful approach - join our journey via [audio with transcripts](https://changelog.com/topic/kaizen) or [written](https://github.com/thechangelog/changelog.com/discussions/categories/kaizen)
 
-See you in our [Zulip Chat](https://changelog.zulipchat.com/) 👋
+See you in our [Zulip Chat](https://changelog.zulipchat.com/#narrow/channel/513743-pipely) 👋
 
 > [!NOTE]
 > Join from <https://changelog.com/~> . It requires signing up and requesting an invite before you can **Log in**
