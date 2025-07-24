@@ -9,11 +9,11 @@ kill_timeout = 30
 [env]
 # This leaves ~800M headroom from the machine's total available memory
 # Any less than this and Varnish makes the machine crash due to OOM errors.
-VARNISH_SIZE = "1200M"
+VARNISH_SIZE = "3200M"
 
 [[vm]]
-size = "shared-cpu-2x"
-memory = "2GB"
+size = "shared-cpu-4x"
+memory = "4GB"
 
 [deploy]
 strategy = "bluegreen"
