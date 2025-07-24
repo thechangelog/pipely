@@ -11,7 +11,7 @@ import (
 
 const (
 	// https://hub.docker.com/_/golang/tags?name=1.24
-	golangVersion = "1.24.4@sha256:10c131810f80a4802c49cab0961bbe18a16f4bb2fb99ef16deaa23e4246fc817"
+	golangVersion = "1.24.5@sha256:ef5b4be1f94b36c90385abd9b6b4f201723ae28e71acacb76d00687333c17282"
 
 	// https://github.com/nabsul/tls-exterminator
 	tlsExterminatorVersion = "4226223f2380319e73300bc7d14fd652c56c6b4e"
@@ -68,7 +68,7 @@ func New(
 	tag string,
 
 	// https://hub.docker.com/_/varnish/tags
-	// +default="7.7.1@sha256:18c3eeba5e929068aa46fd1b8de8345dc3c4b488d957a0953fff9916341b4587"
+	// +default="7.7.1@sha256:1a684d37ec7a4f441a36c84945ee7713d1ddd59e8204d4040aeecb529ed4f68e"
 	varnishVersion string,
 
 	// +default=9000
@@ -89,7 +89,7 @@ func New(
 	// +default="5010:feeds.changelog.place:"
 	feedsProxy string,
 
-	// +default="5020:changelog.place:cdn2.changelog.com"
+	// +default="5020:changelog.place:cdn.changelog.com"
 	assetsProxy string,
 
 	// https://ui.honeycomb.io/changelog/datasets/pipely/overview

@@ -21,7 +21,7 @@ jobs:
 
       - uses: extractions/setup-just@v2
         with:
-          just-version: "1.40.0"
+          just-version: "1.42.3"
 
       - name: "Test all (including local acceptance)..."
         run: |

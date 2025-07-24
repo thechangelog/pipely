@@ -51,7 +51,7 @@ test-acceptance-pipedream *ARGS:
       just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
         --variable proto=https \
         --variable host=pipedream.changelog.com \
-        --variable assets_host=cdn2.changelog.com \
+        --variable assets_host=cdn.changelog.com \
         --variable delay_ms=65000 \
         --variable delay_s=60 \
         {{ ARGS }} \
@@ -143,11 +143,10 @@ scale:
 [group('team')]
 secrets:
     PURGE_TOKEN="op://pipely/purge/credential" \
-    HONEYCOMB_DATASET="pipedream"
     HONEYCOMB_API_KEY="op://pipely/honeycomb/credential" \
     AWS_ACCESS_KEY_ID="op://pipely/aws-s3-logs/access-key-id" \
     AWS_SECRET_ACCESS_KEY="op://pipely/aws-s3-logs/secret-access-key" \
-    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_DATASET="$HONEYCOMB_DATASET" HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"'
+    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_DATASET="pipedream" HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"'
     flyctl secrets list
 
 # Add cert $fqdn to app
