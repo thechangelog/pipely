@@ -44,7 +44,7 @@ test-acceptance-local *ARGS:
     hurl --test --color --continue-on-error --report-html /var/opt/hurl/test-acceptance-local \
      --variable proto=http \
      --variable host=localhost:9000 \
-     --variable assets_host=cdn2.changelog.com \
+     --variable assets_host=cdn.changelog.com \
      --variable delay_ms=6000 \
      --variable delay_s=5 \
      --variable purge_token="{{ env("PURGE_TOKEN") }}" \
