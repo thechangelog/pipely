@@ -265,12 +265,12 @@ server s2 {
 
   # Test for /feeds/* path
   rxreq
-  expect req.url == "/feeds/0284CC5C777C51D158BBECCBBB56422A.xml"
+  expect req.url == "/0284CC5C777C51D158BBECCBBB56422A.xml"
   txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
 
   # Test for /feeds/*?arg=first&arg=second path
   rxreq
-  expect req.url == "/feeds/0284CC5C777C51D158BBECCBBB56422A.xml"
+  expect req.url == "/0284CC5C777C51D158BBECCBBB56422A.xml"
   txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
 } -start
 
@@ -346,7 +346,7 @@ varnish v1 -vcl {
       set req.url = "/feed.xml";
     } else if (req.url ~ "^/feeds/.*(\?.*)?$") {
       set req.http.x-backend = "feeds";
-      set req.url = regsub(req.url, "^(/feeds/[^?]*)(\?.*)?$", "\1.xml");
+      set req.url = regsub(req.url, "^/feeds/([^?]*)(\?.*)?$", "/\1.xml");
     }
   }
 
