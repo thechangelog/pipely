@@ -199,7 +199,7 @@ sub vcl_recv {
     set req.url = "/feed.xml";
   } else if (req.url ~ "^/feeds/.*(\?.*)?$") {
     set req.http.x-backend = "feeds";
-    set req.url = regsub(req.url, "^(/feeds/[^?]*)(\?.*)?$", "\1.xml");
+    set req.url = regsub(req.url, "^/feeds/([^?]*)(\?.*)?$", "/\1.xml");
   }
 
   ### PURGE

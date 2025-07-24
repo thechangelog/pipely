@@ -39,7 +39,8 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - [Add troubleshooting and misc to local dev docs #29](https://github.com/thechangelog/pipely/pull/29)
 - ✅ Tag & ship `v1.0-rc.1`
 - ✅ Tag & ship `v1.0-rc.2` (component updates, etc.)
-- ☑️ Route 20% of the production traffic through
+- ✅ Route 20% of the production traffic through
+  - ✅ Fix `/feeds/<UID>` URL rewrite - [PR #31](https://github.com/thechangelog/pipely/pull/31)
 - ☑️ Tag & ship `v1.0-rc.3` (component updates, etc.)
 - ☑️ Route 50% of the production traffic through (observe cold cache behaviour, etc.)
 - ☑️ Tag & ship `v1.0` just before [changelog.com/live](https://changelog.com/live)
