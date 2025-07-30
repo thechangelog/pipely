@@ -7,13 +7,13 @@ kill_signal = "SIGTERM"
 kill_timeout = 30
 
 [env]
-# This leaves 33% headroom from the machine's total available memory
+# This leaves 20% headroom from the machine's total available memory
 # Any less than this and Varnish makes the machine crash due to OOM errors.
-VARNISH_SIZE = "2640M"
+VARNISH_SIZE = "6400M"
 
 [[vm]]
-size = "shared-cpu-4x"
-memory = "4GB"
+size = "performance-1x"
+memory = "8GB"
 
 [deploy]
 strategy = "bluegreen"
