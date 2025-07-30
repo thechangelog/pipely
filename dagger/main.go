@@ -200,7 +200,7 @@ func (m *Pipely) app() *dagger.Container {
 app: tls-exterminator %s
 feeds: tls-exterminator %s
 assets: tls-exterminator %s
-logs: bash -c 'coproc VARNISH_JSON_RESPONSE { varnish-json-response; }; vector <&${VARNISH_JSON_RESPONSE[0]}; kill ${VARNISH_JSON_RESPONSE_PID}'
+logs: bash -c 'coproc VJS { varnish-json-response; }; if [ -z "${VJS_PID}" ]; then echo "ERROR: Failed to start varnish-json-response coprocess." >&2; exit 1; fi; trap "kill ${VJS_PID} 2>/dev/null" EXIT; vector <&${VJS[0]}'
 `, m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
 
 	return m.Varnish.
