@@ -33,19 +33,27 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - How do we make this friendlier to new users?
   - What would make this more contribution-friendly?
   - How easy is this to use as your own deployment?
-  - [Update documentation and do some local dev tests #22](https://github.com/thechangelog/pipely/pull/22)
-  - [Add debug welcome message and prompt #25](https://github.com/thechangelog/pipely/pull/25)
-  - [Avoid using home_dir() due to Windows issues #26](https://github.com/thechangelog/pipely/pull/26)
-  - [Add troubleshooting and misc to local dev docs #29](https://github.com/thechangelog/pipely/pull/29)
 - ✅ Tag & ship `v1.0-rc.1`
-- ✅ Tag & ship `v1.0-rc.2` (component updates, etc.)
-- ✅ Route 20% of the production traffic through
+  - ✅ Update documentation and do some local dev tests - [PR #22](https://github.com/thechangelog/pipely/pull/22)
+  - ✅ Add debug welcome message and prompt - [PR #25](https://github.com/thechangelog/pipely/pull/25)
+  - ✅ Avoid using home_dir() due to Windows issues - [PR #26](https://github.com/thechangelog/pipely/pull/26)
+  - ✅ Add troubleshooting and misc to local dev docs - [PR #29](https://github.com/thechangelog/pipely/pull/29)
+- ✅ Tag & ship `v1.0-rc.2`
+  - ✅ Prepare for 20% of the production traffic - [PR #30](https://github.com/thechangelog/pipely/pull/30)
+  - Route 20% of the production traffic through
+  - Observe cold cache behaviour
+- ✅ Tag & ship `v1.0-rc.3`
   - ✅ Fix feeds URL rewrite - [PR #31](https://github.com/thechangelog/pipely/pull/31)
   - ✅ Increase instance size - [PR #32](https://github.com/thechangelog/pipely/pull/32)
-- ☑️ Tag & ship `v1.0-rc.3` (component updates, etc.)
-- ☑️ Route 50% of the production traffic through (observe cold cache behaviour, etc.)
-- ☑️ Tag & ship `v1.0` just before [changelog.com/live](https://changelog.com/live)
-- ☑️ Route all the production traffic through `v1.0`
+  ](https://github.com/thechangelog/pipely/commit/355372334b602a0ad55a96a85a288409ad4b8d84)
+- ✅ Tag & ship `v1.0-rc.4`
+  - ✅ Limit Varnish memory to 66% (out of `3200M` out of `4000M`) - [3553723
+- ✅ Tag & ship `v1.0-rc.5`
+  - ✅ Handle varnish-json-response failing on startup - [PR #33](https://github.com/thechangelog/pipely/pull/33)
+  - ✅ Bump the instance size to performance-1x with 8GB of RAM - [PR #34](https://github.com/thechangelog/pipely/pull/34)
+  - Route 50% of the production traffic through
+- ☑️ Tag & ship `v1.0`
+- ☑️ Route 100% of the production traffic through `v1.0`
 
 ## Post `v1.0`
 
