@@ -34,7 +34,7 @@ FLY_APP := env("FLY_APP", "cdn-2025-02-25")
 FLY_APP_IMAGE := env("FLY_APP_IMAGE", "ghcr.io/thechangelog/pipely")
 
 [private]
-FLY_APP_REGIONS := env("FLY_APP_REGIONS", "sjc,dfw,ord,iad,scl,lhr,fra,jnb,sin,syd")
+FLY_APP_REGIONS := env("FLY_APP_REGIONS", "sea,sjc,lax,dfw,ord,iad,ewr,scl,lhr,cdg,ams,fra,jnb,sin,nrt,syd")
 
 [private]
 export PURGE_TOKEN := env("PURGE_TOKEN", "local-purge")
