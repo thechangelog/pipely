@@ -27,12 +27,12 @@ probe backend_health {
   # How frequently Varnish will poll the backend (in seconds)
   # Lower values provide faster detection of backend failures but increase load
   # Higher values reduce backend load but increase failure detection time
-  .interval = 5s;
+  .interval = 10s;
 
   # Maximum time to wait for a response from the backend
   # If the backend does not respond within this time, the probe is considered failed
   # Should be less than the interval to prevent probe overlap
-  .timeout = 3s;
+  .timeout = 9s;
 
   # Number of most recent probes to consider when determining backend health
   # Varnish keeps a sliding window of the latest probe results
@@ -57,27 +57,27 @@ sub vcl_init {
     ttl = 10s,
     probe = backend_health,
     host_header = std.getenv("BACKEND_APP_FQDN"),
-    first_byte_timeout = 5s,
-    connect_timeout = 5s,
-    between_bytes_timeout = 30s
+    first_byte_timeout = 10s,
+    connect_timeout = 10s,
+    between_bytes_timeout = 60s
   );
 
   new feeds = dynamic.director(
     ttl = 10s,
     probe = backend_health,
     host_header = std.getenv("BACKEND_FEEDS_FQDN"),
-    first_byte_timeout = 5s,
-    connect_timeout = 5s,
-    between_bytes_timeout = 30s
+    first_byte_timeout = 10s,
+    connect_timeout = 10s,
+    between_bytes_timeout = 60s
   );
 
   new assets = dynamic.director(
     ttl = 10s,
     probe = backend_health,
     host_header = std.getenv("BACKEND_ASSETS_FQDN"),
-    first_byte_timeout = 5s,
-    connect_timeout = 5s,
-    between_bytes_timeout = 30s
+    first_byte_timeout = 10s,
+    connect_timeout = 10s,
+    between_bytes_timeout = 60s
   );
 }
 
