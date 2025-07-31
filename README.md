@@ -52,6 +52,8 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Handle varnish-json-response failing on startup - [PR #33](https://github.com/thechangelog/pipely/pull/33)
   - ✅ Bump the instance size to performance-1x with 8GB of RAM - [PR #34](https://github.com/thechangelog/pipely/pull/34)
   - Route 50% of the production traffic through
+- ☑️ Tag & ship `v1.0-rc.6`
+  - ✅ Add more locations - [PR #35](https://github.com/thechangelog/pipely/pull/35)
 - ☑️ Tag & ship `v1.0`
 - ☑️ Route 100% of the production traffic through `v1.0`
 
