@@ -45,9 +45,8 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - ✅ Tag & ship `v1.0-rc.3`
   - ✅ Fix feeds URL rewrite - [PR #31](https://github.com/thechangelog/pipely/pull/31)
   - ✅ Increase instance size - [PR #32](https://github.com/thechangelog/pipely/pull/32)
-  ](https://github.com/thechangelog/pipely/commit/355372334b602a0ad55a96a85a288409ad4b8d84)
 - ✅ Tag & ship `v1.0-rc.4`
-  - ✅ Limit Varnish memory to 66% (out of `3200M` out of `4000M`) - [3553723
+  - ✅ Limit Varnish memory to 66% (out of `3200M` out of `4000M`) - [3553723](https://github.com/thechangelog/pipely/commit/355372334b602a0ad55a96a85a288409ad4b8d84)
 - ✅ Tag & ship `v1.0-rc.5`
   - ✅ Handle varnish-json-response failing on startup - [PR #33](https://github.com/thechangelog/pipely/pull/33)
   - ✅ Bump the instance size to performance-1x with 8GB of RAM - [PR #34](https://github.com/thechangelog/pipely/pull/34)
