@@ -50,8 +50,10 @@ test-acceptance-pipedream *ARGS:
     just op run -- \
       just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
         --variable proto=https \
-        --variable host=pipedream.changelog.com \
+        --variable host=changelog.com \
+        --resolve changelog.com:443:137.66.2.20 \
         --variable assets_host=cdn.changelog.com \
+        --resolve cdn.changelog.com:443:137.66.2.20 \
         --variable delay_ms=65000 \
         --variable delay_s=60 \
         {{ ARGS }} \
@@ -62,7 +64,9 @@ test-acceptance-fastly *ARGS:
     @just hurl --test --color --report-html tmp/test-acceptance-fastly --continue-on-error \
       --variable proto=https \
       --variable host=changelog.com \
+      --resolve changelog.com:443:151.101.129.162 \
       --variable assets_host=cdn.changelog.com \
+      --resolve cdn.changelog.com:443:151.101.129.162 \
       {{ ARGS }} \
       test/acceptance/*.hurl test/acceptance/fastly/*.hurl
 

@@ -12,8 +12,6 @@ on:
       - synchronize
       - reopened
       - ready_for_review
-  schedule:
-    - cron: "6 9 * * *"
   workflow_dispatch:
 
 # All jobs have the same outcome. We define multiple for resiliency reasons.
