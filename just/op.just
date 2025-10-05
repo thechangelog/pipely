@@ -1,7 +1,7 @@
 # https://app-updates.agilebits.com/product_history/CLI2
 
 [private]
-OP_VERSION := "2.31.1"
+OP_VERSION := "2.32.0"
 [private]
 OP_NAME := "op_" + OS_ALT2 + "_" + ARCH_ALT + "_v" + OP_VERSION
 [private]
