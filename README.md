@@ -54,6 +54,11 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - ✅ Tag & ship `v1.0-rc.6`
   - ✅ Add more locations - [PR #35](https://github.com/thechangelog/pipely/pull/35)
   - ✅ Increase backend timeout - [PR #36](https://github.com/thechangelog/pipely/pull/36)
+- ☑️ Tag & ship `v1.0-rc.7`
+  - ✅ Update to Varnish v7.7.3 & Vector v0.49.0 - [PR #38](https://github.com/thechangelog/pipely/pull/38)
+  - ☑️ Support mp3 uploads
+- ☑️ Tag & ship `v1.0-rc.8`
+  - ☑️ Replace overmind with runit
 - ☑️ Tag & ship `v1.0`
 - ☑️ Route 100% of the production traffic through `v1.0`
 

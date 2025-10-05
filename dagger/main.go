@@ -11,24 +11,22 @@ import (
 
 const (
 	// https://hub.docker.com/_/golang/tags?name=1.24
-	golangVersion = "1.24.5@sha256:ef5b4be1f94b36c90385abd9b6b4f201723ae28e71acacb76d00687333c17282"
+	golangVersion = "1.24.7@sha256:2c5f7a0c252a17cf6aa30ddee15caa0f485ee29410a6ea64cddb62eea2b07bdf"
 
 	// https://github.com/nabsul/tls-exterminator
-	tlsExterminatorVersion = "4226223f2380319e73300bc7d14fd652c56c6b4e"
-	// 😵 https://github.com/nabsul/tls-exterminator/pull/12#issuecomment-3016801769
-	// tlsExterminatorVersion = "af547186a97d0fbe4e304cf155a4c3a0d1569cd2"
+	tlsExterminatorVersion = "93583389e8bab9b519466d95e69e594682d8de5b"
 
 	// https://github.com/DarthSim/overmind/releases
 	overmindVersion = "2.5.1"
 
 	// https://hub.docker.com/r/timberio/vector/tags?name=debian
-	vectorVersion = "0.47.0-debian@sha256:a7c96178b5dd0800bb6a4a58559b61bca919a43979cd4c3ef12399175eea5ac7"
+	vectorVersion = "0.49.0-debian@sha256:6a56f8ee78e014d53a32fd7c6f6be9c18244fe861d938932fad8d6e65d3f5926"
 
 	// https://github.com/Orange-OpenSource/hurl/releases
-	hurlVersion = "6.1.1"
+	hurlVersion = "7.0.0"
 
 	// https://github.com/hatoo/oha/releases
-	ohaVersion = "1.9.0"
+	ohaVersion = "1.10.0"
 )
 
 type Env int
@@ -68,7 +66,7 @@ func New(
 	tag string,
 
 	// https://hub.docker.com/_/varnish/tags
-	// +default="7.7.1@sha256:1a684d37ec7a4f441a36c84945ee7713d1ddd59e8204d4040aeecb529ed4f68e"
+	// +default="7.7.3@sha256:9310a9cbdb61b632afb83fff44fa7c71b90f987a0587d23fc159e3b22334d577"
 	varnishVersion string,
 
 	// +default=9000

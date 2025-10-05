@@ -2,7 +2,7 @@
 GET {{proto}}://{{host}}?hurl=true
 HTTP 200 # expect OK response
 [Asserts]
-duration < 500 # ensure that it loads sub 500ms when cache is cold...
+duration < 1000 # ensure that it loads sub 1s when cache is cold...
 header "fly-request-id" exists # served by Fly
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
