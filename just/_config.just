@@ -39,6 +39,9 @@ FLY_APP_REGIONS := env("FLY_APP_REGIONS", "sea,sjc,lax,dfw,ord,iad,ewr,scl,lhr,c
 [private]
 export PURGE_TOKEN := env("PURGE_TOKEN", "local-purge")
 
+[private]
+LOCAL_CONTAINER_IMAGE := env("LOCAL_CONTAINER_IMAGE", "pipely.dev:" + datetime("%Y-%m-%d"))
+
 # https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/
 
 [private]

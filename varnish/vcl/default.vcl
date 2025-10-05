@@ -57,7 +57,8 @@ sub vcl_init {
     ttl = 10s,
     probe = backend_health,
     host_header = std.getenv("BACKEND_APP_FQDN"),
-    first_byte_timeout = 10s,
+    # Increase first_byte_timeout so that mp3 uploads work
+    first_byte_timeout = 300s,
     connect_timeout = 10s,
     between_bytes_timeout = 60s
   );
