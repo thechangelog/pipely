@@ -28,6 +28,18 @@ local-run:
       --purge-token=env:PURGE_TOKEN \
         local-production as-service --use-entrypoint=true up
 
+# Run container in Docker (works on remote servers too): http://<DOCKER_HOST>:9000
+docker-run *ARGS:
+    @just dagger call \
+      --beresp-ttl=5s \
+      --purge-token=env:PURGE_TOKEN \
+      local-production export --path=tmp/{{ LOCAL_CONTAINER_IMAGE }}
+    @docker rm --force pipely.dev
+    @docker tag $(docker load --input=tmp/{{ LOCAL_CONTAINER_IMAGE }} | awk -F: '{ print $3 }') {{ LOCAL_CONTAINER_IMAGE }}
+    @docker run --detach --publish 9000:9000 --env PURGE_TOKEN=$PURGE_TOKEN --name pipely.dev {{ LOCAL_CONTAINER_IMAGE }}
+    @docker container ls --filter name="pipely.dev" --format=json --no-trunc | jq .
+    @rm -f tmp/{{ LOCAL_CONTAINER_IMAGE }}
+
 # Test VTC + acceptance locally
 test: test-vtc test-acceptance-local
 
