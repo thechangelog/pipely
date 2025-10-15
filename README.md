@@ -57,10 +57,9 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - ✅ Tag & ship `v1.0-rc.7`
   - ✅ Update to Varnish v7.7.3 & Vector v0.49.0 - [PR #38](https://github.com/thechangelog/pipely/pull/38)
   - ✅ Support MP3 uploads - [PR #39](https://github.com/thechangelog/pipely/pull/39)
-- ☑️ Tag & ship `v1.0-rc.8`
-  - ☑️ Replace overmind with runit
-- ☑️ Tag & ship `v1.0`
-- ☑️ Route 100% of the production traffic through `v1.0`
+- ✅ Tag & ship `v1.0.0`
+  - ✅ Update all dependencies to latest (keep Varnish at v7.7.3) - [PR #40](https://github.com/thechangelog/pipely/pull/40)
+  - ✅ Route 100% of the production traffic through `v1.0.0`
 
 ## Post `v1.0`
 

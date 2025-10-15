@@ -11,7 +11,7 @@ import (
 
 const (
 	// https://hub.docker.com/_/golang/tags?name=1.24
-	golangVersion = "1.24.7@sha256:2c5f7a0c252a17cf6aa30ddee15caa0f485ee29410a6ea64cddb62eea2b07bdf"
+	golangVersion = "1.24.9@sha256:02ce1d7ea7825dccb7cd10222e44e7c0565a08c5a38795e50fbf43936484507b"
 
 	// https://github.com/nabsul/tls-exterminator
 	tlsExterminatorVersion = "93583389e8bab9b519466d95e69e594682d8de5b"
@@ -20,7 +20,7 @@ const (
 	overmindVersion = "2.5.1"
 
 	// https://hub.docker.com/r/timberio/vector/tags?name=debian
-	vectorVersion = "0.49.0-debian@sha256:6a56f8ee78e014d53a32fd7c6f6be9c18244fe861d938932fad8d6e65d3f5926"
+	vectorVersion = "0.50.0-debian@sha256:8e81f992197125f736e1fe5d73117ca6b69a0bb69cf3633f82b9233c9769c9c1"
 
 	// https://github.com/Orange-OpenSource/hurl/releases
 	hurlVersion = "7.0.0"

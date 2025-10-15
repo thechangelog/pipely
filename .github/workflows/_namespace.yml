@@ -14,37 +14,37 @@ jobs:
     runs-on:
       - nscloud-ubuntu-24.04-amd64-4x8-with-cache
       - nscloud-git-mirror-5gb
-      - namespace-experiments:dagger.integration=enabled;dagger.version=0.19.0
+      - namespace-experiments:dagger.integration=enabled;dagger.version=0.19.2
     steps:
-      - name: "Checkout code..."
+      - name: 'Checkout code...'
         uses: namespacelabs/nscloud-checkout-action@v5
 
       - uses: extractions/setup-just@v2
         with:
-          just-version: "1.43.0"
+          just-version: '1.43.0'
 
-      - name: "Test all (including local acceptance)..."
+      - name: 'Test all (including local acceptance)...'
         run: |
           just test
 
-      - name: "Test acceptance of current CDN deployment..."
+      - name: 'Test acceptance of current CDN deployment...'
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
           just test-acceptance-fastly
 
-      - name: "Test acceptance of NEW CDN deployment..."
+      - name: 'Test acceptance of NEW CDN deployment...'
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         run: |
           just test-acceptance-pipedream
 
-      - name: "Archive test acceptance reports..."
+      - name: 'Archive test acceptance reports...'
         uses: actions/upload-artifact@v4
         with:
           name: test-acceptance
           path: |
             tmp/test-acceptance-*
 
-      - name: "Publish & deploy tag..."
+      - name: 'Publish & deploy tag...'
         if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' }}
         run: |
           just publish ${{ github.ref_name }}
