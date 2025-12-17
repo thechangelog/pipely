@@ -1,0 +1,61 @@
+varnishtest "Verify content-length logging logic for streaming/gzip"
+
+server s1 -repeat 3 {
+  # Case 1: A standard response with Content-Length
+  rxreq
+  txresp -hdr "Content-Length: 50" -bodylen 50
+
+  # Case 2: Same response, but Varnish will be forced to gzip it,
+  # which causes Varnish to strip Content-Length and use Chunked encoding to client.
+  rxreq
+  txresp -hdr "Content-Length: 100" -bodylen 100
+} -start
+
+varnish v1 -vcl+backend {
+  vcl 4.1;
+  include "/etc/varnish/content-length.vcl";
+
+  sub vcl_backend_response {
+    set beresp.uncacheable = true;
+
+    # Force gzip for the second request.
+    # This causes Varnish to strip Content-Length and use Transfer-Encoding: chunked,
+    # which tests your "elsif" fallback logic.
+    if (bereq.url == "/gzip") {
+      set beresp.do_gzip = true;
+    }
+    return(deliver);
+  }
+} -start
+
+# We check the VSL (Varnish Shared Log) for your custom std.log entries.
+logexpect l1 -v v1 -g vxid {
+    # Expect Case 1 (Standard)
+    expect * * VCL_Log "content_length: 50"
+
+    # Expect Case 2 (Fallback via x-original-length)
+    expect * * VCL_Log "content_length: 100"
+} -start
+
+# Run the Client
+client c1 {
+    # Case 1: Normal request
+    txreq -url "/normal"
+    rxresp
+    expect resp.status == 200
+    # Verify client sees CL
+    expect resp.http.Content-Length == "50"
+
+    # Case 2: Request requiring gzip (strips CL)
+    txreq -url "/gzip" -hdr "Accept-Encoding: gzip"
+    rxresp
+    expect resp.status == 200
+    # Verify Varnish stripped CL (proving our fallback logic worked)
+    expect resp.http.content-length == <undef>
+    expect resp.http.transfer-encoding == "chunked"
+    # Ensure no header leakage
+    expect resp.http.x-original-length == <undef>
+} -run
+
+# Wait for logs to match
+logexpect l1 -wait

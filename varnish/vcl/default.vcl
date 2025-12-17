@@ -10,6 +10,7 @@ import var;
 # So that we can resolve backend hosts via DNS
 import dynamic;
 
+include "content-length.vcl";
 include "http.vcl";
 include "www.vcl";
 include "news-mp3.vcl";
