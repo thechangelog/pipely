@@ -1,0 +1,40 @@
+varnishtest "Test fly-request-id header handling"
+
+server s1 {
+  # Transaction 1: Generic check
+  rxreq
+  expect req.http.x-request-id != ""
+  txresp -status 200 -hdr "x-request-id: generated-backend-id"
+
+  # Transaction 2: Specific fly-request-id check
+  rxreq
+  expect req.http.x-request-id == "01KARNY9D13ZM9B7HB7YYEDW8Z-lhr"
+  txresp -status 200 -hdr "x-request-id: 01KARNY9D13ZM9B7HB7YYEDW8Z-lhr"
+} -start
+
+varnish v1 -vcl+backend {
+  vcl 4.1;
+  include "/etc/varnish/fly-request-id.vcl";
+
+  # Disable caching for testing
+  sub vcl_backend_response {
+    set beresp.uncacheable = true;
+    return(deliver);
+  }
+} -start
+
+# Test 1: The backend x-request-id header is used
+client c1 {
+  txreq -url "/"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.x-request-id == "generated-backend-id"
+} -run
+
+# Test 2: Test fly-request-id header
+client c2 {
+  txreq -url "/" -hdr "fly-request-id: 01KARNY9D13ZM9B7HB7YYEDW8Z-lhr"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.x-request-id == "01KARNY9D13ZM9B7HB7YYEDW8Z-lhr"
+} -run
