@@ -11,7 +11,22 @@ You are welcome to fork this and build your own - OSS FTW 💚
 
 > 🧢 Jerod Santo - March 29, 2024 - <a href="https://changelog.com/friends/38#transcript-208" target="_blank">Changelog & Friends #38</a>
 
-## How it's going - a.k.a. roadmap to `v1.0`
+## The Roadmap to `v2.0`
+
+- Tag & ship `v1.1`
+  - ✅ Log & forward original `fly-request-id` header - [PR #42](https://github.com/thechangelog/pipely/pull/42)
+  - Support websocket connections
+  - Enable backend streaming so that we don't load more data in memory than the clients can handle
+  - Update all dependencies to latest (hold Varnish at `v7.7.3`)
+  - Split instances into HOT & COLD
+  - Run periodic mp3 & feed checks against all regions
+  - Add nightly.changelog.com backend
+- Split the default VCL into `include` files
+  - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://github.com/thechangelog/pipely/pull/19#pullrequestreview-3013467499)
+- [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
+- Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
+
+## What went into `v1.0`
 
 - ✅ Static backend, 1 day stale, stale on error, `x`-headers - [Initial commit](https://github.com/thechangelog/pipely/commit/17d3899a52d9dc887efd7f49de92b24249431234)
 - ✅ Dynamic backend, `cache-status` header - [PR #1](https://github.com/thechangelog/pipely/pull/1)
@@ -57,16 +72,9 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - ✅ Tag & ship `v1.0-rc.7`
   - ✅ Update to Varnish v7.7.3 & Vector v0.49.0 - [PR #38](https://github.com/thechangelog/pipely/pull/38)
   - ✅ Support MP3 uploads - [PR #39](https://github.com/thechangelog/pipely/pull/39)
-- ✅ Tag & ship `v1.0.0`
-  - ✅ Update all dependencies to latest (keep Varnish at v7.7.3) - [PR #40](https://github.com/thechangelog/pipely/pull/40)
-  - ✅ Route 100% of the production traffic through `v1.0.0`
-
-## Post `v1.0`
-
-- Refactor VCL to use `include`
-  - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://github.com/thechangelog/pipely/pull/19#pullrequestreview-3013467499)
-- [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
-- Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
+- ✅ Tag & ship `v1.0`
+  - ✅ Update all dependencies to latest (hold Varnish at v7.7.3) - [PR #40](https://github.com/thechangelog/pipely/pull/40)
+  - ✅ Route 100% of the production traffic through `v1.0`
 
 ## Local development and testing
 
