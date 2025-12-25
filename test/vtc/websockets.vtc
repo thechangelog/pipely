@@ -1,0 +1,65 @@
+varnishtest "Test Websocket Support in Varnish 7.7"
+
+# 1. Define the backend server
+server s1 {
+  rxreq
+  # Verify the backend receives the upgrade headers
+  expect req.http.upgrade == "websocket"
+  expect req.http.connection == "Upgrade"
+
+  # Verify the specific WebSocket security and protocol headers
+  expect req.http.sec-websocket-key == "dGhlIHNhbXBsZSBub25jZQ=="
+  expect req.http.sec-websocket-version == "13"
+  expect req.http.sec-websocket-protocol == "chat"
+  expect req.http.sec-websocket-extensions == "permessage-deflate"
+
+  # Send the standard WebSocket acceptance response
+  txresp -status 101 \
+    -hdr "Upgrade: websocket" \
+    -hdr "Connection: Upgrade" \
+    -hdr "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=" \
+    -hdr "Sec-WebSocket-Protocol: chat"
+
+  # Simulate raw WebSocket traffic (after handshake, it's just a stream)
+  # Receive "hello" from client
+  recv 5
+  # Send "world" to client
+  send "world"
+} -start
+
+# 2. Define the Varnish Instance with the VCL logic
+  varnish v1 -vcl+backend {
+  vcl 4.1;
+  include "/etc/varnish/websockets.vcl";
+
+  # Disable caching for testing
+  sub vcl_backend_response {
+    set beresp.uncacheable = true;
+    return(deliver);
+  }
+} -start
+
+# 3. Define the client
+client c1 {
+  txreq -hdr "Upgrade: websocket" \
+    -hdr "Connection: Upgrade" \
+    -hdr "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" \
+    -hdr "Sec-WebSocket-Version: 13" \
+    -hdr "Sec-WebSocket-Protocol: chat" \
+    -hdr "Sec-WebSocket-Extensions: permessage-deflate"
+
+  rxresp
+  expect resp.status == 101
+  expect resp.http.upgrade == "websocket"
+  expect resp.http.connection == "Upgrade"
+  expect resp.http.sec-websocket-accept == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+  expect resp.http.sec-websocket-protocol == "chat"
+
+  # Send "hello" to server through Varnish pipe
+  send "hello"
+
+  # Expect "world" from server through Varnish pipe
+  recv 5
+
+  expect_close
+} -run
