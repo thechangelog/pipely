@@ -12,8 +12,9 @@ import dynamic;
 
 include "fly-request-id.vcl";
 include "http.vcl";
-include "www.vcl";
 include "news-mp3.vcl";
+include "websockets.vcl";
+include "www.vcl";
 
 # Disable default backend as we are using dynamic backends **only** so that we
 # can handle new origin instances (e.g. new app version gets deployed)

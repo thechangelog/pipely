@@ -15,7 +15,7 @@ You are welcome to fork this and build your own - OSS FTW 💚
 
 - Tag & ship `v1.1`
   - ✅ Log & forward original `fly-request-id` header - [PR #42](https://github.com/thechangelog/pipely/pull/42)
-  - Support websocket connections
+  - ✅ Support websocket connections - [PR #43](https://github.com/thechangelog/pipely/pull/43)
   - Enable backend streaming so that we don't load more data in memory than the clients can handle
   - Update all dependencies to latest (hold Varnish at `v7.7.3`)
   - Split instances into HOT & COLD
