@@ -1,7 +1,7 @@
 # https://github.com/Orange-OpenSource/hurl/releases
 
 [private]
-HURL_VERSION := "7.0.0"
+HURL_VERSION := "7.1.0"
 [private]
 HURL_NAME := "hurl-" + HURL_VERSION + "-" + arch() + "-" + OS + "-" + OS_ALT
 [private]

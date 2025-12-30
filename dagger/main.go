@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	// https://hub.docker.com/_/golang/tags?name=1.24
-	golangVersion = "1.24.9@sha256:02ce1d7ea7825dccb7cd10222e44e7c0565a08c5a38795e50fbf43936484507b"
+	// https://hub.docker.com/_/golang/tags?name=1.25
+	golangVersion = "1.25.5@sha256:36b4f45d2874905b9e8573b783292629bcb346d0a70d8d7150b6df545234818f"
 
 	// https://github.com/nabsul/tls-exterminator
 	tlsExterminatorVersion = "93583389e8bab9b519466d95e69e594682d8de5b"
@@ -21,14 +21,14 @@ const (
 	// https://github.com/DarthSim/overmind/releases
 	overmindVersion = "2.5.1"
 
-	// https://hub.docker.com/r/timberio/vector/tags?name=debian
-	vectorVersion = "0.50.0-debian@sha256:8e81f992197125f736e1fe5d73117ca6b69a0bb69cf3633f82b9233c9769c9c1"
+	// https://hub.docker.com/r/timberio/vector/tags?name=0.5
+	vectorVersion = "0.52.0-debian@sha256:ee3b99e52896fde12d1b07774826c8e58b07b4a995c3a5a624cc268a69ad7572"
 
 	// https://github.com/Orange-OpenSource/hurl/releases
-	hurlVersion = "7.0.0"
+	hurlVersion = "7.1.0"
 
 	// https://github.com/hatoo/oha/releases
-	ohaVersion = "1.10.0"
+	ohaVersion = "1.12.1"
 )
 
 type Env int
@@ -70,7 +70,7 @@ func New(
 	tag string,
 
 	// https://hub.docker.com/_/varnish/tags
-	// +default="7.7.3@sha256:9310a9cbdb61b632afb83fff44fa7c71b90f987a0587d23fc159e3b22334d577"
+	// +default="7.7.3@sha256:10c3bccedda53fbba1e4a640f615921e98eb0bcab444601e3ffcc8defb3bf184"
 	varnishVersion string,
 
 	// +default=9000

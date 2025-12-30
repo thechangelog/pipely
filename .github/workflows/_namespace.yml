@@ -14,14 +14,14 @@ jobs:
     runs-on:
       - nscloud-ubuntu-24.04-amd64-4x8-with-cache
       - nscloud-git-mirror-5gb
-      - namespace-experiments:dagger.integration=enabled;dagger.version=0.19.2
+      - namespace-experiments:dagger.integration=enabled;dagger.version=0.19.8
     steps:
       - name: 'Checkout code...'
         uses: namespacelabs/nscloud-checkout-action@v5
 
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
         with:
-          just-version: '1.43.0'
+          just-version: '1.45.0'
 
       - name: 'Test all (including local acceptance)...'
         run: |

@@ -1,15 +1,16 @@
 {
   "name": "pipely",
-  "engineVersion": "v0.18.12",
+  "engineVersion": "v0.19.8",
   "sdk": {
     "source": "go"
   },
   "dependencies": [
     {
       "name": "flyio",
-      "source": "github.com/gerhard/daggerverse/flyio",
+      "source": "github.com/gerhard/daggerverse/flyio@main",
       "pin": "3cb1cd957782f7b841f6fc49a662073180021a29"
     }
   ],
-  "source": "dagger"
+  "source": "dagger",
+  "disableDefaultFunctionCaching": true
 }
