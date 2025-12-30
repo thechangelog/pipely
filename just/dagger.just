@@ -1,7 +1,7 @@
 # https://github.com/dagger/dagger/releases
 
 [private]
-DAGGER_VERSION := "0.19.2"
+DAGGER_VERSION := "0.19.8"
 [private]
 DAGGER_DIR := BIN_PATH / "pipely-dagger-" + DAGGER_VERSION
 [private]

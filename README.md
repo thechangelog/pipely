@@ -17,7 +17,7 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Log & forward original `fly-request-id` header - [PR #42](https://github.com/thechangelog/pipely/pull/42)
   - ✅ Support websocket connections - [PR #43](https://github.com/thechangelog/pipely/pull/43)
   - ✅ Store MP3s in file cache + HOT & COLD instances - [PR #44](https://github.com/thechangelog/pipely/pull/44)
-  - Update all dependencies to latest (hold Varnish at `v7.7.3`)
+  - ✅ Update deps to latest stable (hold Varnish at `v7.7.3`) - [PR #45](https://github.com/thechangelog/pipely/pull/45)
   - Run periodic MP3 & feed checks against all regions
   - Add nightly.changelog.com backend
 - [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
