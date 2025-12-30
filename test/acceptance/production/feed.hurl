@@ -10,6 +10,8 @@ header "cache-status" contains "region=" # region that served this request
 header "cache-status" contains "origin=" # origin that served this request
 header "cache-status" contains "ttl=" # ttl is set
 header "cache-status" contains "grace=" # grace is set
+header "cache-status" contains "keep=" # keep is set
+header "cache-status" contains "storage=" # storage is set
 
 # Get the changelog feed AGAIN
 GET {{proto}}://{{host}}/podcast/feed?hurl=true
@@ -30,6 +32,7 @@ HTTP 200 # expect OK response
 [Asserts]
 duration < 500 # ensure that it loads sub 500ms when cached...
 header "cache-status" contains "hit" # served from cache
+header "cache-status" contains "storage.memory" # cached in memory
 header "cache-status" not contains "stale" # not stale
 header "age" toInt <= {{delay_s}} # has been stored in cache LESS than TTL
 

@@ -1,0 +1,155 @@
+varnishtest "Test ASSETS backend"
+
+# Assets mock backend
+server s1 {
+  # Test for /assets_health
+  rxreq
+  expect req.url == "/health"
+  txresp -status 200 -body "assets ok"
+
+  # Test for HEAD /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
+  rxreq
+  # Varnish converts HEAD -> GET so that it can cache the response body
+  expect req.method == "GET"
+  expect req.url == "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  txresp -status 200
+
+  # Test for OPTIONS /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
+  rxreq
+  expect req.method == "OPTIONS"
+  expect req.url == "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  txresp -status 200
+
+  # Test for /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
+  rxreq
+  expect req.url == "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  txresp -status 200 -body "podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+
+  # Test for /static/css/email-5690e09e20c0b25fefebbc5049362b39.css
+  rxreq
+  expect req.url == "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css"
+  txresp -status 200 -body "email-5690e09e20c0b25fefebbc5049362b39.css"
+
+  # Test for /uploads/news/140/changelog-news-140.mp3
+  rxreq
+  expect req.url == "/uploads/news/140/changelog-news-140.mp3?arg=test"
+  txresp -status 200 -body "changelog-news-140.mp3"
+} -start
+
+setenv ASSETS_HOST "assets.local"
+setenv BACKEND_ASSETS_FQDN "assets.local"
+setenv BACKEND_ASSETS_HOST "${s1_addr}"
+setenv BACKEND_ASSETS_PORT "${s1_port}"
+
+# Start varnish with our VCL + memory cache + file cache
+varnish v1 -arg "-s memory=malloc,10M" \
+           -arg "-s disk=file,${tmpdir}/file.bin,10M" -vcl {
+  vcl 4.1;
+  import dynamic;
+  import std;
+
+  # Use an assets backend with no probe when testing
+  sub vcl_init {
+    new assets = dynamic.director(
+      host_header = std.getenv("BACKEND_ASSETS_FQDN"),
+    );
+  }
+  # Add a simple PURGE to simply test that this method is allowed via assets-backend.vcl
+  sub vcl_recv {
+    if (req.method == "PURGE") {
+      return(purge);
+    }
+  }
+
+  include "assets-backend.vcl";
+  include "disable-default-backend.vcl";
+} -start
+
+# GET /assets_health is served by the assets backend
+client c1 {
+  txreq -method "GET" -url "/assets_health"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "assets ok"
+} -run
+
+# POST is not an allowed method
+client c2 {
+  txreq -method "POST" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 405
+  expect resp.http.allow == "GET, HEAD, OPTIONS, PURGE"
+} -run
+
+# HEAD is an allowed method
+client c3 {
+  txreq -method "HEAD" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+} -run
+
+# OPTIONS is an allowed method
+client c4 {
+  txreq -method "OPTIONS" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.access-control-allow-origin == "*"
+} -run
+
+# PURGE is an allowed method
+client c5 {
+  txreq -method "PURGE" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+} -run
+
+# GET png is served by the assets backend + CORS check + memory cache
+logexpect l1 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+    # Expectation for the PNG request
+    expect 0 * Begin
+    expect * * BereqURL "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+    expect * * Storage "malloc memory"
+    expect * * End
+} -start
+client c6 {
+  txreq -method "GET" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  expect resp.http.access-control-allow-origin == "*"
+} -run
+logexpect l1 -wait
+
+# GET css is served by the assets backend + CORS check + memory cache
+logexpect l2 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+    # Expectation for the CSS request
+    expect 0 * Begin
+    expect * * BereqURL "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css"
+    expect * * Storage "malloc memory"
+    expect * * End
+} -start
+client c7 {
+  txreq -method "GET" -url "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "email-5690e09e20c0b25fefebbc5049362b39.css"
+  expect resp.http.access-control-allow-origin == "*"
+} -run
+logexpect l2 -wait
+
+# GET mp3 is served by the assets backend + CORS check + file cache
+logexpect l3 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+    # Expectation for the MP3 request
+    expect 0 * Begin
+    expect * * BereqURL "/uploads/news/140/changelog-news-140.mp3"
+    expect * * Storage "file disk"
+    expect * * End
+} -start
+client c8 {
+  txreq -method "GET" -url "/uploads/news/140/changelog-news-140.mp3?arg=test" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "changelog-news-140.mp3"
+  expect resp.http.access-control-allow-origin == "*"
+} -run
+logexpect l3 -wait

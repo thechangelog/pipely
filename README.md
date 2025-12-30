@@ -16,13 +16,10 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - Tag & ship `v1.1`
   - ✅ Log & forward original `fly-request-id` header - [PR #42](https://github.com/thechangelog/pipely/pull/42)
   - ✅ Support websocket connections - [PR #43](https://github.com/thechangelog/pipely/pull/43)
-  - Enable backend streaming so that we don't load more data in memory than the clients can handle
+  - ✅ Store MP3s in file cache + HOT & COLD instances - [PR #44](https://github.com/thechangelog/pipely/pull/44)
   - Update all dependencies to latest (hold Varnish at `v7.7.3`)
-  - Split instances into HOT & COLD
-  - Run periodic mp3 & feed checks against all regions
+  - Run periodic MP3 & feed checks against all regions
   - Add nightly.changelog.com backend
-- Split the default VCL into `include` files
-  - This will enable us to do reuse the same configs in the tests [💪 @mttjohnson](https://github.com/thechangelog/pipely/pull/19#pullrequestreview-3013467499)
 - [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
 - Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
 
@@ -83,7 +80,7 @@ While it's fun watching other people experiment with digital resin (varnish 😂
 ### Prerequisites
 
 - 🐳 [Docker](https://docs.docker.com/engine/install/)
-- 🤖 [Just](https://github.com/casey/just?tab=readme-ov-file#installation) version `1.27.0` or higher
+- 🤖 [Just](https://github.com/casey/just?tab=readme-ov-file#installation) version `1.35.0` or higher
 
 And that's about it. Everything else is containerized with Dagger.
 
@@ -94,35 +91,25 @@ And that's about it. Everything else is containerized with Dagger.
 ```bash
 just
 Available recipes:
-    how-many-lines                  # How many lines of Varnish config?
-    how-many-lines-raw              # How many lines of Varnish config?
-    http-profile url="https://pipedream.changelog.com/" # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
-    local-debug                     # Debug container locally
-    local-run                       # Run container locally: available on http://localhost:9000
-    test                            # Test VTC + acceptance locally
-    test-acceptance-fastly *ARGS    # Test CURRENT production
-    test-acceptance-local           # Test local setup
-    test-reports                    # Open test reports
-    test-reports-rm                 # Clear test reports
-    test-vtc                        # Test VCL config
+    docker-run *ARGS                          # Run container in Docker (works on remote servers too): http://<DOCKER_HOST>:9000
+    how-many-lines                            # How many lines of Varnish config?
+    how-many-lines-raw                        # How many lines of Varnish config?
+    http-profile url="https://changelog.com/" # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
+    local-debug                               # Debug container locally
+    local-run                                 # Run container locally: available on http://localhost:9000
+    test                                      # Test VTC + acceptance locally
+    test-acceptance-local                     # Test local setup
+    test-reports                              # Open test reports
+    test-reports-rm                           # Clear test reports
+    test-vtc                                  # Test VCL config
 
     [team]
-    cert fqdn                       # Show cert $fqdn for app
-    cert-add fqdn                   # Add cert $fqdn to app
-    certs                           # Show app certs
-    deploy tag=_DEFAULT_TAG         # Deploy container image
-    envrc-secrets                   # Create .envrc.secrets with credentials from 1Password
-    ips                             # Show app IPs
-    local-debug-production          # Debug production container locally - assumes envrc-secrets has already run
-    local-run-production            # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
-    machines                        # Show app machines
-    publish tag=_DEFAULT_TAG        # Publish container image - assumes envrc-secrets was already run
-    restart                         # Restart ALL app machines, one-by-one
-    scale                           # Scale production app
-    secrets                         # Set app secrets - assumes envrc-secrets was already run
-    status                          # Show app status
-    tag tag sha discussion          # Tag a new release
-    test-acceptance-pipedream *ARGS # Test NEW production - Pipedream, the Changelog variant of Pipely
+    envrc-secrets                             # Create .envrc.secrets with credentials from 1Password
+    local-debug-production                    # Debug production container locally - assumes envrc-secrets has already run
+    local-run-production                      # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
+    publish tag=_DEFAULT_TAG                  # Publish container image - assumes envrc-secrets was already run
+    tag tag sha discussion                    # Tag a new release
+    test-acceptance-production *ARGS          # Test production acceptance
 
 # Run the tests
 just test

@@ -1,0 +1,250 @@
+varnishtest "Test default VCL"
+
+# Varnish server
+server s1 {
+  rxreq
+  expect req.url == "/health"
+  txresp -status 204
+} -start
+
+# App mock server
+server s2 {
+  rxreq
+  expect req.url == "/health"
+  txresp -status 200 -body "app ok"
+
+  rxreq
+  expect req.url == "/"
+  txresp -status 200 -body "app homepage"
+} -start
+
+setenv APP_HOST "app.local"
+setenv BACKEND_APP_FQDN "app.local"
+setenv BACKEND_APP_HOST "${s2_addr}"
+setenv BACKEND_APP_PORT "${s2_port}"
+
+# Assets mock server
+server s3 {
+  rxreq
+  expect req.url == "/health"
+  txresp -status 200 -body "assets ok"
+
+  rxreq
+  expect req.url == "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  txresp -status 200 -body "podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+} -start
+
+setenv ASSETS_HOST "assets.local"
+setenv BACKEND_ASSETS_FQDN "assets.local"
+setenv BACKEND_ASSETS_HOST "${s3_addr}"
+setenv BACKEND_ASSETS_PORT "${s3_port}"
+
+# Feeds mock server
+server s4 {
+  rxreq
+  expect req.url == "/health"
+  txresp -status 200 -body "feeds ok"
+
+  rxreq
+  expect req.url == "/podcast.xml"
+  txresp -status 200 -body "podcast.xml"
+} -start
+setenv FEEDS_HOST "feeds.local"
+setenv BACKEND_FEEDS_FQDN "feeds.local"
+setenv BACKEND_FEEDS_HOST "${s4_addr}"
+setenv BACKEND_FEEDS_PORT "${s4_port}"
+
+setenv BERESP_TTL "10s"
+setenv BERESP_GRACE "1m"
+setenv BERESP_KEEP "1h"
+
+# Start Varnish with a VCL close to our final one
+varnish v1 -arg "-s memory=malloc,10M" \
+           -arg "-s disk=file,${tmpdir}/file.bin,10M" -vcl {
+  vcl 4.1;
+  import dynamic;
+  import std;
+  import var;
+
+  backend default {
+    .host = "${s1_addr}";
+    .port = "${s1_port}";
+  }
+
+  # Use an app backend with no probe when testing
+  sub vcl_init {
+    new app = dynamic.director(
+      host_header = std.getenv("BACKEND_APP_FQDN"),
+    );
+  }
+
+  # Use an assets backend with no probe when testing
+  sub vcl_init {
+    new assets = dynamic.director(
+      host_header = std.getenv("BACKEND_ASSETS_FQDN"),
+    );
+  }
+
+  # Use a feeds backend with no probe when testing
+  sub vcl_init {
+    new feeds = dynamic.director(
+      host_header = std.getenv("BACKEND_FEEDS_FQDN"),
+    );
+  }
+
+  include "app-backend.vcl";
+  include "assets-backend.vcl";
+  include "feeds-backend.vcl";
+  include "fly/region.vcl";
+  include "varnish-health.vcl";
+
+  # The following MUST run AFTER all the includes which is why it's added inline
+  #
+  sub vcl_backend_response {
+    # If this is set (only recommended for dev / testing), it WILL overwrite the backend-specific settings
+    if (std.getenv("BERESP_TTL")) {
+      # Objects within ttl are considered fresh.
+      set beresp.ttl = std.duration(std.getenv("BERESP_TTL"));
+    }
+
+    # If this is set (only recommended for dev / testing), it WILL overwrite the backend-specific settings
+    if (std.getenv("BERESP_GRACE")) {
+      # Objects within grace are considered stale.
+      # Serve stale content while refreshing in the background.
+      set beresp.grace = std.duration(std.getenv("BERESP_GRACE"));
+    }
+
+    # If this is set (only recommended for dev / testing), it WILL overwrite the backend-specific settings
+    if (std.getenv("BERESP_KEEP")) {
+      # Keep the object in cache for some additional time
+      # so that the backend does not need to retransmit the object if not modified
+      set beresp.keep = std.duration(std.getenv("BERESP_KEEP"));
+    }
+  }
+
+  sub vcl_pass {
+  	# Bypass caching
+  	set req.http.x-bypass = "true";
+  }
+
+  sub vcl_deliver {
+    # Which origin is serving this request?
+    set resp.http.cache-status = resp.http.cache-status + "; origin=" + req.backend_hint + "," + req.http.x-backend-fqdn;
+    std.log("backend:" + req.http.x-backend-fqdn);
+
+    if (req.http.x-bypass == "true") {
+      set resp.http.cache-status = resp.http.cache-status + "; bypass";
+      return(deliver);
+    }
+
+    # What is the remaining TTL for this object?
+    set resp.http.cache-status = resp.http.cache-status + "; ttl=" + obj.ttl;
+    std.log("ttl:" + obj.ttl);
+
+    # What is the max object staleness permitted?
+    set resp.http.cache-status = resp.http.cache-status + "; grace=" + obj.grace;
+    std.log("grace:" + obj.grace);
+
+    # How long should we keep an object in cache for?
+    set resp.http.cache-status = resp.http.cache-status + "; keep=" + obj.keep;
+    std.log("keep:" + obj.keep);
+
+    # Did the response come from Varnish or from the backend? Which type of cache storage?
+    if (obj.hits > 0) {
+      set resp.http.cache-status = resp.http.cache-status + "; storage=" + obj.storage + "; hit";
+      std.log("storage:" + obj.storage);
+    } else {
+      set resp.http.cache-status = resp.http.cache-status + "; storage=none; miss";
+      std.log("storage:none");
+    }
+
+    # Is this object stale?
+    if (obj.hits > 0 && obj.ttl < std.duration(integer=0)) {
+      set resp.http.cache-status = resp.http.cache-status + "; stale";
+    }
+
+    # How many times has this response been served from Varnish?
+    set resp.http.cache-status = resp.http.cache-status + "; hits=" + obj.hits;
+    std.log("hits:" + obj.hits);
+  }
+} -start
+
+# Varnish
+client c1 {
+  txreq -url "/health"
+  rxresp
+  expect resp.status == 204
+  expect resp.http.cache-status == "region=LOCAL; synth"
+} -run
+
+# App health
+client c2 {
+  txreq -url "/app_health"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=app.+,app.local; bypass"
+} -run
+
+# App homepage uncached
+client c3 {
+  txreq -url "/"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=app.+,app.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
+} -run
+
+# App homepage cached
+client c4 {
+  txreq -url "/"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=app.+,app.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
+} -run
+
+# Assets health
+client c5 {
+  txreq -url "/assets_health"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=assets.+,assets.local; bypass"
+} -run
+
+# Assets uncached
+client c6 {
+  txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=assets.+,assets.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
+} -run
+
+# Assets cached
+client c7 {
+  txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=assets.+,assets.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
+} -run
+
+# Feeds health
+client c8 {
+  txreq -url "/feeds_health"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=feeds.+,feeds.local; bypass"
+} -run
+
+# Feeds uncached
+client c9 {
+  txreq -url "/podcast/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=feeds.+,feeds.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
+} -run
+
+# Feeds cached
+client c10  {
+  txreq -url "/podcast/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.http.cache-status ~ "region=LOCAL; origin=feeds.+,feeds.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
+} -run

@@ -1,14 +1,13 @@
-varnishtest "Test Feeds backend"
-
-# App mock server
-server s1 {
-  rxreq
-  txresp -status 200 -body "App backend"
-} -start
+varnishtest "Test FEEDS backend"
 
 # Feeds mock server with responses for all feed requests
-server s2 {
-# Test for /podcast/feed
+server s1 {
+  # Test for /feeds_health
+  rxreq
+  expect req.url == "/health"
+  txresp -status 200 -body "feeds ok"
+
+  # Test for /podcast/feed
   rxreq
   expect req.url == "/podcast.xml"
   txresp -status 200 -body "podcast.xml"
@@ -274,104 +273,36 @@ server s2 {
   txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
 } -start
 
-# Start varnish with our VCL
-varnish v1 -vcl {
-  vcl 4.1;
+setenv FEEDS_HOST "feeds.local"
+setenv BACKEND_FEEDS_FQDN "feeds.local"
+setenv BACKEND_FEEDS_HOST "${s1_addr}"
+setenv BACKEND_FEEDS_PORT "${s1_port}"
 
+# Start varnish with our VCL
+varnish v1 -arg "-s memory=malloc,10M" \
+           -arg "-s disk=file,${tmpdir}/file.bin,10M" -vcl {
+  vcl 4.1;
+  import dynamic;
   import std;
 
-  backend app {
-    .host = "${s1_addr}";
-    .port = "${s1_port}";
+  # Use a feeds backend with no probe when testing
+  sub vcl_init {
+    new feeds = dynamic.director(
+      host_header = std.getenv("BACKEND_FEEDS_FQDN"),
+    );
   }
 
-  backend feeds {
-    .host = "${s2_addr}";
-    .port = "${s2_port}";
-  }
-
-  sub vcl_recv {
-    set req.http.x-backend = "app";
-
-    if (req.url ~ "^/podcast/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/podcast.xml";
-    } else if (req.url ~ "^/gotime/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/gotime.xml";
-    } else if (req.url ~ "^/master/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/master.xml";
-    } else if (req.url ~ "^/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/feed.xml";
-    } else if (req.url ~ "^/jsparty/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/jsparty.xml";
-    } else if (req.url ~ "^/shipit/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/shipit.xml";
-    } else if (req.url ~ "^/news/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/news.xml";
-    } else if (req.url ~ "^/brainscience/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/brainscience.xml";
-    } else if (req.url ~ "^/founderstalk/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/founderstalk.xml";
-    } else if (req.url ~ "^/interviews/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/interviews.xml";
-    } else if (req.url ~ "^/friends/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/friends.xml";
-    } else if (req.url ~ "^/rfc/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/rfc.xml";
-    } else if (req.url ~ "^/spotlight/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/spotlight.xml";
-    } else if (req.url ~ "^/afk/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/afk.xml";
-    } else if (req.url ~ "^/posts/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/posts.xml";
-    } else if (req.url ~ "^/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/plusplus.xml";
-    } else if (req.url ~ "^/rss/?(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = "/feed.xml";
-    } else if (req.url ~ "^/feeds/.*(\?.*)?$") {
-      set req.http.x-backend = "feeds";
-      set req.url = regsub(req.url, "^/feeds/([^?]*)(\?.*)?$", "/\1.xml");
-    }
-  }
-
-  sub vcl_hash {
-    if (req.http.x-backend == "feeds") {
-      set req.backend_hint = feeds;
-    } else {
-      set req.backend_hint = app;
-    }
-    unset req.http.x-backend;
-  }
-
-  # Disable caching for testing
-  sub vcl_backend_response {
-    set beresp.uncacheable = true;
-    return(deliver);
-  }
+  include "feeds-backend.vcl";
+  include "test/disable-caching-for-testing.vcl";
+  include "disable-default-backend.vcl";
 } -start
 
-# / should go to app backend
+# /feeds_health should go to feeds backend
 client c1 {
-  txreq -url "/"
+  txreq -url "/feeds_health"
   rxresp
   expect resp.status == 200
-  expect resp.body == "App backend"
+  expect resp.body == "feeds ok"
 } -run
 
 # /podcast/feed should go to feeds backend

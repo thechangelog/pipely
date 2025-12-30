@@ -94,7 +94,7 @@ sub vcl_recv {
 sub vcl_synth {
   if (req.http.x-redirect
       && resp.status == 308) {
-    set resp.http.location = "https://" + req.http.host + req.http.x-redirect;
+    set resp.http.location = "https://" + std.getenv("ASSETS_HOST") + req.http.x-redirect;
 
     # If a query string exists, append it to the new path
     if (req.url ~ "\?.+") {

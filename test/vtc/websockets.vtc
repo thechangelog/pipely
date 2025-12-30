@@ -1,4 +1,4 @@
-varnishtest "Test Websocket Support in Varnish 7.7"
+varnishtest "Test Support for Websocket Connections"
 
 # 1. Define the backend server
 server s1 {
@@ -30,13 +30,8 @@ server s1 {
 # 2. Define the Varnish Instance with the VCL logic
   varnish v1 -vcl+backend {
   vcl 4.1;
-  include "/etc/varnish/websockets.vcl";
 
-  # Disable caching for testing
-  sub vcl_backend_response {
-    set beresp.uncacheable = true;
-    return(deliver);
-  }
+  include "websockets.vcl";
 } -start
 
 # 3. Define the client

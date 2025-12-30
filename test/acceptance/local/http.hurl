@@ -9,6 +9,8 @@ header "cache-status" contains "region=" # region that served this request
 header "cache-status" contains "origin=" # origin that served this request
 header "cache-status" contains "ttl=" # ttl is set
 header "cache-status" contains "grace=" # grace is set
+header "cache-status" contains "keep=" # keep is set
+header "cache-status" contains "storage=" # storage is set
 
 # Test the assets_host
 GET http://{{host}}/friends/73-pipely-tech.jpg?hurl=true&https

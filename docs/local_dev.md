@@ -32,7 +32,7 @@ If you're not familiar with tmux, I highly recommend taking a quick tutorial, bu
 - Start the server with `just up`.
 - Create a new window by pressing `ctrl-b` followed by `c`.
 - Try fetching the front page from the locally running server with `curl http://localhost:9000`.
-- Run a benchmark test such as `just bench-app-4-pipedream`.
+- Run a benchmark test such as `just bench-app-2-fly`.
 - Switch back to the other window and check out the live logs feed with `ctrl-b b`.
 - Quit the server with `ctrl-c`.
 - Close your two tmux windows with `exit` and `exit`.

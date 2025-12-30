@@ -33,11 +33,11 @@ top:
 
 # Varnish stat
 stat:
-    varnishstat
+    varnishstat -1
 
 # Run VCL tests
 test-vtc *ARGS:
-    varnishtest {{ ARGS }} test/vtc/*
+    varnishtest {{ ARGS }} -j 8 test/vtc/*.vtc test/vtc/**/*.vtc
 
 # Run acceptance tests
 test-acceptance-local *ARGS:
@@ -49,11 +49,11 @@ test-acceptance-local *ARGS:
      --variable delay_s=5 \
      --variable purge_token="{{ env("PURGE_TOKEN") }}" \
      {{ ARGS }} \
-     test/acceptance/*.hurl test/acceptance/local/*.hurl test/acceptance/pipedream/*.hurl
+     test/acceptance/*.hurl test/acceptance/local/*.hurl test/acceptance/production/*.hurl
 
 # Show Varnish cache stats
 cache:
-    varnishncsa -c -f '%m %u %h %{x-cache}o %{x-cache-hits}o'
+    varnishstat -1 -f "MAIN.cache*" -f "MAIN.shm*" -f "SMA.*" -f "SMF.*"
 
 [private]
 bench url="http://localhost:9000/" http="2" reqs="1000" conns="50":
@@ -62,38 +62,26 @@ bench url="http://localhost:9000/" http="2" reqs="1000" conns="50":
 # Benchmark app origin
 bench-app-1-origin: (bench "https://changelog-2025-05-05.fly.dev/")
 
-# Benchmark app Fastly
-bench-app-2-fastly: (bench "https://changelog.com/" "2" "10000")
+# Benchmark app via Fly.io
+bench-app-2-fly: (bench "https://changelog.com/" "2" "10000")
 
-# Benchmark app Bunny
-bench-app-3-bunny: (bench "https://bunny.changelog.com/")
-
-# Benchmark app Pipedream
-bench-app-4-pipedream: (bench "https://pipedream.changelog.com/" "2" "10000")
-
-# Benchmark app via local Varnish
-bench-app-5-local: (bench "http://localhost:9000/" "2" "10000")
+# Benchmark app via local
+bench-app-3-local: (bench "http://localhost:9000/" "2" "10000")
 
 # Benchmark app TLS proxy
-bench-app-6-tls-proxy: (bench "http://localhost:5000/" "1.1")
+bench-app-4-tls-proxy: (bench "http://localhost:5000/" "1.1")
 
 # Benchmark feed origin
 bench-feed-1-origin: (bench "https://feeds.changelog.place/podcast.xml")
 
-# Benchmark feed Fastly
-bench-feed-2-fastly: (bench "https://changelog.com/podcast/feed")
+# Benchmark feed via Fly.io
+bench-feed-2-fly: (bench "https://changelog.com/podcast/feed")
 
-# Benchmark feed Bunny CDN
-bench-feed-3-bunny: (bench "https://bunny.changelog.com/podcast/feed")
-
-# Benchmark feed Pipedream
-bench-feed-4-pipedream: (bench "https://pipedream.changelog.com/podcast/feed")
-
-# Benchmark feed via local Varnish
-bench-feed-5-local: (bench "http://localhost:9000/podcast/feed" "2" "10000" "50")
+# Benchmark feed via local
+bench-feed-3-local: (bench "http://localhost:9000/podcast/feed" "2" "10000" "50")
 
 # Benchmark feed TLS proxy
-bench-feed-6-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")
+bench-feed-4-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")
 
 # https://williamyaps.github.io/wlmjavascript/servercli.html
 

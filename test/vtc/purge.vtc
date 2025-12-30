@@ -1,20 +1,12 @@
 varnishtest "Test PURGE method handling"
 
-server s1 {
-  rxreq
-  txresp
-} -start
+setenv PURGE_TOKEN "sudo"
 
-varnish v1 -vcl+backend {
-  sub vcl_recv {
-    if (req.method == "PURGE") {
-      if (req.http.purge-token == "doit") {
-        return(purge);
-      } else {
-        return(synth(401, "Invalid PURGE token"));
-      }
-    }
-  }
+varnish v1 -vcl {
+  vcl 4.1;
+
+  include "disable-default-backend.vcl";
+  include "purge.vcl";
 } -start
 
 # PURGE with no token
@@ -27,7 +19,7 @@ client c1 {
 
 # PURGE with invalid token
 client c2 {
-  txreq -method PURGE -url "/" -hdr "purge-token: do"
+  txreq -method PURGE -url "/" -hdr "purge-token: invalid"
   rxresp
   expect resp.status == 401
   expect resp.body ~ "Invalid PURGE token"
@@ -35,7 +27,7 @@ client c2 {
 
 # PURGE with correct token
 client c3 {
-  txreq -method PURGE -url "/" -hdr "purge-token: doit"
+  txreq -method PURGE -url "/" -hdr "purge-token: sudo"
   rxresp
   expect resp.status == 200
 } -run
