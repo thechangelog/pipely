@@ -14,13 +14,8 @@ server s1 {
 
 varnish v1 -vcl+backend {
   vcl 4.1;
-  include "/etc/varnish/fly-request-id.vcl";
 
-  # Disable caching for testing
-  sub vcl_backend_response {
-    set beresp.uncacheable = true;
-    return(deliver);
-  }
+  include "fly/request-id.vcl";
 } -start
 
 # Test 1: The backend x-request-id header is used

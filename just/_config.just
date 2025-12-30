@@ -19,46 +19,13 @@ LOCAL_PATH := "~/.local"
 BIN_PATH := LOCAL_PATH / "bin"
 
 [private]
+APP_IMAGE := env("APP_IMAGE", "ghcr.io/thechangelog/pipely")
+
+[private]
 _DEFAULT_TAG := "dev-" + env("USER", "piper")
-
-[private]
-DAGGER_FLY_MODULE := "github.com/gerhard/daggerverse/flyio@flyio/v0.2.0"
-
-[private]
-FLY_ORG := env("FLY_ORG", "changelog")
-
-[private]
-FLY_APP := env("FLY_APP", "cdn-2025-02-25")
-
-[private]
-FLY_APP_IMAGE := env("FLY_APP_IMAGE", "ghcr.io/thechangelog/pipely")
-
-[private]
-FLY_APP_REGIONS := env("FLY_APP_REGIONS", "sea,sjc,lax,dfw,ord,iad,ewr,scl,lhr,cdg,ams,fra,jnb,sin,nrt,syd")
 
 [private]
 export PURGE_TOKEN := env("PURGE_TOKEN", "local-purge")
 
 [private]
 LOCAL_CONTAINER_IMAGE := env("LOCAL_CONTAINER_IMAGE", "pipely.dev:" + datetime("%Y-%m-%d"))
-
-# https://linux.101hacks.com/ps1-examples/prompt-color-using-tput/
-
-[private]
-_RESET := "$(tput sgr0)"
-[private]
-_GREEN := "$(tput bold)$(tput setaf 2)"
-[private]
-_MAGENTA := "$(tput bold)$(tput setaf 5)"
-[private]
-_WHITEB := "$(tput bold)$(tput setaf 7)"
-[private]
-_YELLOWB := "$(tput bold)$(tput setaf 3)"
-[private]
-_CYANB := "$(tput bold)$(tput setaf 6)"
-[private]
-_MAGENTAB := "$(tput bold)$(tput setaf 5)"
-[private]
-_GREENB := "$(tput bold)$(tput setaf 2)"
-[private]
-_BLUEB := "$(tput bold)$(tput setaf 4)"

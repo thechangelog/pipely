@@ -53,6 +53,7 @@ Content-Type: audio/mpeg # expect MP3
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
+header "cache-status" contains "storage.disk" # cached on disk
 bytes count == 1024 # first chunk size is correct
 
 # Request middle mp3 chunk
@@ -66,6 +67,7 @@ Content-Range: bytes 1024-2047/8575592
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
+header "cache-status" contains "storage.disk" # cached on disk
 bytes count == 1024 # middle chunk size is correct
 
 # Request end mp3 chunk
@@ -79,4 +81,5 @@ Content-Range: bytes 8574568-8575591/8575592
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
+header "cache-status" contains "storage.disk" # cached on disk
 bytes count == 1024 # last chunk size is correct

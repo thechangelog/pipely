@@ -1,0 +1,34 @@
+NAME                        	CODE	GATEWAY	GPUS	CAPACITY	LAUNCH PLAN+ 
+                            	
+                            	
+Atlanta, Georgia (US)       	atl 	       	    	60      	            	
+Miami, Florida (US)         	mia 	       	    	103     	            	
+                            	
+Africa                      	
+Johannesburg, South Africa  	jnb 	       	    	294     	            	
+                            	
+Asia Pacific                	
+Mumbai, India               	bom 	       	    	-85     	✓           	
+Singapore, Singapore        	sin 	✓      	    	328     	            	
+Sydney, Australia           	syd 	✓      	✓   	391     	            	
+Tokyo, Japan                	nrt 	✓      	    	4       	            	
+                            	
+Europe                      	
+Amsterdam, Netherlands      	ams 	✓      	✓   	1782    	            	
+Frankfurt, Germany          	fra 	✓      	    	451     	            	
+London, United Kingdom      	lhr 	✓      	    	949     	            	
+Paris, France               	cdg 	✓      	    	2110    	            	
+Stockholm, Sweden           	arn 	       	    	807     	            	
+                            	
+North America               	
+Ashburn, Virginia (US)      	iad 	✓      	✓   	182     	            	
+Chicago, Illinois (US)      	ord 	✓      	    	-315    	            	
+Dallas, Texas (US)          	dfw 	✓      	    	502     	            	
+Los Angeles, California (US)	lax 	✓      	    	476     	            	
+San Jose, California (US)   	sjc 	✓      	✓   	-958    	            	
+Secaucus, NJ (US)           	ewr 	       	    	-62     	            	
+Toronto, Canada             	yyz 	✓      	    	180     	            	
+                            	
+South America               	
+Sao Paulo, Brazil           	gru 	       	    	1143    	            	
+

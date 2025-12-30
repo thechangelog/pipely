@@ -19,24 +19,26 @@ local-debug:
     @just dagger call \
       --beresp-ttl=5s \
       --purge-token=env:PURGE_TOKEN \
+      --varnish-file-cache=true \
       local-production terminal --cmd=bash
 
 # Run container locally: available on http://localhost:9000
 local-run:
     @just dagger call \
-      --beresp-ttl=5s \
       --purge-token=env:PURGE_TOKEN \
+      --varnish-file-cache=true \
         local-production as-service --use-entrypoint=true up
 
 # Run container in Docker (works on remote servers too): http://<DOCKER_HOST>:9000
 docker-run *ARGS:
     @just dagger call \
-      --beresp-ttl=5s \
       --purge-token=env:PURGE_TOKEN \
+      --varnish-cache-size=1G \
+      --varnish-file-cache=true \
       local-production export --path=tmp/{{ LOCAL_CONTAINER_IMAGE }}
     @docker rm --force pipely.dev
     @docker tag $(docker load --input=tmp/{{ LOCAL_CONTAINER_IMAGE }} | awk -F: '{ print $3 }') {{ LOCAL_CONTAINER_IMAGE }}
-    @docker run --detach --publish 9000:9000 --env PURGE_TOKEN=$PURGE_TOKEN --name pipely.dev {{ LOCAL_CONTAINER_IMAGE }}
+    @docker run --detach --network host --env PURGE_TOKEN=$PURGE_TOKEN --name pipely.dev {{ LOCAL_CONTAINER_IMAGE }}
     @docker container ls --filter name="pipely.dev" --format=json --no-trunc | jq .
     @rm -f tmp/{{ LOCAL_CONTAINER_IMAGE }}
 
@@ -52,15 +54,16 @@ test-acceptance-local:
     @just dagger call \
       --beresp-ttl=5s \
       --purge-token=env:PURGE_TOKEN \
+      --varnish-file-cache=true \
       test-acceptance-report export \
         --path=./tmp/test-acceptance-local
 
-# Test NEW production - Pipedream, the Changelog variant of Pipely
+# Test production acceptance
 [group('team')]
-test-acceptance-pipedream *ARGS:
+test-acceptance-production *ARGS:
     HURL_purge_token="op://pipely/purge/credential" \
     just op run -- \
-      just hurl --test --color --report-html tmp/test-acceptance-pipedream --continue-on-error \
+      just hurl --test --color --report-html tmp/test-acceptance-production --continue-on-error \
         --variable proto=https \
         --variable host=changelog.com \
         --resolve changelog.com:443:137.66.2.20 \
@@ -69,18 +72,7 @@ test-acceptance-pipedream *ARGS:
         --variable delay_ms=65000 \
         --variable delay_s=60 \
         {{ ARGS }} \
-        test/acceptance/*.hurl test/acceptance/pipedream/*.hurl
-
-# Test CURRENT production
-test-acceptance-fastly *ARGS:
-    @just hurl --test --color --report-html tmp/test-acceptance-fastly --continue-on-error \
-      --variable proto=https \
-      --variable host=changelog.com \
-      --resolve changelog.com:443:151.101.129.162 \
-      --variable assets_host=cdn.changelog.com \
-      --resolve cdn.changelog.com:443:151.101.129.162 \
-      {{ ARGS }} \
-      test/acceptance/*.hurl test/acceptance/fastly/*.hurl
+        test/acceptance/*.hurl test/acceptance/production/*.hurl
 
 # Open test reports
 test-reports:
@@ -94,11 +86,12 @@ test-reports-rm:
 [group('team')]
 local-debug-production:
     @PURGE_TOKEN="local-production" \
-    just dagger call --beresp-ttl=5s \
+    just dagger call \
       --honeycomb-dataset=${HONEYCOMB_DATASET} \
       --honeycomb-api-key=env:HONEYCOMB_API_KEY \
       --max-mind-auth=env:MAXMIND_AUTH \
       --purge-token=env:PURGE_TOKEN \
+      --varnish-file-cache=true \
       --aws-region=${AWS_REGION} \
       --aws-local-production-s3-bucket-suffix=${AWS_S3_BUCKET_SUFFIX} \
       --aws-access-key-id=env:AWS_ACCESS_KEY_ID \
@@ -109,11 +102,12 @@ local-debug-production:
 [group('team')]
 local-run-production:
     @PURGE_TOKEN="local-production" \
-    just dagger call --beresp-ttl=5s \
+    just dagger call \
       --honeycomb-dataset=${HONEYCOMB_DATASET} \
       --honeycomb-api-key=env:HONEYCOMB_API_KEY \
       --max-mind-auth=env:MAXMIND_AUTH \
       --purge-token=env:PURGE_TOKEN \
+      --varnish-file-cache=true \
       --aws-region=${AWS_REGION} \
       --aws-local-production-s3-bucket-suffix=${AWS_S3_BUCKET_SUFFIX} \
       --aws-access-key-id=env:AWS_ACCESS_KEY_ID \
@@ -121,10 +115,10 @@ local-run-production:
         local-production as-service --use-entrypoint=true up
 
 # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
-http-profile url="https://pipedream.changelog.com/":
+http-profile url="https://changelog.com/":
     @while sleep 1; do \
       curl -sL -o /dev/null \
-        --write-out "%{url} http:%{http_version} status:%{http_code} {{ _WHITEB }}ip:%{remote_ip}{{ _RESET }} {{ _CYANB }}dns:%{time_namelookup}s{{ _RESET }} {{ _YELLOWB }}tcp:%{time_connect}s{{ _RESET }} {{ _MAGENTAB }}tls:%{time_appconnect}s{{ _RESET }} {{ _GREENB }}wait:%{time_starttransfer}s{{ _RESET }} {{ _BLUEB }}total:%{time_total}s{{ _RESET }}\n" \
+        --write-out "%{url} http:%{http_version} status:%{http_code} {{ BOLD }}{{ WHITE }}ip:%{remote_ip} {{ CYAN }}dns:%{time_namelookup}s {{ YELLOW }}tcp:%{time_connect}s {{ MAGENTA }}tls:%{time_appconnect}s {{ GREEN }}wait:%{time_starttransfer}s {{ BLUE }}total:%{time_total}s{{ NORMAL }}\n" \
       "{{ url }}"; \
     done
 
@@ -139,76 +133,8 @@ how-many-lines-raw:
 # Publish container image - assumes envrc-secrets was already run
 [group('team')]
 publish tag=_DEFAULT_TAG:
-    @just dagger call --tag={{ tag }} --max-mind-auth=op://pipely/maxmind/credential \
-        publish --registry-username=$USER --registry-password=op://pipely/ghcr/credential --image={{ FLY_APP_IMAGE }}
-
-# Deploy container image
-[group('team')]
-deploy tag=_DEFAULT_TAG:
-    @just dagger --mod={{ DAGGER_FLY_MODULE }} call \
-      --token=op://pipely/fly/credential \
-      --org={{ FLY_ORG }} \
-          deploy --dir=. --image={{ FLY_APP_IMAGE }}:{{ tag }}
-
-# Scale production app
-[group('team')]
-scale:
-    flyctl scale count $(echo {{ FLY_APP_REGIONS }}, | grep -o ',' | wc -l) --max-per-region 1 --region {{ FLY_APP_REGIONS }} --app {{ FLY_APP }}
-
-# Set app secrets - assumes envrc-secrets was already run
-[group('team')]
-secrets:
-    PURGE_TOKEN="op://pipely/purge/credential" \
-    HONEYCOMB_API_KEY="op://pipely/honeycomb/credential" \
-    AWS_ACCESS_KEY_ID="op://pipely/aws-s3-logs/access-key-id" \
-    AWS_SECRET_ACCESS_KEY="op://pipely/aws-s3-logs/secret-access-key" \
-    just op run -- bash -c 'flyctl secrets set --stage HONEYCOMB_DATASET="pipedream" HONEYCOMB_API_KEY="$HONEYCOMB_API_KEY" PURGE_TOKEN="$PURGE_TOKEN" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"'
-    flyctl secrets list
-
-# Add cert $fqdn to app
-[group('team')]
-cert-add fqdn:
-    flyctl certs add {{ fqdn }} --app {{ FLY_APP }}
-
-# Show cert $fqdn for app
-[group('team')]
-cert fqdn:
-    flyctl certs show {{ fqdn }} --app {{ FLY_APP }}
-
-# Show app certs
-[group('team')]
-certs:
-    flyctl certs list --app {{ FLY_APP }}
-
-# Show app IPs
-[group('team')]
-ips:
-    flyctl ips list --app {{ FLY_APP }}
-
-# Show app machines
-[group('team')]
-machines:
-    flyctl machines list --app {{ FLY_APP }}
-
-# Restart ALL app machines, one-by-one
-[group('team')]
-restart:
-    @just machines \
-    | awk '/pipely/ { print $1 }' \
-    | while read machine; do \
-      echo -en "\n♻️ "; \
-      flyctl machine stop $machine; \
-      sleep 10; \
-      flyctl machine start $machine \
-      || (sleep 10; flyctl machine start $machine); \
-    done
-    @echo {{ _MAGENTA }}🧐 Any stopped machines?{{ _RESET }}
-    @just machines | grep stop || echo ✨
-
-# Show app status
-[group('team')]
-status:
-    flyctl status --app {{ FLY_APP }}
+    @just dagger call --varnish-file-cache=true --tag={{ tag }} --max-mind-auth=op://pipely/maxmind/credential \
+        publish --registry-username=$USER --registry-password=op://pipely/ghcr/credential --image={{ APP_IMAGE }}
 
 # Tag a new release
 [group('team')]
@@ -219,11 +145,6 @@ tag tag sha discussion:
 [group('team')]
 envrc-secrets:
     just op inject --in-file envrc.secrets.op --out-file .envrc.secrets
-
-[private]
-create:
-    (flyctl apps list --org {{ FLY_ORG }} | grep {{ FLY_APP }}) \
-    || flyctl apps create {{ FLY_APP }} --org {{ FLY_ORG }}
 
 [private]
 actions-runner:

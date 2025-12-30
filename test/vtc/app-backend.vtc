@@ -1,0 +1,41 @@
+varnishtest "Test APP backend"
+
+# App mock backend
+server s1 {
+  # Test for /app_health
+  rxreq
+  expect req.url == "/health"
+  txresp -status 200 -body "app ok"
+} -start
+
+setenv APP_HOST "app.local"
+setenv BACKEND_APP_FQDN "app.local"
+setenv BACKEND_APP_HOST "${s1_addr}"
+setenv BACKEND_APP_PORT "${s1_port}"
+
+# Start varnish with our VCL
+varnish v1 -arg "-s memory=malloc,10M" \
+           -arg "-s disk=file,${tmpdir}/file.bin,10M" -vcl {
+  vcl 4.1;
+
+  import dynamic;
+  import std;
+
+  # Use an app backend with no probe when testing
+  sub vcl_init {
+    new app = dynamic.director(
+      host_header = std.getenv("BACKEND_APP_FQDN"),
+    );
+  }
+
+  include "app-backend.vcl";
+  include "disable-default-backend.vcl";
+} -start
+
+# GET /app_health is served by the app backend
+client c1 {
+  txreq -method "GET" -url "/app_health"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "app ok"
+} -run

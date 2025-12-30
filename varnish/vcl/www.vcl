@@ -18,7 +18,7 @@ sub vcl_synth {
   # Handle the redirect
   if (req.http.www == "true"
       && resp.status == 301) {
-    set resp.http.Location = "https://" + req.http.host + req.url;
+    set resp.http.location = "https://" + req.http.host + req.url;
     return (deliver);
   }
 }

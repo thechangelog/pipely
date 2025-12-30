@@ -10,6 +10,8 @@ header "cache-status" contains "region=" # region that served this request
 header "cache-status" contains "origin=" # origin that served this request
 header "cache-status" contains "ttl=" # ttl is set
 header "cache-status" contains "grace=" # grace is set
+header "cache-status" contains "keep=" # keep is set
+header "cache-status" contains "storage=" # storage is set
 
 # Get the homepage AGAIN
 GET {{proto}}://{{host}}?hurl=true
@@ -19,6 +21,7 @@ duration < 100 # ensure that it loads sub 100ms when cached...
 header "fly-request-id" exists # served by Fly
 header "via" matches /[vV]arnish/ # served via Varnish
 header "cache-status" contains "hit" # definitely served from cache
+header "cache-status" contains "storage.memory" # cached in memory
 
 # Purge the homepage
 PURGE {{proto}}://{{host}}?purge=true

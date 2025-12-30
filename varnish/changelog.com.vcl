@@ -642,11 +642,11 @@ sub vcl_deliver {
 
 
 
-    # Request Condition: embed.js Prio: 10    
+    # Request Condition: embed.js Prio: 10
   if (resp.status == 900 ) {
      set resp.status = 200;
      set resp.response = "OK";
-  }      # Request Condition: www.changelog.com host Prio: 10    
+  }      # Request Condition: www.changelog.com host Prio: 10
   if (resp.status == 901 ) {
      set resp.status = 301;
      set resp.response = "Moved Permanently";
@@ -656,11 +656,11 @@ sub vcl_deliver {
   # Response Condition: www 301 redirect is happening Prio: 10
   if( req.http.host == "www.changelog.com" && resp.status == 301 ) {
 
-# Header rewrite Set Location for www 301 redirect : 10
+# Header rewrite Set location for www 301 redirect : 10
 
 
-  if (!resp.http.Location) {
-      set resp.http.Location = "https://changelog.com" req.url;
+  if (!resp.http.location) {
+      set resp.http.location = "https://changelog.com" req.url;
               }
 
 
@@ -683,7 +683,7 @@ sub vcl_error {
   if (obj.status == 801) {
      set obj.status = 301;
      set obj.response = "Moved Permanently";
-     set obj.http.Location = "https://" req.http.host req.url;
+     set obj.http.location = "https://" req.http.host req.url;
      synthetic {""};
      return (deliver);
   }
@@ -705,19 +705,19 @@ if (obj.status == 905) {
 # Snippet news-redirects-response : 100
 if (obj.status == 618 && obj.response == "redirect") {
   set obj.status = 308;
-  set obj.http.Location = "https://" + req.http.host + table.lookup(news_redirects, req.url.path) + if (std.strlen(req.url.qs) > 0, "?" req.url.qs, "");
+  set obj.http.location = "https://" + req.http.host + table.lookup(news_redirects, req.url.path) + if (std.strlen(req.url.qs) > 0, "?" req.url.qs, "");
   return (deliver);
 }
 
 
-    # Response Condition: embed.js Prio: 10  
+    # Response Condition: embed.js Prio: 10
 
 if (obj.status == 900 ) {
    set obj.http.Content-Type = "application/javascript";
    synthetic {"!function(e){function t(t){var r=t.getAttribute('data-src'),i=t.getAttribute('data-theme')||'night',n=e.createElement('iframe');n.setAttribute('src',r+'?theme='+i+'&referrer='+e.location.href),n.setAttribute('width','100%'),n.setAttribute('height','220'),n.setAttribute('scrolling','no'),n.setAttribute('frameborder','no'),n.setAttribute('title','Changelog Podcast'),t.parentNode.replaceChild(n,t),this.id=+new Date,this.src=n.src,this.iframe=n}var r='https://changelog.com',i=e.getElementsByClassName('changelog-episode'),n=[],a=function(e,t){t.context='player.js',t.version='0.0.11',t.listener=e.id;try{e.iframe.contentWindow.postMessage(JSON.stringify(t),r)}catch(e){}},s=function(e){if(e.origin!==r)return!1;var t=JSON.parse(e.data);if('player.js'!==t.context)return!1;if('ready'===t.event)for(var i=n.length-1;i>=0;i--)n[i].src===t.value.src&&a(n[i],{method:'addEventListener',value:'play'});if('play'===t.event)for(var i=n.length-1;i>=0;i--)n[i].id!==t.listener&&a(n[i],{method:'pause'})};window.addEventListener('message',s);for(var o=i.length-1;o>-1;o--)n.push(new t(i[o]))}(document);"};
    return(deliver);
 }
-      # Response Condition: www.changelog.com host Prio: 10  
+      # Response Condition: www.changelog.com host Prio: 10
 
 if (obj.status == 901 ) {
    return(deliver);

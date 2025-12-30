@@ -5,6 +5,8 @@ import (
 	"dagger/pipely/internal/dagger"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/containerd/platforms"
 )
@@ -44,6 +46,8 @@ type Pipely struct {
 	Varnish *dagger.Container
 	// Varnish PURGE token
 	VarnishPurgeToken *dagger.Secret
+	// Varnish options
+	VarnishOptions []string
 	// Source code
 	Source *dagger.Directory
 	// Container image tag
@@ -72,11 +76,20 @@ func New(
 	// +default=9000
 	varnishPort int,
 
-	// +default="60s"
+	// +default="100M"
+	varnishCacheSize string,
+
+	// +optional
+	varnishFileCache bool,
+
+	// +optional
 	berespTtl string,
 
-	// +default="24h"
+	// +optional
 	berespGrace string,
+
+	// +optional
+	berespKeep string,
 
 	// +optional
 	purgeToken *dagger.Secret,
@@ -120,14 +133,43 @@ func New(
 		VarnishPurgeToken: purgeToken,
 	}
 
+	// Validate size format (e.g., "100M", "1G")
+	if !regexp.MustCompile(`^\d+[KMGkmg]$`).MatchString(varnishCacheSize) {
+		return nil, fmt.Errorf("invalid varnish cache size format: %s (expected format: <number><unit>, e.g., 100M, 1G)", varnishCacheSize)
+	}
+
 	pipely.Varnish = dag.Container().From("varnish:"+varnishVersion).
 		WithUser("root"). // a bunch of commands fail if we are not root, so YOLO & sandbox with Firecracker, Kata Containers, etc.
 		WithEnvVariable("VARNISH_HTTP_PORT", fmt.Sprintf("%d", varnishPort)).
+		WithEnvVariable("VARNISH_SIZE", varnishCacheSize).
 		WithExposedPort(varnishPort).
-		WithEnvVariable("BERESP_TTL", berespTtl).
-		WithEnvVariable("BERESP_GRACE", berespGrace).
 		WithEnvVariable("HONEYCOMB_DATASET", honeycombDataset).
 		WithEnvVariable("AWS_REGION", awsRegion)
+
+	if varnishFileCache {
+		fileCacheDir := "/var/lib/varnish/cache"
+		pipely.Varnish = pipely.Varnish.
+			WithEnvVariable("VARNISH_FILE_SIZE", varnishCacheSize).
+			WithExec([]string{"mkdir", "-p", fileCacheDir})
+
+		option := fmt.Sprintf("-s disk=file,%s/file.bin,$VARNISH_FILE_SIZE", fileCacheDir)
+		pipely.VarnishOptions = append(pipely.VarnishOptions, option)
+	}
+
+	if berespTtl != "" {
+		pipely.Varnish = pipely.Varnish.
+			WithEnvVariable("BERESP_TTL", berespTtl)
+	}
+
+	if berespGrace != "" {
+		pipely.Varnish = pipely.Varnish.
+			WithEnvVariable("BERESP_GRACE", berespGrace)
+	}
+
+	if berespKeep != "" {
+		pipely.Varnish = pipely.Varnish.
+			WithEnvVariable("BERESP_KEEP", berespKeep)
+	}
 
 	if pipely.VarnishPurgeToken != nil {
 		pipely.Varnish = pipely.Varnish.
@@ -194,12 +236,12 @@ func (m *Pipely) app() *dagger.Container {
 
 	vectorContainer := dag.Container().From("timberio/vector:" + vectorVersion)
 
-	procfile := fmt.Sprintf(`varnish: docker-varnish-entrypoint
+	procfile := fmt.Sprintf(`varnish: varnishd -F -f /etc/varnish/default.vcl -a http=:${VARNISH_HTTP_PORT} -p feature=+http2 -s memory=malloc,${VARNISH_SIZE} -p thread_pools=${VARNISH_THREAD_POOLS:-2} -p thread_pool_min=${VARNISH_THREAD_POOL_MIN:-150} -p thread_pool_max=${VARNISH_THREAD_POOL_MAX:-1500} -p workspace_backend=${VARNISH_WORKSPACE_BACKEND:-64k} -p nuke_limit=${VARNISH_NUKE_LIMIT:-150} %s
 app: tls-exterminator %s
 feeds: tls-exterminator %s
 assets: tls-exterminator %s
 logs: bash -c 'coproc VJS { varnish-json-response; }; if [ -z "${VJS_PID}" ]; then echo "ERROR: Failed to start varnish-json-response coprocess." >&2; exit 1; fi; trap "kill ${VJS_PID} 2>/dev/null" EXIT; vector <&${VJS[0]}'
-`, m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
+`, strings.Join(m.VarnishOptions, " "), m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
 
 	return m.Varnish.
 		// Configure various environment variables
@@ -222,6 +264,9 @@ logs: bash -c 'coproc VJS { varnish-json-response; }; if [ -z "${VJS_PID}" ]; th
 		// Install tmux
 		WithExec([]string{"apt-get", "install", "--yes", "tmux"}).
 		WithExec([]string{"tmux", "-V"}).
+		// Install procps
+		WithExec([]string{"apt-get", "install", "--yes", "procps"}).
+		WithExec([]string{"sysctl", "-V"}).
 		// Install vector.dev
 		WithFile("/usr/bin/vector", vectorContainer.File("/usr/bin/vector")).
 		WithDirectory("/usr/share/vector", vectorContainer.Directory("/usr/share/vector")).
@@ -267,13 +312,13 @@ func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Containe
 		WithEnvVariable("VECTOR_CONFIG", "/etc/vector/*.yaml").
 		WithFile(
 			"/etc/vector/vector.yaml",
-			m.Source.File("vector/pipedream.changelog.com/default.yaml"))
+			m.Source.File("vector/changelog.com/default.yaml"))
 
 	if env != Prod {
 		containerWithVectorConfigs = containerWithVectorConfigs.
 			WithFile(
 				"/etc/vector/debug_varnish.yaml",
-				m.Source.File("vector/pipedream.changelog.com/debug_varnish.yaml"))
+				m.Source.File("vector/changelog.com/debug_varnish.yaml"))
 	}
 
 	geoipEnriched, _ := c.EnvVariable(ctx, "GEOIP_ENRICHED")
@@ -281,17 +326,17 @@ func (m *Pipely) withVectorConfig(c *dagger.Container, env Env) *dagger.Containe
 		containerWithVectorConfigs = containerWithVectorConfigs.
 			WithFile(
 				"/etc/vector/geoip.yaml",
-				m.Source.File("vector/pipedream.changelog.com/geoip.yaml"))
+				m.Source.File("vector/changelog.com/geoip.yaml"))
 	}
 
 	if geoipEnriched == "true" && env != Prod {
 		containerWithVectorConfigs = containerWithVectorConfigs.
 			WithFile(
 				"/etc/vector/debug_varnish_geoip.yaml",
-				m.Source.File("vector/pipedream.changelog.com/debug_varnish_geoip.yaml")).
+				m.Source.File("vector/changelog.com/debug_varnish_geoip.yaml")).
 			WithFile(
 				"/etc/vector/debug_s3.yaml",
-				m.Source.File("vector/pipedream.changelog.com/debug_s3.yaml"))
+				m.Source.File("vector/changelog.com/debug_s3.yaml"))
 	}
 
 	return containerWithVectorConfigs.
@@ -352,9 +397,6 @@ func (m *Pipely) local(ctx context.Context) *dagger.Container {
 		// Install htop
 		WithExec([]string{"apt-get", "install", "--yes", "htop"}).
 		WithExec([]string{"htop", "-V"}).
-		// Install procps
-		WithExec([]string{"apt-get", "install", "--yes", "procps"}).
-		WithExec([]string{"ps", "-V"}).
 		// Install neovim
 		WithExec([]string{"apt-get", "install", "--yes", "neovim"}).
 		WithExec([]string{"nvim", "--version"}).
