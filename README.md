@@ -21,8 +21,10 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Add nightly.changelog.com - [PR #46](https://github.com/thechangelog/pipely/pull/46)
   - ✅ Promote new 2025-12-06 production instance - [PR #47](https://github.com/thechangelog/pipely/pull/47)
 - Tag & ship `v1.2`
-  - Run periodic MP3, assets, feeds & nightly checks against all regions
+  - ✅ Run periodic MP3, assets, feeds & nightly checks against all regions - [PR #48](https://github.com/thechangelog/pipely/pull/48)
   - Include app-name in logs
+  - Check `?args` URL impact on caching
+  - Replace coproc with svlogd (a.k.a. overmind with runit)
   - TBD...
 - [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
 - Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
@@ -94,6 +96,8 @@ And that's about it. Everything else is containerized with Dagger.
 ```bash
 just
 Available recipes:
+    check region="iad"                        # Check one region
+    check-all                                 # Check all FLY_APP_REGIONS
     docker-bash                               # Open a shell in the docker container
     docker-run *ARGS                          # Run container in Docker (works on remote servers too): http://<DOCKER_HOST>:9000
     how-many-lines                            # How many lines of Varnish config?

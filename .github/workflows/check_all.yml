@@ -1,0 +1,43 @@
+name: 'Check all instances'
+
+on:
+  # Run the workflow every hour:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on:
+      - nscloud-ubuntu-24.04-amd64-4x8-with-cache;github.run-id=${{ github.run_id }}
+      - nscloud-git-mirror-1gb
+      - nscloud-cache-tag-pipely-check-all
+      - nscloud-cache-size-1gb
+    timeout-minutes: 5
+    steps:
+      - name: 'Checkout code...'
+        uses: namespacelabs/nscloud-checkout-action@v5
+
+      - uses: extractions/setup-just@v3
+        with:
+          just-version: '1.45.0'
+
+      - name: Setup cache
+        uses: namespacelabs/nscloud-cache-action@v1
+        with:
+          path: |
+            ~/.local
+
+      - name: 'Check all instances ...'
+        run: |
+          just hurl --version
+          just check-all \
+          || just check-all
+
+      - name: 'Archive check reports...'
+        uses: namespace-actions/upload-artifact@v1
+        if: ${{ always() }}
+        with:
+          name: check-all
+          path: |
+            tmp/check-all/*
