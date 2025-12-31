@@ -95,4 +95,5 @@ varnishconfig:
 create:
     (flyctl apps list --org {{ FLY_ORG }} | grep {{ FLY_APP }}) \
     || (flyctl apps create {{ FLY_APP }} --org {{ FLY_ORG }} \
-        && flyctl volume create varnish_file_cache --region {{ FLY_APP_PRIMARY_REGION }} --size {{ FLY_APP_DISK_SIZE }} --yes)
+        && flyctl volume create varnish_file_cache --region {{ FLY_APP_PRIMARY_REGION }} --size {{ FLY_APP_DISK_SIZE }} --yes \
+        && flyctl ips allocate-v4 --yes)

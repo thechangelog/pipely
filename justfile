@@ -70,9 +70,11 @@ test-acceptance-production *ARGS:
       just hurl --test --color --report-html tmp/test-acceptance-production --continue-on-error \
         --variable proto=https \
         --variable host=changelog.com \
-        --resolve changelog.com:443:137.66.2.20 \
+        --resolve changelog.com:443:137.66.16.250 \
         --variable assets_host=cdn.changelog.com \
-        --resolve cdn.changelog.com:443:137.66.2.20 \
+        --resolve cdn.changelog.com:443:137.66.16.250 \
+        --variable nightly_host=nightly.changelog.com \
+        --resolve nightly.changelog.com:443:137.66.16.250 \
         --variable delay_ms=65000 \
         --variable delay_s=60 \
         {{ ARGS }} \

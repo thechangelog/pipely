@@ -1,0 +1,44 @@
+# Full app config reference: https://fly.io/docs/reference/configuration/
+app = "cdn-2025-12-06"
+# Closest to the OG origin (the second origin is ewr)
+primary_region = "iad"
+
+kill_signal = "SIGTERM"
+kill_timeout = 30
+
+[deploy]
+  strategy = "rolling"
+  max_unavailable = 1
+
+[http_service.http_options]
+  idle_timeout = 60
+
+[[services]]
+  internal_port = 9000
+  protocol = "tcp"
+
+[[services.http_checks]]
+  grace_period = "5s"
+  interval = "5s"
+  method = "get"
+  path = "/health"
+  protocol = "http"
+  timeout = "3s"
+
+[[services.ports]]
+  handlers = ["tls", "http"]
+  port = 443
+
+[[services.ports]]
+  handlers = ["http"]
+  port = 80
+
+[services.concurrency]
+  # This matches Varnish's thread_pools * thread_pool_max - 10%
+  hard_limit = 2700
+  soft_limit = 2000
+  type = "requests"
+
+[mounts]
+  source = "varnish_file_cache"
+  destination = "/var/lib/varnish/cache"

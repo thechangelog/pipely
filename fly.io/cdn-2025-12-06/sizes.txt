@@ -1,0 +1,20 @@
+Machines platform
+NAME         	CPU CORES	MEMORY
+shared-cpu-1x	1        	256 MB
+shared-cpu-2x	2        	512 MB
+shared-cpu-4x	4        	1 GB
+shared-cpu-8x	8        	2 GB
+
+NAME           	CPU CORES	MEMORY
+performance-1x 	1        	2 GB
+performance-2x 	2        	4 GB
+performance-4x 	4        	8 GB
+performance-8x 	8        	16 GB
+performance-16x	16       	32 GB
+
+NAME     	CPU CORES	MEMORY	GPU MODEL
+a10      	8        	32 GB 	a10
+a100-40gb	8        	32 GB 	a100-pcie-40gb
+a100-80gb	8        	32 GB 	a100-sxm4-80gb
+l40s     	8        	32 GB 	l40s
+

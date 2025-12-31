@@ -13,14 +13,16 @@ You are welcome to fork this and build your own - OSS FTW 💚
 
 ## The Roadmap to `v2.0`
 
-- Tag & ship `v1.1`
+- ✅ Tag & ship `v1.1`
   - ✅ Log & forward original `fly-request-id` header - [PR #42](https://github.com/thechangelog/pipely/pull/42)
   - ✅ Support websocket connections - [PR #43](https://github.com/thechangelog/pipely/pull/43)
   - ✅ Store MP3s in file cache + HOT & COLD instances - [PR #44](https://github.com/thechangelog/pipely/pull/44)
   - ✅ Update deps to latest stable (hold Varnish at `v7.7.3`) - [PR #45](https://github.com/thechangelog/pipely/pull/45)
   - ✅ Add nightly.changelog.com - [PR #46](https://github.com/thechangelog/pipely/pull/46)
+  - ✅ Promote new 2025-12-06 production instance - [PR #47](https://github.com/thechangelog/pipely/pull/47)
 - Tag & ship `v1.2`
   - Run periodic MP3, assets, feeds & nightly checks against all regions
+  - Include app-name in logs
   - TBD...
 - [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
 - Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
@@ -55,7 +57,6 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - ✅ Tag & ship `v1.0-rc.2`
   - ✅ Prepare for 20% of the production traffic - [PR #30](https://github.com/thechangelog/pipely/pull/30)
   - Route 20% of the production traffic through
-  - Observe cold cache behaviour
 - ✅ Tag & ship `v1.0-rc.3`
   - ✅ Fix feeds URL rewrite - [PR #31](https://github.com/thechangelog/pipely/pull/31)
   - ✅ Increase instance size - [PR #32](https://github.com/thechangelog/pipely/pull/32)
