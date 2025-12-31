@@ -1,8 +1,9 @@
-probe backend_health {
+probe backend_health_204 {
   # The URL path to request during health checks
-  # This should be a lightweight endpoint on your backend that returns a 200 status
+  # This should be a lightweight endpoint on your backend that returns a 204 status
   # when the service is healthy
   .url = "/health";
+  .expected_response = 204;
 
   # How frequently Varnish will poll the backend (in seconds)
   # Lower values provide faster detection of backend failures but increase load

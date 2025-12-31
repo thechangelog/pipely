@@ -41,7 +41,7 @@ setenv BACKEND_ASSETS_FQDN "assets.local"
 setenv BACKEND_ASSETS_HOST "${s1_addr}"
 setenv BACKEND_ASSETS_PORT "${s1_port}"
 
-# Start varnish with our VCL + memory cache + file cache
+# Start Varnish with our VCL + memory cache + file cache
 varnish v1 -arg "-s memory=malloc,10M" \
            -arg "-s disk=file,${tmpdir}/file.bin,10M" -vcl {
   vcl 4.1;
@@ -105,11 +105,11 @@ client c5 {
 
 # GET png is served by the assets backend + CORS check + memory cache
 logexpect l1 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
-    # Expectation for the PNG request
-    expect 0 * Begin
-    expect * * BereqURL "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
-    expect * * Storage "malloc memory"
-    expect * * End
+  # Expectation for the PNG request
+  expect 0 * Begin
+  expect * * BereqURL "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  expect * * Storage "malloc memory"
+  expect * * End
 } -start
 client c6 {
   txreq -method "GET" -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
@@ -122,11 +122,11 @@ logexpect l1 -wait
 
 # GET css is served by the assets backend + CORS check + memory cache
 logexpect l2 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
-    # Expectation for the CSS request
-    expect 0 * Begin
-    expect * * BereqURL "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css"
-    expect * * Storage "malloc memory"
-    expect * * End
+  # Expectation for the CSS request
+  expect 0 * Begin
+  expect * * BereqURL "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css"
+  expect * * Storage "malloc memory"
+  expect * * End
 } -start
 client c7 {
   txreq -method "GET" -url "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css" -hdr "Host: assets.local"
@@ -139,11 +139,11 @@ logexpect l2 -wait
 
 # GET mp3 is served by the assets backend + CORS check + file cache
 logexpect l3 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
-    # Expectation for the MP3 request
-    expect 0 * Begin
-    expect * * BereqURL "/uploads/news/140/changelog-news-140.mp3"
-    expect * * Storage "file disk"
-    expect * * End
+  # Expectation for the MP3 request
+  expect 0 * Begin
+  expect * * BereqURL "/uploads/news/140/changelog-news-140.mp3"
+  expect * * Storage "file disk"
+  expect * * End
 } -start
 client c8 {
   txreq -method "GET" -url "/uploads/news/140/changelog-news-140.mp3?arg=test" -hdr "Host: assets.local"

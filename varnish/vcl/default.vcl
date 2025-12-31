@@ -12,7 +12,7 @@ sub vcl_init {
   # https://github.com/nigoroll/libvmod-dynamic/blob/branch-7.7/src/vmod_dynamic.vcc#L234-L255
   new app = dynamic.director(
     ttl = 10s,
-    probe = backend_health,
+    probe = backend_health_200,
     host_header = std.getenv("BACKEND_APP_FQDN"),
     # Increase first_byte_timeout so that mp3 uploads work
     first_byte_timeout = 300s,
@@ -20,19 +20,28 @@ sub vcl_init {
     between_bytes_timeout = 60s
   );
 
+  new assets = dynamic.director(
+    ttl = 10s,
+    probe = backend_health_200,
+    host_header = std.getenv("BACKEND_ASSETS_FQDN"),
+    first_byte_timeout = 10s,
+    connect_timeout = 10s,
+    between_bytes_timeout = 60s
+  );
+
   new feeds = dynamic.director(
     ttl = 10s,
-    probe = backend_health,
+    probe = backend_health_200,
     host_header = std.getenv("BACKEND_FEEDS_FQDN"),
     first_byte_timeout = 10s,
     connect_timeout = 10s,
     between_bytes_timeout = 60s
   );
 
-  new assets = dynamic.director(
+  new nightly = dynamic.director(
     ttl = 10s,
-    probe = backend_health,
-    host_header = std.getenv("BACKEND_ASSETS_FQDN"),
+    probe = backend_health_204,
+    host_header = std.getenv("BACKEND_NIGHTLY_FQDN"),
     first_byte_timeout = 10s,
     connect_timeout = 10s,
     between_bytes_timeout = 60s
@@ -41,7 +50,8 @@ sub vcl_init {
 
 include "app-backend.vcl";
 include "assets-backend.vcl";
-include "backend-health.vcl";
+include "backend-health-200.vcl";
+include "backend-health-204.vcl";
 include "disable-caching-for-5xx.vcl";
 include "disable-default-backend.vcl";
 include "feeds-backend.vcl";
@@ -49,6 +59,7 @@ include "fly/client-ip.vcl";
 include "fly/request-id.vcl";
 include "http.vcl";
 include "news-mp3.vcl";
+include "nightly-backend.vcl";
 include "practicalai.vcl";
 include "purge.vcl";
 include "fly/region.vcl";

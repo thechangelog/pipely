@@ -42,6 +42,10 @@ docker-run *ARGS:
     @docker container ls --filter name="pipely.dev" --format=json --no-trunc | jq .
     @rm -f tmp/{{ LOCAL_CONTAINER_IMAGE }}
 
+# Open a shell in the docker container
+docker-bash:
+    @docker exec -it pipely.dev bash
+
 # Test VTC + acceptance locally
 test: test-vtc test-acceptance-local
 
@@ -49,7 +53,7 @@ test: test-vtc test-acceptance-local
 test-vtc:
     @just dagger call test-varnish stdout
 
-# Test local setup
+# Test acceptance local
 test-acceptance-local:
     @just dagger call \
       --beresp-ttl=5s \
@@ -58,7 +62,7 @@ test-acceptance-local:
       test-acceptance-report export \
         --path=./tmp/test-acceptance-local
 
-# Test production acceptance
+# Test acceptance production
 [group('team')]
 test-acceptance-production *ARGS:
     HURL_purge_token="op://pipely/purge/credential" \
@@ -72,7 +76,7 @@ test-acceptance-production *ARGS:
         --variable delay_ms=65000 \
         --variable delay_s=60 \
         {{ ARGS }} \
-        test/acceptance/*.hurl test/acceptance/production/*.hurl
+        test/acceptance/*.hurl
 
 # Open test reports
 test-reports:

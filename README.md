@@ -18,8 +18,10 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Support websocket connections - [PR #43](https://github.com/thechangelog/pipely/pull/43)
   - ✅ Store MP3s in file cache + HOT & COLD instances - [PR #44](https://github.com/thechangelog/pipely/pull/44)
   - ✅ Update deps to latest stable (hold Varnish at `v7.7.3`) - [PR #45](https://github.com/thechangelog/pipely/pull/45)
-  - Run periodic MP3 & feed checks against all regions
-  - Add nightly.changelog.com backend
+  - ✅ Add nightly.changelog.com - [PR #46](https://github.com/thechangelog/pipely/pull/46)
+- Tag & ship `v1.2`
+  - Run periodic MP3, assets, feeds & nightly checks against all regions
+  - TBD...
 - [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
 - Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
 

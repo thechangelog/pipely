@@ -13,6 +13,14 @@ header "cache-status" contains "region" # contains region info (a.k.a. server_da
 header "cache-status" contains "origin=app" # served by app backend
 header "cache-status" contains "bypass" # never cached
 
+GET {{proto}}://{{host}}/assets_health
+HTTP 200 # expect OK response
+[Asserts]
+header "via" matches /[vV]arnish/ # served via Varnish
+header "cache-status" contains "region" # contains region info (a.k.a. server_datacentre)
+header "cache-status" contains "origin=assets" # served by assets backend
+header "cache-status" contains "bypass" # never cached
+
 GET {{proto}}://{{host}}/feeds_health
 HTTP 200 # expect OK response
 [Asserts]
@@ -21,10 +29,10 @@ header "cache-status" contains "region" # contains region info (a.k.a. server_da
 header "cache-status" contains "origin=feeds" # served by feeds backend
 header "cache-status" contains "bypass" # never cached
 
-GET {{proto}}://{{host}}/assets_health
-HTTP 200 # expect OK response
+GET {{proto}}://{{host}}/nightly_health
+HTTP 204 # expect No Content response
 [Asserts]
 header "via" matches /[vV]arnish/ # served via Varnish
 header "cache-status" contains "region" # contains region info (a.k.a. server_datacentre)
-header "cache-status" contains "origin=assets" # served by feeds backend
+header "cache-status" contains "origin=nightly" # served by nightly backend
 header "cache-status" contains "bypass" # never cached

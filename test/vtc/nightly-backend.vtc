@@ -1,0 +1,126 @@
+varnishtest "Test NIGHTLY backend"
+
+# NIGHTLY mock backend
+server s1 {
+  # Test for /nightly_health
+  rxreq
+  expect req.url == "/health"
+  txresp -status 200 -body "nightly ok"
+
+  # Test for /images/logo-day.png
+  rxreq
+  expect req.method == "GET"
+  expect req.url == "/images/logo-day.png"
+  txresp -status 200
+
+  # Test for /night-theme.css
+  rxreq
+  expect req.url == "/night-theme.css"
+  txresp -status 200 -body "night-theme.css"
+
+  # Test for /images/star.png
+  rxreq
+  expect req.method == "GET"
+  expect req.url == "/images/star.png"
+  txresp -status 200 -body "star.png"
+} -start
+
+setenv NIGHTLY_HOST "nightly.local"
+setenv BACKEND_NIGHTLY_FQDN "nightly.local"
+setenv BACKEND_NIGHTLY_HOST "${s1_addr}"
+setenv BACKEND_NIGHTLY_PORT "${s1_port}"
+
+# Start Varnish with our VCL + memory cache
+varnish v1 -arg "-s memory=malloc,10M" -vcl {
+  vcl 4.1;
+  import dynamic;
+  import std;
+
+  # Use a nightly backend with no probe when testing
+  sub vcl_init {
+    new nightly = dynamic.director(
+      host_header = std.getenv("BACKEND_NIGHTLY_FQDN"),
+    );
+  }
+  # Add a simple PURGE to simply test that this method is allowed via nightly-backend.vcl
+  sub vcl_recv {
+    if (req.method == "PURGE") {
+      return(purge);
+    }
+  }
+
+  include "nightly-backend.vcl";
+  include "disable-default-backend.vcl";
+} -start
+
+# GET /nightly_health is served by the nightly backend
+client c1 {
+  txreq -method "GET" -url "/nightly_health"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "nightly ok"
+} -run
+
+# POST is not an allowed method
+client c2 {
+  txreq -method "POST" -url "/images/logo-night.png" -hdr "Host: nightly.local"
+  rxresp
+  expect resp.status == 405
+  expect resp.http.allow == "GET, HEAD, PURGE"
+} -run
+
+# OPTIONS is not an allowed method
+client c3 {
+  txreq -method "OPTIONS" -url "/images/logo-night.png" -hdr "Host: nightly.local"
+  rxresp
+  expect resp.status == 405
+  expect resp.http.allow == "GET, HEAD, PURGE"
+} -run
+
+# PURGE is an allowed method
+client c4 {
+  txreq -method "PURGE" -url "/images/logo-night.png" -hdr "Host: nightly.local"
+  rxresp
+  expect resp.status == 200
+} -run
+
+# HEAD is an allowed method
+client c5 {
+  txreq -method "HEAD" -url "/images/logo-day.png" -hdr "Host: nightly.local"
+  rxresp
+  expect resp.status == 200
+} -run
+
+# GET css is served by the assets backend + CORS check + memory cache
+logexpect l1 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+  # Expectation for the CSS request
+  expect 0 * Begin
+  expect * * BereqURL "/night-theme.css"
+  expect * * Storage "malloc memory"
+  expect * * End
+} -start
+client c6 {
+  txreq -method "GET" -url "/night-theme.css" -hdr "Host: nightly.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "night-theme.css"
+  expect resp.http.access-control-allow-origin == "*"
+} -run
+logexpect l1 -wait
+
+# GET png is served by the assets backend + CORS check + memory cache
+logexpect l2 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+  # Expectation for the PNG request
+  expect 0 * Begin
+  expect * * BereqURL "/images/star.png"
+  expect * * Storage "malloc memory"
+  expect * * End
+} -start
+client c7 {
+  txreq -method "GET" -url "/images/star.png" -hdr "Host: nightly.local"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "star.png"
+  expect resp.http.access-control-allow-origin == "*"
+} -run
+logexpect l2 -wait

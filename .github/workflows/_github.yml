@@ -23,18 +23,6 @@ jobs:
         run: |
           just test
 
-      - name: 'Test production acceptance...'
-        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-        run: |
-          just test-acceptance-production
-
-      - name: 'Archive test acceptance reports...'
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-acceptance
-          path: |
-            tmp/test-acceptance-*
-
       - name: 'Publish & deploy tag...'
         if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' }}
         run: |
@@ -42,3 +30,16 @@ jobs:
           cd fly.io/cdn-2025-02-25
           just deploy ${{ github.ref_name }}
           just scale
+
+      - name: 'Test production acceptance...'
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' }}
+        run: |
+          just test-acceptance-production
+
+      - name: 'Archive test acceptance reports...'
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-acceptance
+          path: |
+            tmp/test-acceptance-*
