@@ -2,7 +2,6 @@
 
 import '../../just/_config.just'
 import '../../just/_config_fly.just'
-import '../../just/op.just'
 import '../../just/fly.just'
 
 [private]

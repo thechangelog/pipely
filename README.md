@@ -94,6 +94,7 @@ And that's about it. Everything else is containerized with Dagger.
 ```bash
 just
 Available recipes:
+    docker-bash                               # Open a shell in the docker container
     docker-run *ARGS                          # Run container in Docker (works on remote servers too): http://<DOCKER_HOST>:9000
     how-many-lines                            # How many lines of Varnish config?
     how-many-lines-raw                        # How many lines of Varnish config?
@@ -101,7 +102,7 @@ Available recipes:
     local-debug                               # Debug container locally
     local-run                                 # Run container locally: available on http://localhost:9000
     test                                      # Test VTC + acceptance locally
-    test-acceptance-local                     # Test local setup
+    test-acceptance-local                     # Test acceptance local
     test-reports                              # Open test reports
     test-reports-rm                           # Clear test reports
     test-vtc                                  # Test VCL config
@@ -112,7 +113,7 @@ Available recipes:
     local-run-production                      # Run production container locally - assumes envrc-secrets has already run - available on http://localhost:9000
     publish tag=_DEFAULT_TAG                  # Publish container image - assumes envrc-secrets was already run
     tag tag sha discussion                    # Tag a new release
-    test-acceptance-production *ARGS          # Test production acceptance
+    test-acceptance-production *ARGS          # Test acceptance production
 
 # Run the tests
 just test
