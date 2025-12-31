@@ -1,0 +1,10 @@
+# vim: set tabstop=4 shiftwidth=4 expandtab:
+
+import '../../just/_config.just'
+import '../../just/_config_fly.just'
+import '../../just/op.just'
+import '../../just/fly.just'
+
+[private]
+default_fly_io:
+    @just --list

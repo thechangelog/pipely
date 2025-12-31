@@ -27,9 +27,8 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' }}
         run: |
           just publish ${{ github.ref_name }}
-          cd fly.io/cdn-2025-02-25
+          cd fly.io/cdn-2025-12-06
           just deploy ${{ github.ref_name }}
-          just scale
 
       - name: 'Test production acceptance...'
         if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push' }}
@@ -37,8 +36,8 @@ jobs:
           just test-acceptance-production
 
       - name: 'Archive test acceptance reports...'
-        if: ${{ always() }}
         uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
           name: test-acceptance
           path: |

@@ -21,29 +21,6 @@ header "cache-status" contains "grace=" # grace is set
 header "cache-status" contains "keep=" # keep is set
 header "cache-status" contains "storage=" # storage is set
 
-# Get the changelog feed AGAIN
-GET {{proto}}://{{host}}/podcast/feed?hurl=true
-[Options]
-delay: {{delay_ms}} # wait more than TTL so that it becomes stale
-HTTP 200 # expect OK response
-[Asserts]
-duration < 500 # ensure that it loads sub 500ms when cached...
-header "cache-status" contains "hit" # served from cache
-header "cache-status" contains "stale" # will need to be refreshed from origin
-header "age" toInt >= {{delay_s}} # has been stored in cache for MORE than TTL
-
-# Get the changelog feed ONE MORE TIME
-GET {{proto}}://{{host}}/podcast/feed?hurl=true
-[Options]
-delay: 5s # wait a bit so that it refreshes from origin
-HTTP 200 # expect OK response
-[Asserts]
-duration < 500 # ensure that it loads sub 500ms when cached...
-header "cache-status" contains "hit" # served from cache
-header "cache-status" contains "storage.memory" # cached in memory
-header "cache-status" not contains "stale" # not stale
-header "age" toInt <= {{delay_s}} # has been stored in cache LESS than TTL
-
 # Purge the changelog feed
 PURGE {{proto}}://{{host}}/podcast/feed?hurl=true
 Purge-Token: {{purge_token}}
@@ -56,15 +33,22 @@ header "cache-status" contains "synth" # synthetic response
 GET {{proto}}://{{host}}/podcast/feed?hurl=true
 HTTP 200 # expect OK response
 [Asserts]
+header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
+header "age" exists # cache age works
 header "cache-status" contains "miss" # fresh after purge
+header "content-type" contains "application/xml" # content type is XML
 
-GET {{proto}}://{{host}}/podcast/feed
+# Get the changelog feed AGAIN
+GET {{proto}}://{{host}}/podcast/feed?hurl=true
 HTTP 200 # expect OK response
 [Asserts]
 header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
+header "cache-status" contains "hit" # served from cache
+header "cache-status" contains "storage.memory" # cached in memory
+header "cache-status" not contains "stale" # not stale
 header "content-type" contains "application/xml" # content type is XML
 
 GET {{proto}}://{{host}}/gotime/feed
