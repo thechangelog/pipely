@@ -45,43 +45,68 @@ test-acceptance-local *ARGS:
      --variable proto=http \
      --variable host=localhost:9000 \
      --variable assets_host=cdn.changelog.com \
+     --variable nightly_host=nightly.changelog.com \
      --variable delay_ms=6000 \
      --variable delay_s=5 \
      --variable purge_token="{{ env("PURGE_TOKEN") }}" \
      {{ ARGS }} \
-     test/acceptance/*.hurl test/acceptance/local/*.hurl test/acceptance/production/*.hurl
+     test/acceptance/*.hurl test/acceptance/local/*.hurl
 
 # Show Varnish cache stats
 cache:
     varnishstat -1 -f "MAIN.cache*" -f "MAIN.shm*" -f "SMA.*" -f "SMF.*"
 
 [private]
-bench url="http://localhost:9000/" http="2" reqs="1000" conns="50":
-    time oha -n {{ reqs }} -c {{ conns }} {{ url }} --http-version={{ http }}
+bench url="http://localhost:9000/" reqs="1000" conns="50" host="":
+    time oha -n {{ reqs }} -c {{ conns }} {{ if host != "" { "--host " + host } else { "" } }} {{ url }}
 
 # Benchmark app origin
 bench-app-1-origin: (bench "https://changelog-2025-05-05.fly.dev/")
 
+# Benchmark app TLS proxy
+bench-app-2-tls-proxy: (bench "http://localhost:5000/")
+
 # Benchmark app via Fly.io
-bench-app-2-fly: (bench "https://changelog.com/" "2" "10000")
+bench-app-3-fly: (bench "https://changelog.com/" "100000")
 
 # Benchmark app via local
-bench-app-3-local: (bench "http://localhost:9000/" "2" "10000")
+bench-app-4-local: (bench "http://localhost:9000/" "100000")
 
-# Benchmark app TLS proxy
-bench-app-4-tls-proxy: (bench "http://localhost:5000/" "1.1")
+# Benchmark assets origin
+bench-assets-1-origin: (bench "https://changelog.place/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png")
+
+# Benchmark assets TLS proxy
+bench-assets-2-tls-proxy: (bench "http://localhost:5010/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png")
+
+# Benchmark assets via Fly.io
+bench-assets-3-fly: (bench "https://cdn.changelog.com/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png")
+
+# Benchmark assets via local
+bench-assets-4-local: (bench "http://localhost:9000/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" "100000" "50" "cdn.changelog.com")
 
 # Benchmark feed origin
 bench-feed-1-origin: (bench "https://feeds.changelog.place/podcast.xml")
 
+# Benchmark feed TLS proxy
+bench-feed-2-tls-proxy: (bench "http://localhost:5020/podcast.xml")
+
 # Benchmark feed via Fly.io
-bench-feed-2-fly: (bench "https://changelog.com/podcast/feed")
+bench-feed-3-fly: (bench "https://changelog.com/podcast/feed")
 
 # Benchmark feed via local
-bench-feed-3-local: (bench "http://localhost:9000/podcast/feed" "2" "10000" "50")
+bench-feed-4-local: (bench "http://localhost:9000/podcast/feed" "100000" "50")
 
-# Benchmark feed TLS proxy
-bench-feed-4-tls-proxy: (bench "http://localhost:5010/podcast.xml" "1.1")
+# Benchmark nightly origin
+bench-nightly-1-origin: (bench "https://changelog-nightly-2023-10-10.fly.dev/")
+
+# Benchmark nightly TLS proxy
+bench-nightly-2-tls-proxy: (bench "http://localhost:5030/")
+
+# Benchmark nightly via Fly.io
+bench-nightly-3-fly: (bench "https://nightly.changelog.com/")
+
+# Benchmark nightly via local
+bench-nightly-4-local: (bench "http://localhost:9000/" "100000" "50" "nightly.changelog.com")
 
 # https://williamyaps.github.io/wlmjavascript/servercli.html
 

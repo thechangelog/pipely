@@ -14,73 +14,73 @@ varnish v1 -vcl+backend {
 # Test 1: Test fly-client-ip header
 # Expectation: Log should contain the exact fly-client-ip
 logexpect l1 -v v1 -g vxid -T 5 {
-    expect * * VCL_Log "client_ip:151.101.129.162"
+  expect * * VCL_Log "client_ip:151.101.129.162"
 } -start
 client c1 {
-    txreq -url "/" -hdr "fly-client-ip: 151.101.129.162"
-    rxresp
-    expect resp.status == 200
+  txreq -url "/" -hdr "fly-client-ip: 151.101.129.162"
+  rxresp
+  expect resp.status == 200
 } -run
 logexpect l1 -wait
 
 # Test 2: fly-client-ip header is preferred when x-forwarded-for is set
 # Expectation: fly-client-ip takes precedence
 logexpect l2 -v v1 -g vxid -T 5 {
-    expect * * VCL_Log "client_ip:151.101.129.162"
+  expect * * VCL_Log "client_ip:151.101.129.162"
 } -start
 client c2 {
-    txreq -url "/" \
-        -hdr "fly-client-ip: 151.101.129.162" \
-        -hdr "x-forwarded-for: 151.101.1.162, 66.241.124.108, 172.16.5.82"
-    rxresp
-    expect resp.status == 200
+  txreq -url "/" \
+      -hdr "fly-client-ip: 151.101.129.162" \
+      -hdr "x-forwarded-for: 151.101.1.162, 66.241.124.108, 172.16.5.82"
+  rxresp
+  expect resp.status == 200
 } -run
 logexpect l2 -wait
 
 # Test 3: uses the first ip when 3 ips are present in x-forwarded-for
 # Expectation: Regex extracts the first IP (151.101.1.162)
 logexpect l3 -v v1 -g vxid -T 5 {
-    expect * * VCL_Log "client_ip:151.101.1.162"
+  expect * * VCL_Log "client_ip:151.101.1.162"
 } -start
 client c3 {
-    txreq -url "/" -hdr "x-forwarded-for: 151.101.1.162, 66.241.124.108, 172.16.5.82"
-    rxresp
-    expect resp.status == 200
+  txreq -url "/" -hdr "x-forwarded-for: 151.101.1.162, 66.241.124.108, 172.16.5.82"
+  rxresp
+  expect resp.status == 200
 } -run
 logexpect l3 -wait
 
 # Test 4: uses the first ip when 2 ips are present in x-forwarded-for
 # Expectation: Regex extracts the first IP
 logexpect l4 -v v1 -g vxid -T 5 {
-    expect * * VCL_Log "client_ip:151.101.1.162"
+  expect * * VCL_Log "client_ip:151.101.1.162"
 } -start
 client c4 {
-    txreq -url "/" -hdr "x-forwarded-for: 151.101.1.162, 66.241.124.108"
-    rxresp
-    expect resp.status == 200
+  txreq -url "/" -hdr "x-forwarded-for: 151.101.1.162, 66.241.124.108"
+  rxresp
+  expect resp.status == 200
 } -run
 logexpect l4 -wait
 
 # Test 5: uses the ip in x-forwarded-for & it prefers it over the default client ip
 # Expectation: Uses x-forwarded-for IP
 logexpect l5 -v v1 -g vxid -T 5 {
-    expect * * VCL_Log "client_ip:151.101.1.162"
+  expect * * VCL_Log "client_ip:151.101.1.162"
 } -start
 client c5 {
-    txreq -url "/" -hdr "x-forwarded-for: 151.101.1.162"
-    rxresp
-    expect resp.status == 200
+  txreq -url "/" -hdr "x-forwarded-for: 151.101.1.162"
+  rxresp
+  expect resp.status == 200
 } -run
 logexpect l5 -wait
 
 # Test 6: uses the default client ip
 # Expectation: Falls back to client.ip (which is 127.0.0.1 in varnishtest)
 logexpect l6 -v v1 -g vxid -T 5 {
-    expect * * VCL_Log "client_ip:127.0.0.1"
+  expect * * VCL_Log "client_ip:127.0.0.1"
 } -start
 client c6 {
-    txreq -url "/"
-    rxresp
-    expect resp.status == 200
+  txreq -url "/"
+  rxresp
+  expect resp.status == 200
 } -run
 logexpect l6 -wait

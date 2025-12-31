@@ -54,10 +54,12 @@ type Pipely struct {
 	Tag string
 	// App proxy
 	AppProxy *Proxy
-	// Feeds proxy
-	FeedsProxy *Proxy
 	// Assets proxy
 	AssetsProxy *Proxy
+	// Feeds proxy
+	FeedsProxy *Proxy
+	// Nightly proxy
+	NightlyProxy *Proxy
 }
 
 func New(
@@ -97,11 +99,14 @@ func New(
 	// +default="5000:changelog-2025-05-05.fly.dev:"
 	appProxy string,
 
-	// +default="5010:feeds.changelog.place:"
+	// +default="5010:changelog.place:cdn.changelog.com"
+	assetsProxy string,
+
+	// +default="5020:feeds.changelog.place:"
 	feedsProxy string,
 
-	// +default="5020:changelog.place:cdn.changelog.com"
-	assetsProxy string,
+	// +default="5030:changelog-nightly-2023-10-10.fly.dev:nightly.changelog.com"
+	nightlyProxy string,
 
 	// https://ui.honeycomb.io/changelog/datasets/pipely/overview
 	// +default="pipely"
@@ -210,17 +215,23 @@ func New(
 	}
 	pipely.AppProxy = app
 
+	assets, err := NewProxy(assetsProxy)
+	if err != nil {
+		return nil, err
+	}
+	pipely.AssetsProxy = assets
+
 	feeds, err := NewProxy(feedsProxy)
 	if err != nil {
 		return nil, err
 	}
 	pipely.FeedsProxy = feeds
 
-	assets, err := NewProxy(assetsProxy)
+	nightly, err := NewProxy(nightlyProxy)
 	if err != nil {
 		return nil, err
 	}
-	pipely.AssetsProxy = assets
+	pipely.NightlyProxy = nightly
 
 	return pipely, nil
 }
@@ -238,23 +249,28 @@ func (m *Pipely) app() *dagger.Container {
 
 	procfile := fmt.Sprintf(`varnish: varnishd -F -f /etc/varnish/default.vcl -a http=:${VARNISH_HTTP_PORT} -p feature=+http2 -s memory=malloc,${VARNISH_SIZE} -p thread_pools=${VARNISH_THREAD_POOLS:-2} -p thread_pool_min=${VARNISH_THREAD_POOL_MIN:-150} -p thread_pool_max=${VARNISH_THREAD_POOL_MAX:-1500} -p workspace_backend=${VARNISH_WORKSPACE_BACKEND:-64k} -p nuke_limit=${VARNISH_NUKE_LIMIT:-150} %s
 app: tls-exterminator %s
-feeds: tls-exterminator %s
 assets: tls-exterminator %s
+feeds: tls-exterminator %s
+nightly: tls-exterminator %s
 logs: bash -c 'coproc VJS { varnish-json-response; }; if [ -z "${VJS_PID}" ]; then echo "ERROR: Failed to start varnish-json-response coprocess." >&2; exit 1; fi; trap "kill ${VJS_PID} 2>/dev/null" EXIT; vector <&${VJS[0]}'
-`, strings.Join(m.VarnishOptions, " "), m.AppProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.AssetsProxy.TlsExterminator)
+`, strings.Join(m.VarnishOptions, " "), m.AppProxy.TlsExterminator, m.AssetsProxy.TlsExterminator, m.FeedsProxy.TlsExterminator, m.NightlyProxy.TlsExterminator)
 
 	return m.Varnish.
 		// Configure various environment variables
 		WithEnvVariable("BACKEND_APP_FQDN", m.AppProxy.Fqdn).
 		WithEnvVariable("BACKEND_APP_HOST", "localhost").
 		WithEnvVariable("BACKEND_APP_PORT", m.AppProxy.Port).
-		WithEnvVariable("BACKEND_FEEDS_FQDN", m.FeedsProxy.Fqdn).
-		WithEnvVariable("BACKEND_FEEDS_HOST", "localhost").
-		WithEnvVariable("BACKEND_FEEDS_PORT", m.FeedsProxy.Port).
 		WithEnvVariable("BACKEND_ASSETS_FQDN", m.AssetsProxy.Fqdn).
 		WithEnvVariable("BACKEND_ASSETS_HOST", "localhost").
 		WithEnvVariable("BACKEND_ASSETS_PORT", m.AssetsProxy.Port).
 		WithEnvVariable("ASSETS_HOST", m.AssetsProxy.Host).
+		WithEnvVariable("BACKEND_FEEDS_FQDN", m.FeedsProxy.Fqdn).
+		WithEnvVariable("BACKEND_FEEDS_HOST", "localhost").
+		WithEnvVariable("BACKEND_FEEDS_PORT", m.FeedsProxy.Port).
+		WithEnvVariable("BACKEND_NIGHTLY_FQDN", m.NightlyProxy.Fqdn).
+		WithEnvVariable("BACKEND_NIGHTLY_HOST", "localhost").
+		WithEnvVariable("BACKEND_NIGHTLY_PORT", m.NightlyProxy.Port).
+		WithEnvVariable("NIGHTLY_HOST", m.NightlyProxy.Host).
 		// Add tls-exterminator
 		WithFile("/usr/local/bin/tls-exterminator", tlsExterminator).
 		// Prepare apt packages
