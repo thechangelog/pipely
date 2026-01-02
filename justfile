@@ -85,7 +85,7 @@ test-acceptance-production *ARGS:
 check-all: (check "sjc") (check "lax") (check "dfw") (check "ord") (check "iad") (check "ewr") (check "gru") (check "lhr") (check "cdg") (check "ams") (check "fra") (check "jnb") (check "sin") (check "nrt") (check "syd")
 
 # Check one region
-check region="iad":
+check region="iad" timeout="100":
     @echo "🧐 Checking {{ uppercase(region) }}..."
     @(just hurl --test --color --report-html tmp/check-all --continue-on-error \
       --variable region={{ region }} \
@@ -96,10 +96,11 @@ check region="iad":
       --variable nightly_host=nightly.changelog.com \
       --resolve nightly.changelog.com:443:137.66.16.250 \
       --connect-timeout 10 \
-      --max-time 100 \
+      --max-time {{ timeout }} \
       test/acceptance/periodic/*.hurl \
-      && echo -e "\033[1A✅ {{ uppercase(region) }}") \
-    || echo -e "\033[1A❌ {{ uppercase(region) }}"
+      && echo -e "\033[1A✅ {{ uppercase(region) }}\n\u200B") \
+    || (echo -e "\033[1A❌ {{ uppercase(region) }}\n\u200B" \
+        && exit 69)
 
 # Open test reports
 test-reports:
