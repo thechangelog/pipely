@@ -98,8 +98,8 @@ check region="iad":
       --connect-timeout 10 \
       --max-time 100 \
       test/acceptance/periodic/*.hurl \
-      && echo "✅ {{ uppercase(region) }}") \
-    || echo "❌ {{ uppercase(region) }}"
+      && echo -e "\033[1A✅ {{ uppercase(region) }}") \
+    || echo -e "\033[1A❌ {{ uppercase(region) }}"
 
 # Open test reports
 test-reports:
