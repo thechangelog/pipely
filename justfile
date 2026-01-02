@@ -80,6 +80,27 @@ test-acceptance-production *ARGS:
         {{ ARGS }} \
         test/acceptance/*.hurl
 
+# Check all FLY_APP_REGIONS
+[parallel]
+check-all: (check "sjc") (check "lax") (check "dfw") (check "ord") (check "iad") (check "ewr") (check "gru") (check "lhr") (check "cdg") (check "ams") (check "fra") (check "jnb") (check "sin") (check "nrt") (check "syd")
+
+# Check one region
+check region="iad":
+    @echo "🧐 Checking {{ uppercase(region) }}..."
+    @(just hurl --test --color --report-html tmp/check-all --continue-on-error \
+      --variable region={{ region }} \
+      --variable host=changelog.com \
+      --resolve changelog.com:443:137.66.16.250 \
+      --variable assets_host=cdn.changelog.com \
+      --resolve cdn.changelog.com:443:137.66.16.250 \
+      --variable nightly_host=nightly.changelog.com \
+      --resolve nightly.changelog.com:443:137.66.16.250 \
+      --connect-timeout 10 \
+      --max-time 100 \
+      test/acceptance/periodic/*.hurl \
+      && echo "✅ {{ uppercase(region) }}") \
+    || echo "❌ {{ uppercase(region) }}"
+
 # Open test reports
 test-reports:
     open tmp/*/index.html

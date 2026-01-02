@@ -12,9 +12,11 @@ env:
 jobs:
   run:
     runs-on:
-      - nscloud-ubuntu-24.04-amd64-4x8-with-cache
-      - nscloud-git-mirror-5gb
+      - nscloud-ubuntu-24.04-amd64-4x8-with-cache;github.run-id=${{ github.run_id }}
+      - nscloud-git-mirror-1gb
       - namespace-experiments:dagger.integration=enabled;dagger.version=0.19.8
+      - nscloud-cache-tag-pipely-test-deploy
+      - nscloud-cache-size-1gb
     steps:
       - name: 'Checkout code...'
         uses: namespacelabs/nscloud-checkout-action@v5
@@ -35,6 +37,12 @@ jobs:
         with:
           just-version: '1.45.0'
 
+      - name: Setup cache
+        uses: namespacelabs/nscloud-cache-action@v1
+        with:
+          path: |
+            ~/.local
+
       - name: 'Test all (including local acceptance)...'
         run: |
           just test
@@ -52,7 +60,7 @@ jobs:
           just test-acceptance-production
 
       - name: 'Archive test acceptance reports...'
-        uses: actions/upload-artifact@v4
+        uses: namespace-actions/upload-artifact@v1
         if: ${{ always() }}
         with:
           name: test-acceptance
