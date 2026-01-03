@@ -1,0 +1,21 @@
+15 machines have been retrieved from app cdn-2025-12-06.
+View them in the UI here (​https://fly.io/apps/cdn-2025-12-06/machines/)
+
+[1mcdn-2025-12-06[0m
+ID            	NAME                	STATE  	CHECKS	REGION	ROLE	IMAGE                     	IP ADDRESS                     	VOLUME              	CREATED             	LAST UPDATED        	PROCESS GROUP	SIZE                  
+2873321a446d58	dry-star-4868       	started	1/1   	lhr   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:4e3:1f39:500d:2	vol_vx2g2p75z3e8e0wr	2025-12-31T17:42:41Z	2026-01-03T08:05:51Z	app          	performance-1x:2048MB	
+0801900ad35008	muddy-firefly-4617  	started	1/1   	ams   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:38:28c1:1420:2 	vol_r1l2lkp7y9nqmoz4	2025-12-31T17:42:41Z	2026-01-03T08:06:12Z	app          	performance-1x:2048MB	
+683727ec1729d8	hidden-shadow-1332  	started	1/1   	cdg   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:5b1:ce1d:2609:2	vol_42lelpgj1787589r	2025-12-31T17:42:42Z	2026-01-03T08:06:39Z	app          	performance-1x:2048MB	
+2873241a63e328	still-night-6790    	started	1/1   	fra   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:523:91fc:e2f4:2	vol_vz5m52kl92go169v	2025-12-31T17:42:42Z	2026-01-03T08:07:02Z	app          	performance-2x:4096MB	
+080eee0c702098	frosty-darkness-899 	started	1/1   	ewr   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:cc:20f:5728:2  	vol_rn8e80w20gzdl00r	2025-12-31T17:42:41Z	2026-01-03T08:07:22Z	app          	performance-2x:4096MB	
+68327e4c47ede8	black-meadow-4415   	started	1/1   	iad   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:41a:ad73:8e26:2	vol_vgjp71y9dz73d1pv	2025-12-31T17:40:29Z	2026-01-03T08:07:44Z	app          	performance-2x:4096MB	
+1857001cd725e8	lingering-river-1263	started	1/1   	dfw   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:164:4b12:a65c:2	vol_rn8e80wgx87n2d8r	2025-12-31T17:42:44Z	2026-01-03T08:08:30Z	app          	performance-2x:4096MB	
+825de7c7e90358	quiet-wood-777      	started	1/1   	lax   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:2b5:cecc:cd19:2	vol_re8k8x2w28p36dor	2025-12-31T17:42:43Z	2026-01-03T08:08:53Z	app          	performance-1x:2048MB	
+d8d31e7a67d498	sparkling-dream-8375	started	1/1   	sjc   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:4f3:bc1f:2a90:2	vol_45lnl20o572q10jr	2025-12-31T17:42:43Z	2026-01-03T08:09:15Z	app          	performance-2x:4096MB	
+874dd5c0350338	long-dawn-3414      	started	1/1   	ord   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:111:aa74:f5e5:2	vol_vjeqejp7671zw0p4	2025-12-31T17:42:42Z	2026-01-03T08:08:08Z	app          	performance-2x:4096MB	
+48e4d55f311558	wispy-silence-2650  	started	1/1   	sin   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:481:665a:954e:2	vol_r77j7xlmnjgqnggr	2025-12-31T17:42:42Z	2026-01-03T08:09:39Z	app          	performance-2x:4096MB	
+08016e4b579178	winter-wind-9541    	started	1/1   	jnb   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:2e3:d7a9:11f6:2	vol_vdmjm73ndk0wgo1v	2025-12-31T17:42:41Z	2026-01-03T08:10:02Z	app          	performance-1x:2048MB	
+17817961ade758	wandering-frost-603 	started	1/1   	gru   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:5be:6080:7476:2	vol_42lelpg9lqlp760r	2025-12-31T17:42:41Z	2026-01-03T08:10:26Z	app          	performance-1x:2048MB	
+e822074a453e98	weathered-bird-530  	started	1/1   	nrt   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:465:b534:b270:2	vol_4o5153k62pjx3m2v	2025-12-31T17:42:43Z	2026-01-03T08:10:50Z	app          	performance-2x:4096MB	
+d8966d5ae40128	damp-lake-5993      	started	1/1   	syd   	    	thechangelog/pipely:v1.1.0	fdaa:0:4556:a7b:4df:864d:6ab2:2	vol_45lnl2055kkoyejr	2025-12-31T17:42:42Z	2026-01-03T08:11:14Z	app          	performance-1x:2048MB	
+

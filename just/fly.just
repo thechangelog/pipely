@@ -14,16 +14,26 @@ deploy tag=_DEFAULT_TAG:
 [group('team')]
 scale:
     just flyctl scale count $(echo {{ FLY_APP_REGIONS }}, | grep -o ',' | wc -l) --max-per-region 1 --region {{ FLY_APP_REGIONS }} --app {{ FLY_APP }}
-    @just machines \
+    just machines \
     | awk '/pipely/ { print $1, $5 }' \
     | while read machine region; do \
-        if [[ ! {{ FLY_APP_REGIONS_HOT }} =~ $region ]]; then \
+        if [[ {{ FLY_APP_REGIONS_HOT }} =~ $region ]]; then \
+          echo -e "\n🌕 Scaling machine in {{ YELLOW }}HOT region {{ BOLD }}$region{{ NORMAL }} to {{ BOLD }}{{ FLY_APP_REGION_HOT_CPU_KIND }}-{{ FLY_APP_REGION_HOT_CPU_NUM }}C-{{ FLY_APP_REGION_HOT_MEM }}M{{ BOLD }} ..."; \
+          just flyctl machine update --yes \
+            --vm-cpu-kind {{ FLY_APP_REGION_HOT_CPU_KIND }} \
+            --vm-cpus {{ FLY_APP_REGION_HOT_CPU_NUM }} \
+            --vm-memory {{ FLY_APP_REGION_HOT_MEM }} \
+            --env VARNISH_SIZE=$(({{ FLY_APP_REGION_HOT_MEM }} * 70 / 100))M \
+            --env VARNISH_FILE_SIZE=$(({{ FLY_APP_DISK_SIZE }} * 90 / 100))G \
+            "$machine"; \
+        else \
           echo -e "\n🌑 Scaling machine in {{ BLUE }}COLD region {{ BOLD }}$region{{ NORMAL }} to {{ BOLD }}{{ FLY_APP_REGION_DEFAULT_CPU_KIND }}-{{ FLY_APP_REGION_DEFAULT_CPU_NUM }}C-{{ FLY_APP_REGION_DEFAULT_MEM }}M{{ BOLD }} ..."; \
           just flyctl machine update --yes \
             --vm-cpu-kind {{ FLY_APP_REGION_DEFAULT_CPU_KIND }} \
             --vm-cpus {{ FLY_APP_REGION_DEFAULT_CPU_NUM }} \
             --vm-memory {{ FLY_APP_REGION_DEFAULT_MEM }} \
             --env VARNISH_SIZE=$(({{ FLY_APP_REGION_DEFAULT_MEM }} * 70 / 100))M \
+            --env VARNISH_FILE_SIZE=$(({{ FLY_APP_DISK_SIZE }} * 90 / 100))G \
             "$machine"; \
         fi; \
       done
@@ -66,7 +76,7 @@ machines:
 # Restart ALL app machines, one-by-one
 [group('team')]
 restart:
-    @just machines \
+    just machines \
     | awk '/pipely/ { print $1 }' \
     | while read machine; do \
         echo -en "\n♻️ "; \

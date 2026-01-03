@@ -19,15 +19,14 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Store MP3s in file cache + HOT & COLD instances - [PR #44](https://github.com/thechangelog/pipely/pull/44)
   - ✅ Update deps to latest stable (hold Varnish at `v7.7.3`) - [PR #45](https://github.com/thechangelog/pipely/pull/45)
   - ✅ Add nightly.changelog.com - [PR #46](https://github.com/thechangelog/pipely/pull/46)
-  - ✅ Promote new 2025-12-06 production instance - [PR #47](https://github.com/thechangelog/pipely/pull/47)
+  - ✅ Promote new `cdn-2025-12-06` production instance - [PR #47](https://github.com/thechangelog/pipely/pull/47)
 - Tag & ship `v1.2`
   - ✅ Run periodic MP3, assets, feeds & nightly checks against all regions - [PR #48](https://github.com/thechangelog/pipely/pull/48)
+  - ✅ Right-size `cdn-2025-12-06` + cleanup - [PR #49](https://github.com/thechangelog/pipely/pull/49)
   - Include app-name in logs
-  - Check `?args` URL impact on caching
+  - Check URL `?args` impact on caching
   - Replace coproc with svlogd (a.k.a. overmind with runit)
   - TBD...
-- [Add logging acceptance tests](https://github.com/thechangelog/pipely/pull/27#issuecomment-3094684063)
-- Keep Dagger version in `.github/workflows/_namespace.yaml` in sync with `just/dagger.just`
 
 ## What went into `v1.0`
 
