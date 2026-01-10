@@ -10,14 +10,38 @@ deploy tag=_DEFAULT_TAG:
       --env VARNISH_SIZE=$(({{ FLY_APP_REGION_HOT_MEM }} * 70 / 100))M \
       --env VARNISH_FILE_SIZE=$(({{ FLY_APP_DISK_SIZE }} * 90 / 100))G
 
-# Scale production app
+# Scale app
 [group('team')]
-scale:
-    just flyctl scale count $(echo {{ FLY_APP_REGIONS }}, | grep -o ',' | wc -l) --max-per-region 1 --region {{ FLY_APP_REGIONS }} --app {{ FLY_APP }}
+scale regions=FLY_APP_REGIONS regions_hot=FLY_APP_REGIONS_HOT: (scale-count regions) (scale-disk regions) (scale-size regions regions_hot)
+
+# Scale number of app instances
+[group('team')]
+scale-count regions=FLY_APP_REGIONS:
+    just flyctl scale count $(echo {{ regions }}, | grep -o ',' | wc -l) --max-per-region 1 --region {{ regions }} --app {{ FLY_APP }}
+
+# Scale disk size
+[group('team')]
+scale-disk regions=FLY_APP_REGIONS:
+    just flyctl volume list \
+    | awk '/varnish_file_cache.*({{ replace(regions, ",", "|") }})/ { print $1, $4, $5 }' \
+    | while read volume size region; do \
+        if (( "${size%GB}" < "{{ FLY_APP_DISK_SIZE }}" )); then \
+          echo -e "\n💿 Scaling disk in region {{ BOLD }}$region{{ NORMAL }} from {{ BOLD }}$size{{ NORMAL }} to {{ BOLD }}{{ FLY_APP_DISK_SIZE }}GB{{ NORMAL }} ..."; \
+          just flyctl volume extend --yes \
+            --size {{ FLY_APP_DISK_SIZE }}G \
+            "$volume"; \
+        else \
+          echo "NOOP {{ BOLD }}$region{{ NORMAL }}: $size (from) >= {{ FLY_APP_DISK_SIZE }}GB (to)"; \
+        fi; \
+      done
+
+# Scale size of app instances
+[group('team')]
+scale-size regions=FLY_APP_REGIONS regions_hot=FLY_APP_REGIONS_HOT:
     just machines \
-    | awk '/pipely/ { print $1, $5 }' \
+    | awk '/({{ replace(regions, ",", "|") }}).*pipely/ { print $1, $5 }' \
     | while read machine region; do \
-        if [[ {{ FLY_APP_REGIONS_HOT }} =~ $region ]]; then \
+        if [[ {{ regions_hot }} =~ $region ]]; then \
           echo -e "\n🌕 Scaling machine in {{ YELLOW }}HOT region {{ BOLD }}$region{{ NORMAL }} to {{ BOLD }}{{ FLY_APP_REGION_HOT_CPU_KIND }}-{{ FLY_APP_REGION_HOT_CPU_NUM }}C-{{ FLY_APP_REGION_HOT_MEM }}M{{ BOLD }} ..."; \
           just flyctl machine update --yes \
             --vm-cpu-kind {{ FLY_APP_REGION_HOT_CPU_KIND }} \
