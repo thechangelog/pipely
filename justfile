@@ -152,11 +152,8 @@ http-profile url="https://changelog.com/":
 
 # How many lines of Varnish config?
 how-many-lines:
-    rg -c '' varnish/*.vcl
-
-# How many lines of Varnish config?
-how-many-lines-raw:
-    rg -cv '^.*#|^\$' varnish/*.vcl
+    rg -cv '^.*#|^\$' varnish/vcl/*.vcl \
+    | awk -F: '{sum += $2} END {print sum}'
 
 # Publish container image - assumes envrc-secrets was already run
 [group('team')]
