@@ -64,6 +64,9 @@ setenv BERESP_TTL "10s"
 setenv BERESP_GRACE "1m"
 setenv BERESP_KEEP "1h"
 
+setenv FLY_REGION "lgz"
+setenv FLY_APP "local-2026-01-10"
+
 # Start Varnish with a VCL close to our final one
 varnish v1 -arg "-s memory=malloc,10M" \
            -arg "-s disk=file,${tmpdir}/file.bin,10M" -vcl {
@@ -79,6 +82,18 @@ varnish v1 -arg "-s memory=malloc,10M" \
 
   # Use an app backend with no probe when testing
   sub vcl_init {
+    if (std.getenv("FLY_APP") && std.getenv("FLY_APP") != "") {
+        var.global_set("app_generation", std.getenv("FLY_APP"));
+    } else {
+        var.global_set("app_generation", "NOW");
+    }
+
+    if (std.getenv("FLY_REGION") && std.getenv("FLY_REGION") != "") {
+        var.global_set("region", std.getenv("FLY_REGION"));
+    } else {
+        var.global_set("region", "LOCAL");
+    }
+
     new app = dynamic.director(
       host_header = std.getenv("BACKEND_APP_FQDN"),
     );
@@ -101,6 +116,7 @@ varnish v1 -arg "-s memory=malloc,10M" \
   include "app-backend.vcl";
   include "assets-backend.vcl";
   include "feeds-backend.vcl";
+  include "fly/app-generation.vcl";
   include "fly/region.vcl";
   include "varnish-health.vcl";
 
@@ -175,12 +191,24 @@ varnish v1 -arg "-s memory=malloc,10M" \
   }
 } -start
 
+logexpect l1 -v v1 -d 1 -g vxid -q "VCL_Log" -T 2 {
+  expect 0 * Begin
+  expect * * VCL_Log "app_generation:local-2026-01-10"
+  expect * * End
+} -start
+
+logexpect l2 -v v1 -d 1 -g vxid -q "VCL_Log" -T 2 {
+  expect 0 * Begin
+  expect * * VCL_Log "server_datacenter:lgz"
+  expect * * End
+} -start
+
 # Varnish
 client c1 {
   txreq -url "/health"
   rxresp
   expect resp.status == 204
-  expect resp.http.cache-status == "region=LOCAL; synth"
+  expect resp.http.cache-status == "region=lgz; synth"
 } -run
 
 # App health
@@ -188,7 +216,7 @@ client c2 {
   txreq -url "/app_health"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=app.+,app.origin.local; bypass"
+  expect resp.http.cache-status ~ "region=lgz; origin=app.+,app.origin.local; bypass"
 } -run
 
 # App homepage uncached
@@ -196,7 +224,7 @@ client c3 {
   txreq -url "/"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=app.+,app.origin.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
+  expect resp.http.cache-status ~ "region=lgz; origin=app.+,app.origin.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
 } -run
 
 # App homepage cached
@@ -204,7 +232,7 @@ client c4 {
   txreq -url "/"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=app.+,app.origin.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
+  expect resp.http.cache-status ~ "region=lgz; origin=app.+,app.origin.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
 } -run
 
 # Assets health
@@ -212,7 +240,7 @@ client c5 {
   txreq -url "/assets_health"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=assets.+,assets.origin.local; bypass"
+  expect resp.http.cache-status ~ "region=lgz; origin=assets.+,assets.origin.local; bypass"
 } -run
 
 # Assets uncached
@@ -220,7 +248,7 @@ client c6 {
   txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=assets.+,assets.origin.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
+  expect resp.http.cache-status ~ "region=lgz; origin=assets.+,assets.origin.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
 } -run
 
 # Assets cached
@@ -228,7 +256,7 @@ client c7 {
   txreq -url "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png" -hdr "Host: assets.local"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=assets.+,assets.origin.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
+  expect resp.http.cache-status ~ "region=lgz; origin=assets.+,assets.origin.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
 } -run
 
 # Feeds health
@@ -236,7 +264,7 @@ client c8 {
   txreq -url "/feeds_health"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=feeds.+,feeds.origin.local; bypass"
+  expect resp.http.cache-status ~ "region=lgz; origin=feeds.+,feeds.origin.local; bypass"
 } -run
 
 # Feeds uncached
@@ -244,7 +272,7 @@ client c9 {
   txreq -url "/podcast/feed"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=feeds.+,feeds.origin.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
+  expect resp.http.cache-status ~ "region=lgz; origin=feeds.+,feeds.origin.local; ttl=10.000; grace=60.000; keep=3600.000; storage=none; miss; hits=0"
 } -run
 
 # Feeds cached
@@ -252,5 +280,5 @@ client c10  {
   txreq -url "/podcast/feed"
   rxresp
   expect resp.status == 200
-  expect resp.http.cache-status ~ "region=LOCAL; origin=feeds.+,feeds.origin.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
+  expect resp.http.cache-status ~ "region=lgz; origin=feeds.+,feeds.origin.local; ttl=.+; grace=60.000; keep=3600.000; storage=storage.memory; hit; hits=1"
 } -run

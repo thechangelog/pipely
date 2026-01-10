@@ -20,13 +20,14 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Update deps to latest stable (hold Varnish at `v7.7.3`) - [PR #45](https://github.com/thechangelog/pipely/pull/45)
   - ✅ Add nightly.changelog.com - [PR #46](https://github.com/thechangelog/pipely/pull/46)
   - ✅ Promote new `cdn-2025-12-06` production instance - [PR #47](https://github.com/thechangelog/pipely/pull/47)
-- Tag & ship `v1.2`
+- ✅ Tag & ship `v1.2`
   - ✅ Run periodic MP3, assets, feeds & nightly checks against all regions - [PR #48](https://github.com/thechangelog/pipely/pull/48)
   - ✅ Right-size `cdn-2025-12-06` + cleanup - [PR #49](https://github.com/thechangelog/pipely/pull/49)
   - ✅ Bump default memory pools - [PR #50](https://github.com/thechangelog/pipely/pull/50)
   - ✅ Add `x-forwarded-host` header to all backend requests - [PR #51](https://github.com/thechangelog/pipely/pull/51)
-  - Include app-name in logs
+  - ✅ Log `app_generation` - [PR #52](https://github.com/thechangelog/pipely/pull/52)
 - Tag & ship `v1.3`
+  - Throttle mp3 requests
   - Disable cookies for asset requests (ensure they always get served from cache)
   - Check URL `?args` impact on caching
   - Replace coproc with svlogd (a.k.a. overmind with runit)

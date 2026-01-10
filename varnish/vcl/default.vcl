@@ -3,12 +3,25 @@ vcl 4.1;
 
 import dynamic;
 import std;
+import var;
 
 # We are using a dynamic backend so that we can handle new origin instances (e.g. new app version gets deployed)
 #
 # We are declaring the dynamic directors here so that when testing & importing the backends
 # we can define dynamic directors WITHOUT health probes
 sub vcl_init {
+  if (std.getenv("FLY_APP") && std.getenv("FLY_APP") != "") {
+      var.global_set("app_generation", std.getenv("FLY_APP"));
+  } else {
+      var.global_set("app_generation", "NOW");
+  }
+
+  if (std.getenv("FLY_REGION") && std.getenv("FLY_REGION") != "") {
+      var.global_set("region", std.getenv("FLY_REGION"));
+  } else {
+      var.global_set("region", "LOCAL");
+  }
+
   # https://github.com/nigoroll/libvmod-dynamic/blob/branch-7.7/src/vmod_dynamic.vcc#L234-L255
   new app = dynamic.director(
     ttl = 10s,
@@ -55,6 +68,7 @@ include "backend-health-204.vcl";
 include "disable-caching-for-5xx.vcl";
 include "disable-default-backend.vcl";
 include "feeds-backend.vcl";
+include "fly/app-generation.vcl";
 include "fly/client-ip.vcl";
 include "fly/request-id.vcl";
 include "http.vcl";
