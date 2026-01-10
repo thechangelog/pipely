@@ -82,10 +82,10 @@ test-acceptance-production *ARGS:
 
 # Check all FLY_APP_REGIONS
 [parallel]
-check-all: (check "sjc") (check "lax") (check "dfw") (check "ord") (check "iad") (check "ewr") (check "gru") (check "lhr") (check "cdg") (check "ams") (check "fra") (check "jnb") (check "sin") (check "nrt") (check "syd")
+check-all: (check "sjc") (check "lax") (check "ord") (check "iad") (check "lhr") (check "cdg") (check "ams") (check "fra") (check "sin") (check "nrt")
 
 # Check one region
-check region="iad" timeout="100":
+check region="iad" timeout="60":
     @echo "🧐 Checking {{ uppercase(region) }}..."
     @(just hurl --test --color --report-html tmp/check-all --continue-on-error \
       --variable region={{ region }} \

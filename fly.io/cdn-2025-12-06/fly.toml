@@ -1,6 +1,6 @@
 # Full app config reference: https://fly.io/docs/reference/configuration/
 app = "cdn-2025-12-06"
-# Closest to the OG origin (the second origin is ewr)
+# Closest to the APP origin
 primary_region = "iad"
 
 kill_signal = "SIGTERM"
