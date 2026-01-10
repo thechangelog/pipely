@@ -5,276 +5,331 @@ server s1 {
   # Test for /feeds_health
   rxreq
   expect req.url == "/health"
+  expect req.http.host == "127.0.0.1"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "feeds ok"
 
   # Test for /podcast/feed
   rxreq
   expect req.url == "/podcast.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "podcast.xml"
 
   # Test for /podcast/feed/
   rxreq
   expect req.url == "/podcast.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "podcast.xml"
 
   # Test for /podcast/feed?arg=first&arg=second
   rxreq
   expect req.url == "/podcast.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "podcast.xml"
 
   # Test for /gotime/feed
   rxreq
   expect req.url == "/gotime.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "gotime.xml"
 
   # Test for /gotime/feed/
   rxreq
   expect req.url == "/gotime.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "gotime.xml"
 
   # Test for /gotime/feed?arg=first&arg=second
   rxreq
   expect req.url == "/gotime.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "gotime.xml"
 
   # Test for /master/feed
   rxreq
   expect req.url == "/master.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "master.xml"
 
   # Test for /master/feed/
   rxreq
   expect req.url == "/master.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "master.xml"
 
   # Test for /master/feed?arg=first&arg=second
   rxreq
   expect req.url == "/master.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "master.xml"
 
   # Test for /feed
   rxreq
   expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "feed.xml"
 
   # Test for /feed/
   rxreq
   expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "feed.xml"
 
   # Test for /feed?arg=first&arg=second
   rxreq
   expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "feed.xml"
 
   # Test for /jsparty/feed
   rxreq
   expect req.url == "/jsparty.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "jsparty.xml"
 
   # Test for /jsparty/feed/
   rxreq
   expect req.url == "/jsparty.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "jsparty.xml"
 
   # Test for /jsparty/feed?arg=first&arg=second
   rxreq
   expect req.url == "/jsparty.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "jsparty.xml"
 
   # Test for /shipit/feed
   rxreq
   expect req.url == "/shipit.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "shipit.xml"
 
   # Test for /shipit/feed/
   rxreq
   expect req.url == "/shipit.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "shipit.xml"
 
   # Test for /shipit/feed?arg=first&arg=second
   rxreq
   expect req.url == "/shipit.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "shipit.xml"
 
   # Test for /news/feed
   rxreq
   expect req.url == "/news.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "news.xml"
 
   # Test for /news/feed/
   rxreq
   expect req.url == "/news.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "news.xml"
 
   # Test for /news/feed?arg=first&arg=second
   rxreq
   expect req.url == "/news.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "news.xml"
 
   # Test for /brainscience/feed
   rxreq
   expect req.url == "/brainscience.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "brainscience.xml"
 
   # Test for /brainscience/feed/
   rxreq
   expect req.url == "/brainscience.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "brainscience.xml"
 
   # Test for /brainscience/feed?arg=first&arg=second
   rxreq
   expect req.url == "/brainscience.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "brainscience.xml"
 
   # Test for /founderstalk/feed
   rxreq
   expect req.url == "/founderstalk.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "founderstalk.xml"
 
   # Test for /founderstalk/feed/
   rxreq
   expect req.url == "/founderstalk.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "founderstalk.xml"
 
   # Test for /founderstalk/feed?arg=first&arg=second
   rxreq
   expect req.url == "/founderstalk.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "founderstalk.xml"
 
   # Test for /interviews/feed
   rxreq
   expect req.url == "/interviews.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "interviews.xml"
 
   # Test for /interviews/feed/
   rxreq
   expect req.url == "/interviews.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "interviews.xml"
 
   # Test for /interviews/feed?arg=first&arg=second
   rxreq
   expect req.url == "/interviews.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "interviews.xml"
 
   # Test for /friends/feed
   rxreq
   expect req.url == "/friends.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "friends.xml"
 
   # Test for /friends/feed/
   rxreq
   expect req.url == "/friends.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "friends.xml"
 
   # Test for /friends/feed?arg=first&arg=second
   rxreq
   expect req.url == "/friends.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "friends.xml"
 
   # Test for /rfc/feed
   rxreq
   expect req.url == "/rfc.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "rfc.xml"
 
   # Test for /rfc/feed/
   rxreq
   expect req.url == "/rfc.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "rfc.xml"
 
   # Test for /rfc/feed?arg=first&arg=second
   rxreq
   expect req.url == "/rfc.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "rfc.xml"
 
   # Test for /spotlight/feed
   rxreq
   expect req.url == "/spotlight.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "spotlight.xml"
 
   # Test for /spotlight/feed/
   rxreq
   expect req.url == "/spotlight.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "spotlight.xml"
 
   # Test for /spotlight/feed?arg=first&arg=second
   rxreq
   expect req.url == "/spotlight.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "spotlight.xml"
 
   # Test for /afk/feed
   rxreq
   expect req.url == "/afk.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "afk.xml"
 
   # Test for /afk/feed/
   rxreq
   expect req.url == "/afk.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "afk.xml"
 
   # Test for /afk/feed?arg=first&arg=second
   rxreq
   expect req.url == "/afk.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "afk.xml"
 
   # Test for /posts/feed
   rxreq
   expect req.url == "/posts.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "posts.xml"
 
   # Test for /posts/feed/
   rxreq
   expect req.url == "/posts.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "posts.xml"
 
   # Test for /posts/feed?arg=first&arg=second
   rxreq
   expect req.url == "/posts.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "posts.xml"
 
   # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed
   rxreq
   expect req.url == "/plusplus.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "plusplus.xml"
 
   # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/
   rxreq
   expect req.url == "/plusplus.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "plusplus.xml"
 
   # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed?arg=first&arg=second
   rxreq
   expect req.url == "/plusplus.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "plusplus.xml"
 
   # Test for /rss
   rxreq
   expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "feed.xml"
 
   # Test for /rss/
   rxreq
   expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "feed.xml"
 
   # Test for /rss?arg=first&arg=second
   rxreq
   expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "feed.xml"
 
   # Test for /feeds/* path
   rxreq
   expect req.url == "/0284CC5C777C51D158BBECCBBB56422A.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
 
   # Test for /feeds/*?arg=first&arg=second path
   rxreq
   expect req.url == "/0284CC5C777C51D158BBECCBBB56422A.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
 } -start
 
 setenv FEEDS_HOST "feeds.local"
-setenv BACKEND_FEEDS_FQDN "feeds.local"
+setenv BACKEND_FEEDS_FQDN "feeds.origin.local"
 setenv BACKEND_FEEDS_HOST "${s1_addr}"
 setenv BACKEND_FEEDS_PORT "${s1_port}"
 

@@ -9,6 +9,7 @@ sub vcl_recv {
       std.getenv("BACKEND_ASSETS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_ASSETS_FQDN");
     set req.http.x-backend-assets = true;
+    set req.http.x-forwarded-host = std.getenv("ASSETS_HOST");
 
     # Reject non-GET/HEAD/OPTIONS/PURGE requests
     if (req.method !~ "GET|HEAD|OPTIONS|PURGE") {

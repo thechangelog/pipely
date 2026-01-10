@@ -5,28 +5,33 @@ server s1 {
   # Test for /nightly_health
   rxreq
   expect req.url == "/health"
+  expect req.http.host == "127.0.0.1"
+  expect req.http.x-forwarded-host == "nightly.local"
   txresp -status 200 -body "nightly ok"
 
   # Test for /images/logo-day.png
   rxreq
   expect req.method == "GET"
   expect req.url == "/images/logo-day.png"
+  expect req.http.x-forwarded-host == "nightly.local"
   txresp -status 200
 
   # Test for /night-theme.css
   rxreq
   expect req.url == "/night-theme.css"
+  expect req.http.x-forwarded-host == "nightly.local"
   txresp -status 200 -body "night-theme.css"
 
   # Test for /images/star.png
   rxreq
   expect req.method == "GET"
   expect req.url == "/images/star.png"
+  expect req.http.x-forwarded-host == "nightly.local"
   txresp -status 200 -body "star.png"
 } -start
 
 setenv NIGHTLY_HOST "nightly.local"
-setenv BACKEND_NIGHTLY_FQDN "nightly.local"
+setenv BACKEND_NIGHTLY_FQDN "nightly.origin.local"
 setenv BACKEND_NIGHTLY_HOST "${s1_addr}"
 setenv BACKEND_NIGHTLY_PORT "${s1_port}"
 
