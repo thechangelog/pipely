@@ -5,6 +5,7 @@ sub vcl_recv {
   set req.backend_hint = app.backend(std.getenv("BACKEND_APP_HOST"), std.getenv("BACKEND_APP_PORT"));
   set req.http.x-backend-fqdn = std.getenv("BACKEND_APP_FQDN");
   set req.http.x-backend-app = true;
+  set req.http.x-forwarded-host = std.getenv("APP_HOST");
 
   if (req.url == "/app_health") {
     set req.url = "/health";

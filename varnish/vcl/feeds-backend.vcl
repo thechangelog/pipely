@@ -5,6 +5,7 @@ sub vcl_recv {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/health";
     return(pass);
   }
@@ -20,91 +21,109 @@ sub vcl_recv {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/podcast.xml";
   } else if (req.url ~ "^/gotime/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/gotime.xml";
   } else if (req.url ~ "^/master/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/master.xml";
   } else if (req.url ~ "^/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/feed.xml";
   } else if (req.url ~ "^/jsparty/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/jsparty.xml";
   } else if (req.url ~ "^/shipit/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/shipit.xml";
   } else if (req.url ~ "^/news/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/news.xml";
   } else if (req.url ~ "^/brainscience/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/brainscience.xml";
   } else if (req.url ~ "^/founderstalk/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/founderstalk.xml";
   } else if (req.url ~ "^/interviews/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/interviews.xml";
   } else if (req.url ~ "^/friends/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/friends.xml";
   } else if (req.url ~ "^/rfc/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/rfc.xml";
   } else if (req.url ~ "^/spotlight/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/spotlight.xml";
   } else if (req.url ~ "^/afk/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/afk.xml";
   } else if (req.url ~ "^/posts/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/posts.xml";
   } else if (req.url ~ "^/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/plusplus.xml";
   } else if (req.url ~ "^/rss/?(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = "/feed.xml";
   } else if (req.url ~ "^/feeds/.*(\?.*)?$") {
     set req.backend_hint = feeds.backend(std.getenv("BACKEND_FEEDS_HOST"), std.getenv("BACKEND_FEEDS_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_FEEDS_FQDN");
     set req.http.x-backend-feeds = true;
+    set req.http.x-forwarded-host = std.getenv("FEEDS_HOST");
     set req.url = regsub(req.url, "^/feeds/([^?]*)(\?.*)?$", "/\1.xml");
   }
 }

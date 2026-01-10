@@ -8,6 +8,7 @@ sub vcl_recv {
       std.getenv("BACKEND_NIGHTLY_PORT"));
     set req.http.x-backend-fqdn = std.getenv("BACKEND_NIGHTLY_FQDN");
     set req.http.x-backend-nightly = true;
+    set req.http.x-forwarded-host = std.getenv("NIGHTLY_HOST");
 
     # Reject non-GET/HEAD/PURGE requests
     if (req.method !~ "GET|HEAD|PURGE") {

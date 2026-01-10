@@ -5,6 +5,8 @@ server s1 {
   # Test for /assets_health
   rxreq
   expect req.url == "/health"
+  expect req.http.host == "127.0.0.1"
+  expect req.http.x-forwarded-host == "assets.local"
   txresp -status 200 -body "assets ok"
 
   # Test for HEAD /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
@@ -12,32 +14,37 @@ server s1 {
   # Varnish converts HEAD -> GET so that it can cache the response body
   expect req.method == "GET"
   expect req.url == "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  expect req.http.x-forwarded-host == "assets.local"
   txresp -status 200
 
   # Test for OPTIONS /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
   rxreq
   expect req.method == "OPTIONS"
   expect req.url == "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  expect req.http.x-forwarded-host == "assets.local"
   txresp -status 200
 
   # Test for /static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
   rxreq
   expect req.url == "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
+  expect req.http.x-forwarded-host == "assets.local"
   txresp -status 200 -body "podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
 
   # Test for /static/css/email-5690e09e20c0b25fefebbc5049362b39.css
   rxreq
   expect req.url == "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css"
+  expect req.http.x-forwarded-host == "assets.local"
   txresp -status 200 -body "email-5690e09e20c0b25fefebbc5049362b39.css"
 
   # Test for /uploads/news/140/changelog-news-140.mp3
   rxreq
   expect req.url == "/uploads/news/140/changelog-news-140.mp3?arg=test"
+  expect req.http.x-forwarded-host == "assets.local"
   txresp -status 200 -body "changelog-news-140.mp3"
 } -start
 
 setenv ASSETS_HOST "assets.local"
-setenv BACKEND_ASSETS_FQDN "assets.local"
+setenv BACKEND_ASSETS_FQDN "assets.origin.local"
 setenv BACKEND_ASSETS_HOST "${s1_addr}"
 setenv BACKEND_ASSETS_PORT "${s1_port}"
 

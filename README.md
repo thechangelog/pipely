@@ -24,9 +24,10 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Run periodic MP3, assets, feeds & nightly checks against all regions - [PR #48](https://github.com/thechangelog/pipely/pull/48)
   - ✅ Right-size `cdn-2025-12-06` + cleanup - [PR #49](https://github.com/thechangelog/pipely/pull/49)
   - ✅ Bump default memory pools - [PR #50](https://github.com/thechangelog/pipely/pull/50)
-  - Add `x-forwarded-host` header to all backend requests
+  - ✅ Add `x-forwarded-host` header to all backend requests - [PR #51](https://github.com/thechangelog/pipely/pull/51)
   - Include app-name in logs
 - Tag & ship `v1.3`
+  - Disable cookies for asset requests (ensure they always get served from cache)
   - Check URL `?args` impact on caching
   - Replace coproc with svlogd (a.k.a. overmind with runit)
   - TBD...

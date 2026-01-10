@@ -5,11 +5,13 @@ server s1 {
   # Test for /app_health
   rxreq
   expect req.url == "/health"
+  expect req.http.host == "127.0.0.1"
+  expect req.http.x-forwarded-host == "app.local"
   txresp -status 200 -body "app ok"
 } -start
 
 setenv APP_HOST "app.local"
-setenv BACKEND_APP_FQDN "app.local"
+setenv BACKEND_APP_FQDN "app.origin.local"
 setenv BACKEND_APP_HOST "${s1_addr}"
 setenv BACKEND_APP_PORT "${s1_port}"
 
