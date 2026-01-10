@@ -111,7 +111,7 @@ client c5 {
 } -run
 
 # GET png is served by the assets backend + CORS check + memory cache
-logexpect l1 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+logexpect l1 -v v1 -d 1 -g vxid -q "Storage" -T 2 {
   # Expectation for the PNG request
   expect 0 * Begin
   expect * * BereqURL "/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png"
@@ -128,7 +128,7 @@ client c6 {
 logexpect l1 -wait
 
 # GET css is served by the assets backend + CORS check + memory cache
-logexpect l2 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+logexpect l2 -v v1 -d 1 -g vxid -q "Storage" -T 2 {
   # Expectation for the CSS request
   expect 0 * Begin
   expect * * BereqURL "/static/css/email-5690e09e20c0b25fefebbc5049362b39.css"
@@ -145,7 +145,7 @@ client c7 {
 logexpect l2 -wait
 
 # GET mp3 is served by the assets backend + CORS check + file cache
-logexpect l3 -v v1 -d 1 -g vxid -q "Storage" -T 5 {
+logexpect l3 -v v1 -d 1 -g vxid -q "Storage" -T 2 {
   # Expectation for the MP3 request
   expect 0 * Begin
   expect * * BereqURL "/uploads/news/140/changelog-news-140.mp3"
