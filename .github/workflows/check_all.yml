@@ -4,6 +4,12 @@ on:
   # Run the workflow every hour:
   schedule:
     - cron: "23 * * * *"
+  # Verify that the workflow works as expected after changes
+  push:
+    paths:
+      - fly.io/cdn-2025-12-06/.envrc
+      - .github/workflows/check_all.yml
+  # Enable manual trigger
   workflow_dispatch:
 
 jobs:
