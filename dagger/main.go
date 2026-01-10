@@ -247,7 +247,7 @@ func (m *Pipely) app() *dagger.Container {
 
 	vectorContainer := dag.Container().From("timberio/vector:" + vectorVersion)
 
-	procfile := fmt.Sprintf(`varnish: varnishd -F -f /etc/varnish/default.vcl -a http=:${VARNISH_HTTP_PORT} -p feature=+http2 -s memory=malloc,${VARNISH_SIZE} -p thread_pools=${VARNISH_THREAD_POOLS:-2} -p thread_pool_min=${VARNISH_THREAD_POOL_MIN:-150} -p thread_pool_max=${VARNISH_THREAD_POOL_MAX:-1500} -p workspace_backend=${VARNISH_WORKSPACE_BACKEND:-64k} -p nuke_limit=${VARNISH_NUKE_LIMIT:-150} %s
+	procfile := fmt.Sprintf(`varnish: varnishd -F -f /etc/varnish/default.vcl -a http=:${VARNISH_HTTP_PORT} -p feature=+http2 -s memory=malloc,${VARNISH_SIZE} -p thread_pools=${VARNISH_THREAD_POOLS:-2} -p thread_pool_min=${VARNISH_THREAD_POOL_MIN:-150} -p thread_pool_max=${VARNISH_THREAD_POOL_MAX:-1500} -p pool_req=${VARNISH_POOL_REQ:-150,1500,10} -p pool_sess=${VARNISH_POOL_SESS:-150,1500,10} -p pool_vbo=${VARNISH_POOL_VBO:-150,750,10} -p workspace_backend=${VARNISH_WORKSPACE_BACKEND:-64k} -p nuke_limit=${VARNISH_NUKE_LIMIT:-150} %s
 app: tls-exterminator %s
 assets: tls-exterminator %s
 feeds: tls-exterminator %s
