@@ -23,7 +23,10 @@ You are welcome to fork this and build your own - OSS FTW 💚
 - Tag & ship `v1.2`
   - ✅ Run periodic MP3, assets, feeds & nightly checks against all regions - [PR #48](https://github.com/thechangelog/pipely/pull/48)
   - ✅ Right-size `cdn-2025-12-06` + cleanup - [PR #49](https://github.com/thechangelog/pipely/pull/49)
+  - Make pool req, sess & vbo configurable
+  - Add `x-forwarded-host` header to all backend requests
   - Include app-name in logs
+- Tag & ship `v1.3`
   - Check URL `?args` impact on caching
   - Replace coproc with svlogd (a.k.a. overmind with runit)
   - TBD...
