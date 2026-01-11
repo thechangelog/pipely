@@ -2,8 +2,9 @@ import 'flyctl.just'
 
 # Deploy container image
 [group('team')]
-deploy tag=_DEFAULT_TAG:
+deploy tag=_DEFAULT_TAG regions=FLY_APP_REGIONS:
     just flyctl deploy --ha=false --image={{ APP_IMAGE }}:{{ tag }} \
+      --regions {{ regions }} \
       --vm-cpu-kind {{ FLY_APP_REGION_HOT_CPU_KIND }} \
       --vm-cpus {{ FLY_APP_REGION_HOT_CPU_NUM }} \
       --vm-memory {{ FLY_APP_REGION_HOT_MEM }} \

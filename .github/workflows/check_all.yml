@@ -34,11 +34,17 @@ jobs:
           path: |
             ~/.local
 
-      - name: 'Check all instances ...'
+      - name: 'Check all instances HTTP/1.1 ...'
         run: |
           just hurl --version
           just check-all \
           || just check-all
+
+      - name: 'Check all instances HTTP/2 ...'
+        run: |
+          just hurl --version
+          just check-all 2 \
+          || just check-all 2
 
       - name: 'Archive check reports...'
         uses: namespace-actions/upload-artifact@v1
