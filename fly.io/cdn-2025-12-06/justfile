@@ -5,5 +5,10 @@ import '../../just/_config_fly.just'
 import '../../just/fly.just'
 
 [private]
-default_fly_io:
+default:
     @just --list
+
+[private]
+fmt:
+    just --fmt --check --unstable
+    just --version

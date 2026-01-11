@@ -82,12 +82,23 @@ test-acceptance-production *ARGS:
 
 # Check all FLY_APP_REGIONS
 [parallel]
-check-all: (check "sjc") (check "lax") (check "ord") (check "iad") (check "lhr") (check "cdg") (check "ams") (check "fra") (check "sin") (check "nrt")
+check-all http="1.1": (check "sjc" http) \
+                      (check "lax" http) \
+                      (check "iad" http) \
+                      (check "lhr" http) \
+                      (check "cdg" http) \
+                      (check "ams" http) \
+                      (check "fra" http) \
+                      (check "sin" http) \
+                      (check "nrt" http)
 
 # Check one region
-check region="iad" timeout="60":
+check region="iad" http="1.1" timeout="60":
     @echo "🧐 Checking {{ uppercase(region) }}..."
     @(just hurl --test --color --report-html tmp/check-all --continue-on-error \
+      --connect-timeout 10 \
+      --http{{ http }} \
+      --max-time {{ timeout }} \
       --variable region={{ region }} \
       --variable host=changelog.com \
       --resolve changelog.com:443:137.66.16.250 \
@@ -95,8 +106,6 @@ check region="iad" timeout="60":
       --resolve cdn.changelog.com:443:137.66.16.250 \
       --variable nightly_host=nightly.changelog.com \
       --resolve nightly.changelog.com:443:137.66.16.250 \
-      --connect-timeout 10 \
-      --max-time {{ timeout }} \
       test/acceptance/periodic/*.hurl \
       && echo -e "\033[1A✅ {{ uppercase(region) }}\n\u200B") \
     || (echo -e "\033[1A❌ {{ uppercase(region) }}\n\u200B" \

@@ -27,10 +27,11 @@ You are welcome to fork this and build your own - OSS FTW 💚
   - ✅ Add `x-forwarded-host` header to all backend requests - [PR #51](https://github.com/thechangelog/pipely/pull/51)
   - ✅ Log `app_generation` - [PR #52](https://github.com/thechangelog/pipely/pull/52)
 - Tag & ship `v1.3`
-  - Throttle mp3 requests
+  - ✅ Run periodic HTTP/1.1 checks (on top of HTTP/2) - [PR #53](https://github.com/thechangelog/pipely/pull/53)
+  - Throttle MP3 requests
   - Disable cookies for asset requests (ensure they always get served from cache)
   - Check URL `?args` impact on caching
-  - Replace coproc with svlogd (a.k.a. overmind with runit)
+  - Replace `coproc` with `svlogd` (a.k.a. overmind with runit)
   - TBD...
 
 ## What went into `v1.0`
