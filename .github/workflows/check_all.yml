@@ -1,9 +1,9 @@
 name: 'Check all instances'
 
 on:
-  # Run the workflow every hour:
+  # Run the workflow every 4 hours:
   schedule:
-    - cron: "23 * * * *"
+    - cron: "23 */4 * * *"
   # Verify that the workflow works as expected after changes
   push:
     paths:
