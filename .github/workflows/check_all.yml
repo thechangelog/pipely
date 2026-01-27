@@ -15,7 +15,7 @@ on:
 jobs:
   run:
     runs-on:
-      - nscloud-ubuntu-24.04-amd64-4x8-with-cache;github.run-id=${{ github.run_id }}
+      - nscloud-ubuntu-24.04-amd64-2x4-with-cache;github.run-id=${{ github.run_id }}
       - nscloud-git-mirror-1gb
       - nscloud-cache-tag-pipely-check-all
       - nscloud-cache-size-1gb
