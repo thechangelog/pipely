@@ -1,30 +1,30 @@
 NAME                        	CODE	CAPACITY 
                             	
 Africa                      	
-Johannesburg, South Africa  	jnb 	313     	
+Johannesburg, South Africa  	jnb 	289     	
                             	
 Asia Pacific                	
-Mumbai, India               	bom 	157     	
-Singapore, Singapore        	sin 	821     	
-Sydney, Australia           	syd 	483     	
-Tokyo, Japan                	nrt 	-252    	
+Mumbai, India               	bom 	117     	
+Singapore, Singapore        	sin 	28      	
+Sydney, Australia           	syd 	672     	
+Tokyo, Japan                	nrt 	-158    	
                             	
 Europe                      	
-Amsterdam, Netherlands      	ams 	1446    	
-Frankfurt, Germany          	fra 	1272    	
-London, United Kingdom      	lhr 	970     	
-Paris, France               	cdg 	2152    	
-Stockholm, Sweden           	arn 	967     	
+Amsterdam, Netherlands      	ams 	1523    	
+Frankfurt, Germany          	fra 	497     	
+London, United Kingdom      	lhr 	765     	
+Paris, France               	cdg 	2060    	
+Stockholm, Sweden           	arn 	916     	
                             	
 North America               	
-Ashburn, Virginia (US)      	iad 	-1310   	
-Chicago, Illinois (US)      	ord 	20      	
-Dallas, Texas (US)          	dfw 	1067    	
-Los Angeles, California (US)	lax 	698     	
-San Jose, California (US)   	sjc 	533     	
-Secaucus, NJ (US)           	ewr 	-56     	
-Toronto, Canada             	yyz 	787     	
+Ashburn, Virginia (US)      	iad 	-4788   	
+Chicago, Illinois (US)      	ord 	-131    	
+Dallas, Texas (US)          	dfw 	-147    	
+Los Angeles, California (US)	lax 	288     	
+San Jose, California (US)   	sjc 	482     	
+Secaucus, NJ (US)           	ewr 	-196    	
+Toronto, Canada             	yyz 	908     	
                             	
 South America               	
-Sao Paulo, Brazil           	gru 	1707    	
+Sao Paulo, Brazil           	gru 	1643    	
 
