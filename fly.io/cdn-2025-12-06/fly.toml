@@ -17,6 +17,11 @@ kill_timeout = 30
 [http_service.http_options]
   idle_timeout = 60
 
+# Force HTTP/1.1 to avoid blocking on body response
+# https://github.com/thechangelog/changelog.com/issues/553
+[http_service.tls_options]
+  alpn = ["http/1.1"]
+
 [http_service.concurrency]
   # This matches Varnish's thread_pools * thread_pool_max - 10%
   hard_limit = 2700

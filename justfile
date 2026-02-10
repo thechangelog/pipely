@@ -84,6 +84,8 @@ test-acceptance-production *ARGS:
 [parallel]
 check-all http="1.1": (check "sjc" http) \
                       (check "lax" http) \
+                      (check "dfw" http) \
+                      (check "ord" http) \
                       (check "iad" http) \
                       (check "lhr" http) \
                       (check "cdg" http) \
