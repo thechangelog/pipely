@@ -1,9 +1,9 @@
 name: 'Check all instances'
 
 on:
-  # Run the workflow every hour:
+  # Run the workflow daily:
   schedule:
-    - cron: "23 * * * *"
+    - cron: "23 11 * * *"
   # Verify that the workflow works as expected after changes
   push:
     paths:
@@ -15,24 +15,26 @@ on:
 jobs:
   run:
     runs-on:
-      - nscloud-ubuntu-24.04-amd64-2x4-with-cache;github.run-id=${{ github.run_id }}
-      - nscloud-git-mirror-1gb
-      - nscloud-cache-tag-pipely-check-all
-      - nscloud-cache-size-1gb
+      - ubuntu-24.04
+      # - nscloud-ubuntu-24.04-amd64-2x4-with-cache;github.run-id=${{ github.run_id }}
+      # - nscloud-git-mirror-1gb
+      # - nscloud-cache-tag-pipely-check-all
+      # - nscloud-cache-size-1gb
     timeout-minutes: 5
     steps:
       - name: 'Checkout code...'
-        uses: namespacelabs/nscloud-checkout-action@v5
+        uses: actions/checkout@v5
+        # uses: namespacelabs/nscloud-checkout-action@v5
 
       - uses: extractions/setup-just@v3
         with:
           just-version: '1.46.0'
 
-      - name: Setup cache
-        uses: namespacelabs/nscloud-cache-action@v1
-        with:
-          path: |
-            ~/.local
+      # - name: Setup cache
+      #   uses: namespacelabs/nscloud-cache-action@v1
+      #   with:
+      #     path: |
+      #       ~/.local
 
       - name: 'Check all instances HTTP/1.1 ...'
         run: |
@@ -47,7 +49,8 @@ jobs:
           || just check-all 2
 
       - name: 'Archive check reports...'
-        uses: namespace-actions/upload-artifact@v1
+        # uses: namespace-actions/upload-artifact@v1
+        uses: actions/upload-artifact@v6
         if: ${{ always() }}
         with:
           name: check-all
