@@ -10,8 +10,8 @@ import var;
 # We are declaring the dynamic directors here so that when testing & importing the backends
 # we can define dynamic directors WITHOUT health probes
 sub vcl_init {
-  if (std.getenv("FLY_APP") && std.getenv("FLY_APP") != "") {
-      var.global_set("app_generation", std.getenv("FLY_APP"));
+  if (std.getenv("FLY_APP_NAME") && std.getenv("FLY_APP_NAME") != "") {
+      var.global_set("app_generation", std.getenv("FLY_APP_NAME"));
   } else {
       var.global_set("app_generation", "NOW");
   }
