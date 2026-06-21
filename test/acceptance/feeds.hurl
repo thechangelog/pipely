@@ -51,6 +51,17 @@ header "cache-status" contains "storage.memory" # cached in memory
 header "cache-status" not contains "stale" # not stale
 header "content-type" contains "application/xml" # content type is XML
 
+# Get the changelog feed with credentials: must not bypass the cache
+GET {{proto}}://{{host}}/podcast/feed?hurl=true
+Cookie: hurl=true
+Authorization: Bearer hurl
+HTTP 200 # expect OK response
+[Asserts]
+header "via" matches /[vV]arnish/ # served via Varnish
+header "cache-status" contains "hit" # served from cache despite credentials
+header "cache-status" not contains "bypass" # not passed to the origin
+header "content-type" contains "application/xml" # content type is XML
+
 GET {{proto}}://{{host}}/gotime/feed
 HTTP 200 # expect OK response
 [Asserts]
@@ -172,3 +183,33 @@ header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 header "content-type" contains "application/xml" # content type is XML
+
+# Direct requests for the canonical feed URLs (old bookmarks & crawlers)
+GET {{proto}}://{{host}}/feed.xml
+HTTP 200 # expect OK response
+[Asserts]
+header "cf-ray" exists # served by Cloudflare
+header "via" matches /[vV]arnish/ # served via Varnish
+header "age" exists # cache age works
+header "cache-status" contains "origin=feeds" # served by feeds backend, not app
+header "content-type" contains "application/xml" # content type is XML
+
+GET {{proto}}://{{host}}/podcast.xml
+HTTP 200 # expect OK response
+[Asserts]
+header "cf-ray" exists # served by Cloudflare
+header "via" matches /[vV]arnish/ # served via Varnish
+header "age" exists # cache age works
+header "cache-status" contains "origin=feeds" # served by feeds backend, not app
+header "content-type" contains "application/xml" # content type is XML
+
+# The private ++ feed must NOT be reachable without its token
+GET {{proto}}://{{host}}/plusplus.xml
+HTTP 404 # expect Not Found
+[Asserts]
+header "cache-status" contains "origin=app" # not routed to the feeds backend
+
+GET {{proto}}://{{host}}/feeds/plusplus
+HTTP 404 # expect Not Found
+[Asserts]
+header "cache-status" contains "origin=app" # not routed to the feeds backend

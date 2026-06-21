@@ -1,0 +1,66 @@
+varnishtest "Private ++ feed is only reachable via its tokenized URL"
+
+# Feeds mock server: accepts a SINGLE request, so any test request below
+# that is not served from the cache (or not routed at all) fails this test
+server s1 {
+  # Test for /plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed
+  rxreq
+  expect req.url == "/plusplus.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
+  txresp -status 200 -body "plusplus.xml"
+} -start
+
+setenv FEEDS_HOST "feeds.local"
+setenv BACKEND_FEEDS_FQDN "feeds.origin.local"
+setenv BACKEND_FEEDS_HOST "${s1_addr}"
+setenv BACKEND_FEEDS_PORT "${s1_port}"
+
+# Caching is intentionally ENABLED: these tests assert on cache keys
+varnish v1 -arg "-s memory=malloc,10M" -vcl {
+  vcl 4.1;
+  import dynamic;
+  import std;
+
+  # Use a feeds backend with no probe when testing
+  sub vcl_init {
+    new feeds = dynamic.director(
+      host_header = std.getenv("BACKEND_FEEDS_FQDN"),
+    );
+  }
+
+  include "feeds-backend.vcl";
+  include "disable-default-backend.vcl";
+} -start
+
+# The tokenized URL is served by the feeds backend & cached
+client c1 {
+  txreq -url "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "plusplus.xml"
+} -run
+
+# A direct /plusplus.xml request must NOT hit the cached private feed: the
+# token is part of the cache key & no feeds rule matches, so with no backend
+# configured Varnish returns 503
+client c2 {
+  txreq -url "/plusplus.xml"
+  rxresp
+  expect resp.status == 503
+} -run
+
+# /feeds/plusplus must NOT bypass the token via the /feeds/* wildcard
+client c3 {
+  txreq -url "/feeds/plusplus"
+  rxresp
+  expect resp.status == 503
+} -run
+
+# Tokenized URL variants are normalized to a single cache key:
+# this is a cache hit, the mock server only serves a single request
+client c4 {
+  txreq -url "/plusplus/xae9heiphohtupha1Ahha3aexoo0oo4W/feed/"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "plusplus.xml"
+} -run

@@ -326,6 +326,24 @@ server s1 {
   expect req.url == "/0284CC5C777C51D158BBECCBBB56422A.xml"
   expect req.http.x-forwarded-host == "feeds.local"
   txresp -status 200 -body "0284CC5C777C51D158BBECCBBB56422A.xml"
+
+  # Test for /feed.xml (direct request for the canonical form)
+  rxreq
+  expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
+  txresp -status 200 -body "feed.xml"
+
+  # Test for /feed.xml?arg=first&arg=second (query string is dropped)
+  rxreq
+  expect req.url == "/feed.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
+  txresp -status 200 -body "feed.xml"
+
+  # Test for /podcast.xml (direct request for the canonical form)
+  rxreq
+  expect req.url == "/podcast.xml"
+  expect req.http.x-forwarded-host == "feeds.local"
+  txresp -status 200 -body "podcast.xml"
 } -start
 
 setenv FEEDS_HOST "feeds.local"
@@ -782,4 +800,50 @@ client c54 {
   rxresp
   expect resp.status == 200
   expect resp.body == "0284CC5C777C51D158BBECCBBB56422A.xml"
+} -run
+
+# /feed.xml (direct request for the canonical form) should go to feeds backend
+client c55 {
+  txreq -url "/feed.xml"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "feed.xml"
+} -run
+
+# /feed.xml?arg=first&arg=second should go to feeds backend, query dropped
+client c56 {
+  txreq -url "/feed.xml?arg=first&arg=second"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "feed.xml"
+} -run
+
+# /podcast.xml (direct request for the canonical form) should go to feeds backend
+client c57 {
+  txreq -url "/podcast.xml"
+  rxresp
+  expect resp.status == 200
+  expect resp.body == "podcast.xml"
+} -run
+
+# /plusplus.xml must NOT be routed to the feeds backend (private feed, only
+# reachable via its tokenized URL); no backend matches, so Varnish returns 503
+client c58 {
+  txreq -url "/plusplus.xml"
+  rxresp
+  expect resp.status == 503
+} -run
+
+# An .xml URL outside the allowlist must NOT be routed to the feeds backend
+client c59 {
+  txreq -url "/not-a-feed.xml"
+  rxresp
+  expect resp.status == 503
+} -run
+
+# A client-injected x-backend-feeds header must NOT influence routing
+client c60 {
+  txreq -url "/not-a-feed" -hdr "x-backend-feeds: true"
+  rxresp
+  expect resp.status == 503
 } -run
