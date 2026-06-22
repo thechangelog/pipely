@@ -49,6 +49,17 @@ header "cf-ray" exists # served by Cloudflare
 header "via" matches /[vV]arnish/ # served via Varnish
 header "age" exists # cache age works
 
+# Get the static asset with credentials: must not bypass the cache
+GET {{proto}}://{{host}}/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
+Host: {{assets_host}}
+Cookie: hurl=true
+Authorization: Bearer hurl
+HTTP 200 # expect OK response
+[Asserts]
+header "via" matches /[vV]arnish/ # served via Varnish
+header "cache-status" contains "hit" # served from cache despite credentials
+header "cache-status" not contains "bypass" # not passed to the origin
+
 POST {{proto}}://{{host}}/static/images/podcasts/podcast-original-f16d0363067166f241d080ee2e2d4a28.png
 Host: {{assets_host}}
 HTTP 405 # expect method not allowed

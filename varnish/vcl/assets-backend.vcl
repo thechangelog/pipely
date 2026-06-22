@@ -11,6 +11,12 @@ sub vcl_recv {
     set req.http.x-backend-assets = true;
     set req.http.x-forwarded-host = std.getenv("ASSETS_HOST");
 
+    # Assets are public static files: credentials never affect the response.
+    # Drop them so that the builtin vcl_recv does not pass these requests
+    # (they would never be served from the cache otherwise).
+    unset req.http.cookie;
+    unset req.http.authorization;
+
     # Reject non-GET/HEAD/OPTIONS/PURGE requests
     if (req.method !~ "GET|HEAD|OPTIONS|PURGE") {
       return(synth(405, "Method Not Allowed"));
