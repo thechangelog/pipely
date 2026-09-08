@@ -93,7 +93,10 @@ While it's fun watching other people experiment with digital resin (varnish 😂
 - 🐳 [Docker](https://docs.docker.com/engine/install/)
 - 🤖 [Just](https://github.com/casey/just?tab=readme-ov-file#installation) version `1.35.0` or higher
 
-And that's about it. Everything else is containerized with Dagger.
+The workflow scheduling checks in `just test` also require Ruby 2.6+ with its
+standard-library YAML parser (no additional gems). The application tests and
+build are containerized with Dagger. See [release recovery](docs/release_recovery.md)
+for the automatic fallback boundary and its isolated tests.
 
 > [!NOTE]
 >  **For Windows Developers:**
