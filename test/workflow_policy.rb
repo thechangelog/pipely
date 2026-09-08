@@ -18,7 +18,7 @@ def evaluate(expression, event:, ref:, result:, runners:)
   value = value.gsub(/startsWith\(github.ref, '([^']*)'\)/) { ref.downcase.start_with?(Regexp.last_match(1).downcase).to_s }
   value = value.gsub(/contains\(vars.RUNS_ON, '([^']*)'\)/) { runners.downcase.include?(Regexp.last_match(1).downcase).to_s }
   value = value.gsub(/github.event_name == '([^']*)'/) { (event.downcase == Regexp.last_match(1).downcase).to_s }
-  raise "Unsupported guard: #{expression}" unless value.gsub(/true|false|[\s()!&|]/, '').empty?
+  raise "Unsupported guard: #{expression}" unless value.gsub(/true|false|&&|\|\||[\s()!]/, '').empty?
 
   # Only boolean literals/operators remain, never arbitrary workflow code.
   eval(value) # rubocop:disable Security/Eval
@@ -29,6 +29,25 @@ check = lambda do |condition, message|
   raise message unless condition
 
   checks += 1
+end
+
+context = { event: 'push', ref: 'refs/heads/main', result: 'success', runners: '' }
+{
+  'true && false' => false,
+  'true || false' => true,
+  '!(true && false) && (false || true)' => true
+}.each do |expression, expected|
+  check.call(evaluate(expression, **context) == expected, "Logical operator evaluation failed: #{expression}")
+end
+
+['true & false', 'true | false', 'true &&& false', 'true ||| false'].each do |expression|
+  rejected = false
+  begin
+    evaluate(expression, **context)
+  rescue RuntimeError => error
+    rejected = error.message == "Unsupported guard: #{expression}"
+  end
+  check.call(rejected, "Unsupported operator accepted: #{expression}")
 end
 
 fallback = jobs.fetch('on-github-fallback')

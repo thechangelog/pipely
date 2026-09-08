@@ -114,11 +114,12 @@ Available recipes:
     http-profile url="https://changelog.com/" # Observe all HTTP timings - https://blog.cloudflare.com/a-question-of-timing
     local-debug                               # Debug container locally
     local-run                                 # Run container locally: available on http://localhost:9000
-    test                                      # Test VTC + acceptance locally
+    test                                      # Test workflow policy, VTC and acceptance locally
     test-acceptance-local                     # Test acceptance local
     test-reports                              # Open test reports
     test-reports-rm                           # Clear test reports
     test-vtc                                  # Test VCL config
+    test-workflows                            # Test workflow scheduling policy (Ruby standard library only)
 
     [team]
     envrc-secrets                             # Create .envrc.secrets with credentials from 1Password

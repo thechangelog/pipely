@@ -46,7 +46,7 @@ docker-run *ARGS:
 docker-bash:
     @docker exec -it pipely.dev bash
 
-# Test VTC + acceptance locally
+# Test workflow policy, VTC and acceptance locally
 test: test-workflows test-vtc test-acceptance-local
 
 # Test workflow scheduling policy (Ruby standard library only)
