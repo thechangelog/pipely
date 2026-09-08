@@ -14,7 +14,7 @@ on:
       - ready_for_review
   workflow_dispatch:
 
-# All jobs have the same outcome. We define multiple for resiliency reasons.
+# Alternate runners provide resiliency for checks, not automatic release replay.
 jobs:
   # In thechangelog/pipely repository (a.k.a. upstream),
   # this is the preferred default (i.e. custom runners, faster than GitHub):
@@ -23,11 +23,11 @@ jobs:
     uses: ./.github/workflows/_namespace.yml
     secrets: inherit
 
-  # Just in case Namespace.so misbehaves, we want a fallback.
-  # Always run two of everything™
+  # Release failures may occur after publish/deploy/PURGE. Inspect before recovery;
+  # never replay the entire release automatically on another runner.
   on-github-fallback:
     needs: on-namespace
-    if: ${{ failure() }}
+    if: ${{ failure() && !(startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push') }}
     uses: ./.github/workflows/_github.yml
     secrets: inherit
 
